@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll } from "framer-motion";
 import { TunerProvider, Tunable, useTuner, DEFAULT_TUNE_CONFIG } from "./HeroTuner";
 import { FALLBACK_HERO_STATUS } from "@/data/status";
+import { useActiveStatus } from "@/lib/useActiveStatus";
 import {
   FALLBACK_HERO_CONFIG,
   FALLBACK_HERO_CHIPS,
@@ -53,6 +54,10 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
   const [locState, setLocState] = useState(0);
   const [logIndex, setLogIndex] = useState(0);
   const [statusTimeAgo, setStatusTimeAgo] = useState("JUST NOW");
+
+  // Rotates through the day's status batch by the location's timezone; falls
+  // back to status.text/generatedAt when there's no schedule.
+  const activeStatus = useActiveStatus(status);
 
   const particles = useMemo(() => mounted ? Array.from({ length: 25 }).map(() => ({
     left: `${Math.random() * 100}%`,
@@ -118,11 +123,11 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
   // GPT regen timestamp from Notion. If no generatedAt yet (cron hasn't
   // run / DB has no timestamp column), shows "JUST NOW" indefinitely.
   useEffect(() => {
-    if (!status.generatedAt) {
+    if (!activeStatus.generatedAt) {
       setStatusTimeAgo("JUST NOW");
       return;
     }
-    const generatedAtMs = new Date(status.generatedAt).getTime();
+    const generatedAtMs = new Date(activeStatus.generatedAt).getTime();
     const tick = () => {
       const elapsed = Math.floor((Date.now() - generatedAtMs) / 1000);
       if (elapsed < 60) setStatusTimeAgo(`${elapsed}S AGO`);
@@ -133,7 +138,7 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
     tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [status.generatedAt]);
+  }, [activeStatus.generatedAt]);
 
   return (
     <div className="relative w-full perspective-stage">
@@ -297,7 +302,7 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
               <Tunable id="ornament">
                 <div className="md:-translate-y-[14px] mb-3">
                   <motion.span
-                    key={`orn-${status.text}`}
+                    key={`orn-${activeStatus.text}`}
                     initial={{ scale: 1.5, filter: "drop-shadow(0 0 14px rgba(196, 160, 80, 0.9))" }}
                     animate={{ scale: 1, filter: "drop-shadow(0 0 0px rgba(196, 160, 80, 0))" }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
@@ -319,7 +324,7 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
                   className={`status-shimmer font-sans italic text-center max-w-[760px] leading-relaxed px-4 min-h-[5em] md:translate-y-[25px] ${tuneOn ? "" : "text-[15px] md:text-[17px]"}`}
                   style={tuneOn ? { fontSize: C.statusText.fontSize } : undefined}
                 >
-                  <ScrambleText key={status.text} text={status.text} />
+                  <ScrambleText key={activeStatus.text} text={activeStatus.text} />
                 </p>
               </Tunable>
             </motion.div>

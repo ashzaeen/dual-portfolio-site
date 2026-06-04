@@ -6,6 +6,7 @@ import styles from "./Hero.module.css";
 import { FALLBACK_ROLES } from "@/data/roles";
 import { FALLBACK_HERO_STATUS } from "@/data/status";
 import { FALLBACK_SECTION_COPY } from "@/data/sections";
+import { useActiveStatus } from "@/lib/useActiveStatus";
 import { PersonalHeroTunerProvider, TunerBox } from "./PersonalHeroTuner";
 
 // The personal Hero — a two-column composition:
@@ -97,8 +98,11 @@ function HeroInner({ roles, status = FALLBACK_HERO_STATUS, copy = FALLBACK_SECTI
     return () => clearTimeout(startTimer);
   }, []);
 
+  // Rotates through the day's status batch by the location's timezone; falls
+  // back to status.text when there's no schedule.
+  const activeStatus = useActiveStatus(status);
   const role = list[tick % list.length];
-  const statusText = status.text;
+  const statusText = activeStatus.text;
   const fullCaption = PHOTOS[0].caption;
   const typedCaption = fullCaption.slice(0, typedLen);
   const typingDone = typedLen >= fullCaption.length;

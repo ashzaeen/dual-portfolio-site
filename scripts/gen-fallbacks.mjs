@@ -256,7 +256,11 @@ function sectionCopy() {
 writeFile("roles.js", (s) => replaceExport(s, "FALLBACK_ROLES", lit(D.roles, 0)));
 
 writeFile("status.js", (s) =>
-  replaceExport(s, "FALLBACK_HERO_STATUS", lit({ text: D.heroStatus.text, generatedAt: null }, 0))
+  replaceExport(
+    s,
+    "FALLBACK_HERO_STATUS",
+    lit({ text: D.heroStatus.text, generatedAt: null, schedule: null, tz: null }, 0)
+  )
 );
 
 writeFile("hero.js", (s) => {
