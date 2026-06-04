@@ -46,3 +46,6 @@ next-env.d.ts
 .claude/
 .agents/
 skills-lock.json
+
+# local deploy guide — contains generated secrets, never commit/publish
+DEPLOY_GUIDE.md
