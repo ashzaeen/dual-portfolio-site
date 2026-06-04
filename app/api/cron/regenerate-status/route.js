@@ -9,10 +9,15 @@
 //                                       → call GPT, push
 //   else                                → skip
 //
-// Production: Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` when
-//             CRON_SECRET is set on the project. Other invocations 401.
-// Local dev:  hit http://localhost:3000/api/cron/regenerate-status directly
-//             (skip CRON_SECRET env var entirely so the route runs without auth).
+// Auth (when CRON_SECRET is set):
+//   • Vercel Cron   → `Authorization: Bearer ${CRON_SECRET}` (auto-injected daily).
+//   • Manual / on-demand → `?key=${CRON_SECRET}` query param, so a plain link
+//     (Notion "open link" button, bookmark, curl) can fire it immediately after
+//     you edit the status in Notion — no waiting for the daily tick. Combine with
+//     the row's `Update` checkbox to force an immediate GPT regen regardless of
+//     the 4-hour staleness window. (A key in the URL shows up in logs/history —
+//     fine for this low-stakes regen; rotate CRON_SECRET if it ever leaks.)
+// Local dev:  skip CRON_SECRET entirely and hit the route directly (open access).
 
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -196,11 +201,15 @@ function isStale(generatedAt) {
 }
 
 export async function GET(request) {
-  // Vercel Cron auth: when CRON_SECRET is set, Vercel injects the header.
-  // Skipping the env var in local dev = open access for testing.
-  const auth = request.headers.get("authorization");
-  if (process.env.CRON_SECRET && auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // Auth: accept the cron's bearer header OR a `?key=` query param (manual
+  // trigger), both checked against CRON_SECRET. Unset secret = open (local dev).
+  const secret = process.env.CRON_SECRET;
+  if (secret) {
+    const auth = request.headers.get("authorization");
+    const key = new URL(request.url).searchParams.get("key");
+    if (auth !== `Bearer ${secret}` && key !== secret) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
   }
 
   try {
