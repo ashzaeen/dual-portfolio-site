@@ -159,7 +159,7 @@ function HeroInner({ roles, status = FALLBACK_HERO_STATUS, copy = FALLBACK_SECTI
             </div>
             <AnimatePresence mode="wait" initial={false}>
               <motion.p
-                key={statusText}
+                key={activeStatus.slotKey}
                 className={styles.statusText}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}

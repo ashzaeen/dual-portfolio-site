@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState, useMemo } from "react";
+import { Fragment, useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll } from "framer-motion";
 import { TunerProvider, Tunable, useTuner, DEFAULT_TUNE_CONFIG } from "./HeroTuner";
 import { FALLBACK_HERO_STATUS } from "@/data/status";
@@ -17,24 +17,45 @@ const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%&";
 
 // Length-aware scramble: settles in ~1.4s regardless of text size so short
 // labels still feel snappy and long status lines don't take forever to reveal.
-const ScrambleText = ({ text }) => {
+// Scrambles in whenever `animateKey` changes (defaults to `text`). Live text
+// edits that DON'T change animateKey — e.g. the [TIME] clock ticking within the
+// same status slot — update the displayed text directly, without re-scrambling.
+const ScrambleText = ({ text, animateKey }) => {
   const [display, setDisplay] = useState(text);
+  const textRef = useRef(text);
+  textRef.current = text;
+  const animatingRef = useRef(false);
+  const key = animateKey ?? text;
+
   useEffect(() => {
     let iterations = 0;
     const tickMs = 35;
     const ticks = 40; // ~1400ms total
-    const increment = Math.max(0.4, text.length / ticks);
+    animatingRef.current = true;
     const interval = setInterval(() => {
-      setDisplay(text.split('').map((char, index) => {
+      const t = textRef.current;
+      const increment = Math.max(0.4, t.length / ticks);
+      setDisplay(t.split('').map((char, index) => {
         if (char === " ") return " ";
         if (index < iterations) return char;
         return characters[Math.floor(Math.random() * characters.length)];
       }).join(''));
-      if (iterations >= text.length) clearInterval(interval);
+      if (iterations >= t.length) {
+        clearInterval(interval);
+        animatingRef.current = false;
+        setDisplay(textRef.current);
+      }
       iterations += increment;
     }, tickMs);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); animatingRef.current = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  // Reflect live text changes (the ticking clock) when not mid-scramble.
+  useEffect(() => {
+    if (!animatingRef.current) setDisplay(text);
   }, [text]);
+
   return <span>{display}</span>;
 };
 
@@ -302,7 +323,7 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
               <Tunable id="ornament">
                 <div className="md:-translate-y-[14px] mb-3">
                   <motion.span
-                    key={`orn-${activeStatus.text}`}
+                    key={`orn-${activeStatus.slotKey}`}
                     initial={{ scale: 1.5, filter: "drop-shadow(0 0 14px rgba(196, 160, 80, 0.9))" }}
                     animate={{ scale: 1, filter: "drop-shadow(0 0 0px rgba(196, 160, 80, 0))" }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
@@ -324,7 +345,7 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
                   className={`status-shimmer font-sans italic text-center max-w-[760px] leading-relaxed px-4 min-h-[5em] md:translate-y-[25px] ${tuneOn ? "" : "text-[15px] md:text-[17px]"}`}
                   style={tuneOn ? { fontSize: C.statusText.fontSize } : undefined}
                 >
-                  <ScrambleText key={activeStatus.text} text={activeStatus.text} />
+                  <ScrambleText animateKey={activeStatus.slotKey} text={activeStatus.text} />
                 </p>
               </Tunable>
             </motion.div>
