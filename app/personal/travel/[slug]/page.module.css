@@ -1,0 +1,16 @@
+.main {
+  /* Full height minus navbar (~60px). StoryView fills this. */
+  height: calc(100dvh - 60px);
+  overflow: hidden;
+}
+
+.notFound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+}

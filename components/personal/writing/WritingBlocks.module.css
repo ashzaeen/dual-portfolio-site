@@ -1,0 +1,606 @@
+.blocks {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+
+/* ── Paragraph ── */
+.paragraph {
+  font-family: var(--font-body);
+  font-size: 0.97rem;
+  line-height: 1.72;
+  color: var(--ink);
+  margin: 0 0 1.05rem;
+}
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.spacer {
+  height: 0.6rem;
+}
+
+/* ── Drop cap (first paragraph only) ── */
+.dropCap {
+  float: left;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-style: italic;
+  font-size: 4rem;
+  line-height: 0.78;
+  margin: 0.12em 0.1em 0 0;
+}
+
+/* ── Inline marks ── */
+.bold { font-weight: 700; }
+.italic { font-style: italic; }
+.underline { text-decoration: underline; text-decoration-color: rgba(160,120,56,0.5); text-underline-offset: 0.18em; }
+.strikethrough { text-decoration: line-through; text-decoration-color: rgba(160,120,56,0.5); }
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: rgba(160, 120, 56, 0.12);
+  padding: 0.08em 0.4em;
+  border-radius: 2px;
+  color: var(--ink);
+}
+.link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: rgba(160, 120, 56, 0.55);
+  text-underline-offset: 0.22em;
+  transition: text-decoration-color 0.2s ease;
+}
+.link:hover {
+  text-decoration-color: var(--gold);
+}
+
+/* ── Headings ── */
+.h2 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.55rem;
+  line-height: 1.18;
+  color: var(--ink);
+  margin: 1.85rem 0 0.7rem;
+  letter-spacing: -0.005em;
+}
+.h2:first-child {
+  margin-top: 0;
+}
+
+.h3 {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+  margin: 1.45rem 0 0.55rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.h3Dash {
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  flex-shrink: 0;
+}
+
+/* ── Quote ── */
+.quote {
+  border-left: 2px solid var(--gold-dim);
+  padding: 0.2rem 0 0.2rem 1.4rem;
+  margin: 1.2rem 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--ink-mid);
+  line-height: 1.62;
+}
+
+/* ── Callout ── */
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(160, 120, 56, 0.09);
+  border: 1px solid rgba(160, 120, 56, 0.22);
+  border-radius: 3px;
+  padding: 0.85rem 1.1rem;
+  margin: 1.15rem 0;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--ink-mid);
+  line-height: 1.6;
+}
+.calloutIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  font-style: normal;
+}
+.calloutText {
+  flex: 1;
+}
+
+/* ── Lists ── */
+.ul {
+  list-style: none;
+  margin: 0.4rem 0 1.05rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.ol {
+  list-style: decimal;
+  margin: 0.4rem 0 1.05rem 1.6rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.li {
+  font-family: var(--font-body);
+  font-size: 0.97rem;
+  line-height: 1.68;
+  color: var(--ink);
+  position: relative;
+  padding-left: 1.35rem;
+}
+.ul .li::before {
+  content: "·";
+  position: absolute;
+  left: 0.4rem;
+  color: var(--gold);
+  font-size: 1.4em;
+  line-height: 1.15;
+}
+.olLi {
+  padding-left: 0.3rem;
+}
+.ol .li::marker {
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+/* Nested lists hug their parent item rather than carrying full block margin. */
+.nestedList {
+  margin-top: 0.3rem;
+  margin-bottom: 0.2rem;
+}
+.li > .nestedList:last-child {
+  margin-bottom: 0;
+}
+
+/* ── To-do ── */
+.todo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0.3rem 0;
+}
+.todoBox {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 0.28rem;
+  border: 1px solid rgba(160, 120, 56, 0.5);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  background: transparent;
+}
+.todoBoxChecked {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #2a1c10;
+}
+.todoText {
+  font-family: var(--font-body);
+  font-size: 0.97rem;
+  line-height: 1.68;
+  color: var(--ink);
+}
+.todoTextChecked {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+  text-decoration-color: rgba(160, 120, 56, 0.5);
+}
+
+/* ── Code ── */
+.codeBlock {
+  margin: 1.4rem 0;
+  border: 1px solid rgba(160, 120, 56, 0.28);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #efe7d4;
+}
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.85rem;
+  background: rgba(160, 120, 56, 0.12);
+  border-bottom: 1px solid rgba(160, 120, 56, 0.22);
+}
+.codeLang {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+.codeCopy {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.1rem 0.2rem;
+  transition: color 0.2s ease;
+}
+.codeCopy:hover {
+  color: var(--gold);
+}
+.codePre {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+}
+.codeText {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #3a2a16;
+  white-space: pre;
+}
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 2.2rem 0;
+}
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(160, 120, 56, 0.4));
+}
+.dividerLine:last-child {
+  background: linear-gradient(90deg, rgba(160, 120, 56, 0.4), transparent);
+}
+.dividerMark {
+  font-size: 0.7rem;
+  color: var(--gold-dim);
+  flex-shrink: 0;
+}
+
+/* ── File / link action buttons ── */
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 1.4rem 0;
+}
+.alignLeft { justify-content: flex-start; }
+.alignCenter { justify-content: center; }
+.alignRight { justify-content: flex-end; }
+
+.actionBtn {
+  --btn-accent: var(--gold);
+  --btn-deep: var(--gold-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1.05rem 0.5rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  text-decoration: none;
+  background: linear-gradient(180deg, #f6f0e2 0%, #ece1c8 100%);
+  border: 1px solid rgba(160, 120, 56, 0.5);
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 2px 7px rgba(80, 50, 0, 0.12);
+  transition: transform 0.18s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.actionBtn:hover {
+  transform: translateY(-1.5px);
+  border-color: var(--btn-accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 6px 16px rgba(196, 160, 80, 0.3);
+}
+.actionBtn:active { transform: translateY(0); }
+.actionIcon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--btn-deep);
+  color: #f8f2e4;
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.actionLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 32ch;
+}
+
+/* ── Image ── */
+.figure {
+  margin: 1.4rem 0;
+}
+/* Sized figures: desktop uses --img-w, mobile uses --img-w-mobile (which
+   defaults to 100% so desktop-shrunk images aren't rendered tiny on phones). */
+.figureSized {
+  max-width: var(--img-w, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (max-width: 768px) {
+  .figureSized {
+    max-width: var(--img-w-mobile, var(--img-w, 100%));
+  }
+}
+/* Image is wrapped in a button so it opens the lightbox; reset button chrome. */
+.imageBtn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  -webkit-tap-highlight-color: transparent;
+}
+.imageBtn .image {
+  transition: box-shadow 0.25s ease;
+}
+.imageBtn:hover .image {
+  box-shadow: 0 10px 26px rgba(20, 12, 4, 0.32), 0 0 0 1px rgba(196, 160, 80, 0.3);
+}
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+  box-shadow: 0 6px 18px rgba(20, 12, 4, 0.25), 0 2px 4px rgba(20, 12, 4, 0.15);
+  background: rgba(160, 120, 56, 0.06);
+}
+
+/* ── Image lightbox — warm dark backdrop + cream/gold frame ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(10, 6, 2, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: zoom-out;
+}
+/* Base frame: a clean, undecorated framed image. Used as-is for Journalism /
+   Technical pieces. The image itself carries the border + shadow. */
+.lightboxFrame {
+  position: relative;
+  max-width: min(1100px, 96vw);
+  max-height: 92vh;
+  border-radius: 2px;
+  box-shadow: 0 30px 80px rgba(10, 6, 2, 0.7);
+  cursor: default;
+}
+
+/* Personal pieces only: the full aged-parchment mat (+ album corners). Light
+   warm base, gentle foxing/toning, woven paper fibers, and a soft vignette. */
+.lightboxFrameParchment {
+  padding: 16px;
+  background-color: #efe6cf;
+  background-image:
+    repeating-linear-gradient(94deg, rgba(120, 88, 45, 0.035) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(2deg, rgba(120, 88, 45, 0.028) 0 1px, transparent 1px 5px),
+    radial-gradient(ellipse at 13% 9%, rgba(190, 162, 104, 0.3) 0%, transparent 46%),
+    radial-gradient(ellipse at 87% 91%, rgba(168, 138, 84, 0.26) 0%, transparent 52%),
+    radial-gradient(circle at 40% 60%, rgba(150, 116, 60, 0.12) 0%, transparent 30%),
+    radial-gradient(ellipse at 72% 18%, rgba(140, 108, 60, 0.1) 0%, transparent 40%),
+    radial-gradient(ellipse at 28% 78%, rgba(140, 108, 60, 0.09) 0%, transparent 42%),
+    radial-gradient(ellipse at 50% 50%, rgba(40, 26, 8, 0.04) 0%, transparent 74%),
+    linear-gradient(180deg, #f3ead3 0%, #e7d8b8 100%);
+  border: 1px solid rgba(150, 116, 60, 0.5);
+  box-shadow:
+    0 30px 80px rgba(10, 6, 2, 0.72),
+    inset 0 0 30px rgba(150, 116, 60, 0.18),
+    inset 0 1px 0 rgba(255, 250, 235, 0.5),
+    inset 0 0 0 1px rgba(255, 248, 228, 0.3);
+}
+/* Ruled inner keyline — an archival double-mat border, gold-brown. */
+.lightboxFrameParchment::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(150, 116, 60, 0.34);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Old-album photo corners — image looks slid into mounting pockets. */
+.corner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(86, 58, 26, 0.62), rgba(58, 38, 16, 0.46));
+  box-shadow:
+    inset 0 1px 1px rgba(255, 232, 190, 0.25),
+    0 1px 2px rgba(30, 18, 6, 0.4);
+}
+.cornerTL {
+  top: 16px;
+  left: 16px;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.cornerTR {
+  top: 16px;
+  right: 16px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+.cornerBL {
+  bottom: 16px;
+  left: 16px;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+.cornerBR {
+  bottom: 16px;
+  right: 16px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+.lightboxImg {
+  display: block;
+  max-width: 100%;
+  max-height: calc(92vh - 32px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 1px;
+  /* Thin aged hairline so the photo reads as mounted on the parchment. */
+  border: 1px solid rgba(90, 65, 30, 0.35);
+  box-shadow: 0 2px 8px rgba(40, 26, 8, 0.4);
+}
+.lightboxClose {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(20, 12, 4, 0.9);
+  border: 1px solid rgba(196, 160, 80, 0.5);
+  color: #f5f0e8;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.lightboxClose:hover {
+  background: rgba(20, 12, 4, 1);
+  border-color: var(--gold);
+}
+@media (max-width: 768px) {
+  .lightbox {
+    padding: 0.75rem;
+  }
+  .lightboxClose {
+    top: 6px;
+    right: 6px;
+  }
+}
+.figcaption {
+  margin-top: 0.65rem;
+  text-align: center;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  line-height: 1.45;
+  color: var(--ink-mid);
+}
+.imagePlaceholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(160, 120, 56, 0.16) 0%, rgba(160, 120, 56, 0.06) 100%);
+  border: 1px dashed rgba(160, 120, 56, 0.3);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* ── Two-column image layout ── */
+.columnList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin: 1.4rem 0;
+}
+.column > .figure:first-child {
+  margin-top: 0;
+}
+.column > .figure:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 640px) {
+  .columnList {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Table ── */
+.tableWrap {
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  border-radius: 3px;
+  border: 1px solid rgba(160, 120, 56, 0.22);
+  background: rgba(160, 120, 56, 0.04);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 320px;
+}
+.th {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0.65rem 1rem;
+  text-align: left;
+  background: rgba(160, 120, 56, 0.1);
+  border-bottom: 1px solid rgba(160, 120, 56, 0.28);
+  white-space: nowrap;
+}
+.td {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink);
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(160, 120, 56, 0.14);
+  vertical-align: top;
+  line-height: 1.55;
+}
+.table tr:last-child .td {
+  border-bottom: none;
+}

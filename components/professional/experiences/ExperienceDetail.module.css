@@ -1,0 +1,67 @@
+.root {
+  padding: 2rem;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #1a1814 transparent;
+}
+
+.header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(196, 160, 80, 0.12);
+}
+
+.category {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold, #c4a050);
+  margin-bottom: 0.5em;
+}
+
+.role {
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--ink, #ede8df);
+  line-height: 1.1;
+  margin: 0 0 0.25em;
+}
+
+.org {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: rgba(237, 232, 223, 0.6);
+  margin-bottom: 0.2em;
+}
+
+.date {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: rgba(237, 232, 223, 0.4);
+  margin-bottom: 1em;
+}
+
+.techStack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+}
+.techPill {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid rgba(196, 160, 80, 0.2);
+  color: rgba(237, 232, 223, 0.45);
+  padding: 0.2em 0.55em;
+  border-radius: 2px;
+  background: rgba(196, 160, 80, 0.04);
+}
+
+.body { padding-bottom: 2rem; }

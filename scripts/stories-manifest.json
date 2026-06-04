@@ -1,0 +1,39 @@
+{
+  "_comment": "Edit this file before running the rename / Notion-insert scripts. Each entry maps a /stories/<folder> to a country/state/city URL slug + the Notion Location row to attach to + a Story title. country/state/citySlug are URL slugs (kebab-case, lowercase). For non-US/BD countries leave state as empty string \"\". notionLocationName must exactly match an existing row's Name in the Locations DB.",
+  "config": {
+    "cdnBase": "https://cdn.ashzaeen.com",
+    "storiesRoot": "stories",
+    "outputRoot": "stories-organized"
+  },
+  "folders": [
+    { "folder": "Akron",                "country": "usa",        "state": "ohio",          "citySlug": "akron",                "notionLocationName": "Akron, OH",            "notionStoryTitle": "Akron" },
+    { "folder": "Albuquerque",          "country": "usa",        "state": "new-mexico",    "citySlug": "albuquerque",          "notionLocationName": "Albuquerque, NM",      "notionStoryTitle": "Albuquerque" },
+    { "folder": "Arlington",            "country": "usa",        "state": "texas",         "citySlug": "arlington",            "notionLocationName": "Arlington",            "notionStoryTitle": "Arlington" },
+    { "folder": "Cleveland",            "country": "usa",        "state": "ohio",          "citySlug": "cleveland",            "notionLocationName": "Cleveland, OH",        "notionStoryTitle": "Cleveland" },
+    { "folder": "Colorado Springs",     "country": "usa",        "state": "colorado",      "citySlug": "colorado-springs",     "notionLocationName": "Colorado Springs, CO", "notionStoryTitle": "Colorado Springs" },
+    { "folder": "Columbus",             "country": "usa",        "state": "ohio",          "citySlug": "columbus",             "notionLocationName": "Columbus, OH",         "notionStoryTitle": "Columbus" },
+    { "folder": "Cox Bazar",            "country": "bangladesh", "state": "chittagong",    "citySlug": "cox-bazar",            "notionLocationName": "Cox Bazar",            "notionStoryTitle": "Cox's Bazar" },
+    { "folder": "Dhaka",                "country": "bangladesh", "state": "dhaka",         "citySlug": "dhaka",                "notionLocationName": "Dhaka",                "notionStoryTitle": "Dhaka" },
+    { "folder": "Eureka Springs",       "country": "usa",        "state": "arkansas",      "citySlug": "eureka-springs",       "notionLocationName": "Eureka Springs, AR",   "notionStoryTitle": "Eureka Springs" },
+    { "folder": "Hot Springs",          "country": "usa",        "state": "arkansas",      "citySlug": "hot-springs",          "notionLocationName": "Hot Springs, AR",      "notionStoryTitle": "Hot Springs" },
+    { "folder": "Houston",              "country": "usa",        "state": "texas",         "citySlug": "houston",              "notionLocationName": "Houston, TX",          "notionStoryTitle": "Houston" },
+    { "folder": "Istanbul",             "country": "turkey",     "state": "",              "citySlug": "istanbul",             "notionLocationName": "Istanbul",             "notionStoryTitle": "Istanbul" },
+    { "folder": "Las Vegas",            "country": "usa",        "state": "nevada",        "citySlug": "las-vegas",            "notionLocationName": "Las Vegas, NV",        "notionStoryTitle": "Las Vegas" },
+    { "folder": "Mount Scott",          "country": "usa",        "state": "oklahoma",      "citySlug": "mount-scott",          "notionLocationName": "Mt Scott, OK",         "notionStoryTitle": "Mount Scott" },
+    { "folder": "Nashville",            "country": "usa",        "state": "tennessee",     "citySlug": "nashville",            "notionLocationName": "Nashville, TN",        "notionStoryTitle": "Nashville" },
+    { "folder": "New Orleans",          "country": "usa",        "state": "louisiana",     "citySlug": "new-orleans",          "notionLocationName": "New Orleans, LA",      "notionStoryTitle": "New Orleans" },
+    { "folder": "New York City",        "country": "usa",        "state": "new-york",      "citySlug": "new-york-city",        "notionLocationName": "New York City, NY",    "notionStoryTitle": "New York City" },
+    { "folder": "Niagara",              "country": "usa",        "state": "new-york",      "citySlug": "niagara",              "notionLocationName": "Niagara, NY",          "notionStoryTitle": "Niagara Falls" },
+    { "folder": "Pabna",                "country": "bangladesh", "state": "rajshahi",      "citySlug": "pabna",                "notionLocationName": "Pabna",                "notionStoryTitle": "Pabna" },
+    { "folder": "Panchagarh",           "country": "bangladesh", "state": "rangpur",       "citySlug": "panchagarh",           "notionLocationName": "Panchagarh",           "notionStoryTitle": "Panchagarh" },
+    { "folder": "Pittsburgh",           "country": "usa",        "state": "pennsylvania",  "citySlug": "pittsburgh",           "notionLocationName": "Pittsburgh, PA",       "notionStoryTitle": "Pittsburgh" },
+    { "folder": "Rajshahi",             "country": "bangladesh", "state": "rajshahi",      "citySlug": "rajshahi",             "notionLocationName": "Rajshahi",             "notionStoryTitle": "Rajshahi" },
+    { "folder": "Salt Lake",            "country": "usa",        "state": "utah",          "citySlug": "salt-lake-city",       "notionLocationName": "Salt lake, UT",        "notionStoryTitle": "Salt Lake City" },
+    { "folder": "Santa Fe",             "country": "usa",        "state": "new-mexico",    "citySlug": "santa-fe",             "notionLocationName": "Santa Fe, NM",         "notionStoryTitle": "Santa Fe" },
+    { "folder": "Shenandoah",           "country": "usa",        "state": "virginia",      "citySlug": "shenandoah",           "notionLocationName": "Shenandoah, VA",       "notionStoryTitle": "Shenandoah" },
+    { "folder": "Sylhet",               "country": "bangladesh", "state": "sylhet",        "citySlug": "sylhet",               "notionLocationName": "Sylhet",               "notionStoryTitle": "Sylhet" },
+    { "folder": "Tampa",                "country": "usa",        "state": "florida",       "citySlug": "tampa",                "notionLocationName": "Tampa, FL",            "notionStoryTitle": "Tampa" },
+    { "folder": "Washington DC",        "country": "usa",        "state": "dc",            "citySlug": "washington-dc",        "notionLocationName": "Washington DC",        "notionStoryTitle": "Washington DC" },
+    { "folder": "Washington DC Spring", "country": "usa",        "state": "dc",            "citySlug": "washington-dc-spring", "notionLocationName": "Washington DC",        "notionStoryTitle": "Washington DC — Spring" }
+  ]
+}

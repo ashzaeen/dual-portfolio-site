@@ -1,0 +1,1239 @@
+/* ── SERIES SECTION — The Screening Room ─────────────────── */
+
+/* ── Local keyframes ─────────────────────────────────────── */
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes projectorBreath {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+@keyframes screenFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Shared header tokens ────────────────────────────────── */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--gold-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  color: var(--ink);
+  line-height: 1;
+  margin: 0.2rem 0 0.6rem;
+}
+.sectionSub {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.98rem;
+  color: var(--ink-mid);
+  max-width: 460px;
+  margin: 0.5rem 0 0;
+}
+.rule {
+  width: 44px;
+  height: 1px;
+  margin-top: 1rem;
+  background: var(--gold-dim);
+}
+
+/* ── Desktop wrapper ─────────────────────────────────────── */
+.desktopWrap {
+  /* Mirrors Writing/The Desk on top; bottom is tighter because the
+     full-bleed film strip + seat caption already act as the section's
+     ender, so a full 4rem below them over-spaces the seam to the Wall. */
+  padding: 5rem 3rem 1.75rem;
+  background: var(--bg);
+  position: relative;
+}
+.desktopInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* No forced 100svh: the Screening Room is content-height so the film
+   strip terminates the section cleanly. Forcing full height padded a
+   slug of empty parchment below the strip, leaving a non-standard gap
+   before the Wall section. The standard rhythm (4rem bottom + the next
+   section's top) now drives the seam like every other section. */
+
+/* ── Section header row ──────────────────────────────────── */
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  gap: 1.5rem;
+}
+
+/* ── Spoiler toggle ──────────────────────────────────────── */
+.spoilerToggle {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(160, 120, 56, 0.4);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+.spoilerToggle:hover {
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--ink);
+}
+.spoilerOn {
+  background: rgba(196, 160, 80, 0.14);
+  border-color: var(--gold);
+  color: var(--gold-dim);
+}
+
+/* ── Main grid ───────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 2.25rem;
+  align-items: start;
+}
+
+/* ── Frame wrap ──────────────────────────────────────────── */
+.frameWrap {
+  position: relative;
+}
+.frameWrap::before {
+  content: "";
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(ellipse at 50% 55%, rgba(196, 160, 80, 0.1) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Outer theatre frame ─────────────────────────────────── */
+.frame {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* Taller than 16:10 so the lobby text column gets vertical breathing
+     room. The poster is width-capped (not height-driven), so this extra
+     height flows to the title/verdict/hot-take rather than widening the
+     poster and squeezing the text. */
+  aspect-ratio: 16 / 11.8;
+  background:
+    repeating-linear-gradient(172deg, rgba(20, 12, 4, 0.18) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(168deg, rgba(20, 12, 4, 0.10) 0 2px, transparent 2px 23px),
+    repeating-linear-gradient(176deg, rgba(255, 220, 170, 0.05) 0 1px, transparent 1px 9px),
+    linear-gradient(160deg, #3a2518 0%, #2a180e 50%, #180e06 100%);
+  padding: 22px;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 0 1px rgba(196, 160, 80, 0.12),
+    0 0 80px rgba(0, 0, 0, 0.55),
+    0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Reel counter lives in the frame's 22px top-right padding */
+.reelCounter {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  z-index: 4;
+  font-family: var(--font-mono);
+  font-size: 0.42rem;
+  letter-spacing: 0.16em;
+  color: rgba(196, 160, 80, 0.45);
+  pointer-events: none;
+}
+
+.frameGrain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image:
+    repeating-linear-gradient(169deg, rgba(196, 160, 80, 0.05) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(173deg, rgba(80, 40, 5, 0.1) 0 1px, transparent 1px 5px);
+  z-index: 0;
+}
+.frameInnerBorder {
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(196, 160, 80, 0.22);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Screen inside frame ─────────────────────────────────── */
+.screen {
+  position: absolute;
+  inset: 22px;
+  overflow: hidden;
+  transition: background 0.5s ease;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.5);
+  cursor: crosshair;
+}
+
+/* Cinematic letterbox top bar */
+.letterboxTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 18px;
+  background: #000;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.filmGrain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.28;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+}
+.screenTint {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: rgba(80, 50, 10, 0.06);
+}
+.scanLines {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.045) 2px 4px
+  );
+}
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+/* Projector cone — warm amber light from above */
+.projectionCone {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 55% 75% at 50% -8%,
+    rgba(255, 248, 215, 0.065) 0%,
+    rgba(255, 235, 170, 0.028) 45%,
+    transparent 72%
+  );
+  animation: projectorBreath 5s ease-in-out infinite;
+}
+
+/* Cursor-following spotlight */
+.spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(ellipse 42% 34% at 50% 42%, rgba(255, 242, 200, 0.04) 0%, transparent 100%);
+  transition: background 0.08s linear;
+}
+
+/* ── Screen inner — keyed, fades in on show change ───────── */
+.screenInner {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  animation: screenFadeIn 0.45s ease;
+}
+
+/* ── Lobby layout (poster + title/verdict on the screen) ──── */
+.lobbyTop {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  /* Top padding clears the 18px letterbox bar. */
+  padding: calc(18px + 0.85rem) 1.6rem 0.55rem;
+}
+
+.lobbyHead {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 1.2rem;
+  padding: 0 1.6rem 0.7rem;
+}
+/* Dedicated left column that centers the poster both ways in its lane. */
+.lobbyPosterCol {
+  flex: 0 0 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lobbyText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+/* Left-align the reused title/verdict bits inside the lobby column. */
+.lobbyText .showTitle {
+  font-size: clamp(1.45rem, 2.5vw, 2.15rem);
+  text-align: left;
+  margin-bottom: 0.45rem;
+}
+.lobbyText .titleDivider {
+  margin: 0 0 0.45rem;
+}
+.lobbyText .seasonLine {
+  text-align: left;
+}
+
+/* ── Poster panel (shared by desktop + mobile) ───────────── */
+.posterPanel {
+  position: relative;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #0a0703;
+  box-shadow:
+    0 0 0 1px rgba(196, 160, 80, 0.3),
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 242, 200, 0.06);
+}
+.posterPanelDesktop {
+  /* Fills its centering column (capped) so it sits neatly in the left lane,
+     square, with a little matting on the taller axis. */
+  width: 100%;
+  max-width: 210px;
+  aspect-ratio: 1;
+}
+.posterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Soft lobby-card sheen + lower shading for legibility against the frame. */
+.posterSheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 242, 200, 0.14) 0%,
+    transparent 38%,
+    transparent 70%,
+    rgba(0, 0, 0, 0.34) 100%
+  );
+}
+
+/* Monogram-slide fallback when no Poster Media is set. */
+.posterFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.posterFallback::before,
+.posterFallback::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 10px;
+  background-image: radial-gradient(circle, rgba(255, 242, 200, 0.22) 2px, transparent 2.7px);
+  background-size: 10px 16px;
+  background-repeat: repeat-y;
+  background-position: center;
+}
+.posterFallback::before { left: 5px; }
+.posterFallback::after  { right: 5px; }
+.posterMonogram {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(2.8rem, 7vw, 5rem);
+  line-height: 1;
+  opacity: 0.92;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+.posterFallbackLabel {
+  position: absolute;
+  bottom: 0.55rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.42rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(244, 236, 224, 0.4);
+}
+
+/* Compact verdict block (replaces the centered double-rule row). */
+.verdictBlock {
+  flex-shrink: 0;
+  margin: 0.95rem 0 0.65rem;
+}
+.lobbyText .verdictLabel {
+  margin-bottom: 0;
+}
+.verdictTagRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.32rem;
+}
+.verdictTick {
+  width: 16px;
+  height: 2px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.lobbyText .hotWrap {
+  text-align: left;
+  margin-top: 0.1rem;
+}
+.lobbyText .hotTake {
+  font-size: 0.79rem;
+  line-height: 1.68;
+}
+.lobbyText .revealHint {
+  text-align: left;
+}
+/* Screen-wide centered CTA row — mirrors the centered PRESENTED marquee. */
+.lobbyCta {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 1.6rem 0.75rem;
+}
+
+/* ── Title zone ──────────────────────────────────────────── */
+.titleZone {
+  flex-shrink: 0;
+  padding: 1.6rem 2rem 0.7rem;
+  padding-top: calc(18px + 1.1rem);
+  text-align: center;
+}
+.presentedRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+.presentedStar {
+  font-size: 0.48rem;
+  opacity: 0.85;
+  line-height: 1;
+}
+.presentedText {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+.showTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(1.55rem, 2.8vw, 2.3rem);
+  color: #f5ede0;
+  line-height: 1.05;
+  margin: 0 0 0.55rem;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.65);
+}
+.titleDivider {
+  width: 44px;
+  height: 1px;
+  margin: 0 auto 0.45rem;
+  opacity: 0.45;
+}
+.seasonLine {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: rgba(244, 236, 224, 0.38);
+  letter-spacing: 0.1em;
+}
+
+/* ── Verdict zone ────────────────────────────────────────── */
+.verdictZone {
+  flex: 1;
+  padding: 0.6rem 1.75rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+.verdictLabel {
+  font-family: var(--font-mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.2em;
+  color: rgba(244, 236, 224, 0.28);
+  margin-bottom: 0.45rem;
+  flex-shrink: 0;
+}
+.verdictFilmRow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.65rem;
+  width: 100%;
+  flex-shrink: 0;
+}
+.verdictRule {
+  flex: 1;
+  height: 1px;
+  opacity: 0.38;
+}
+.verdictText {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Hot take ────────────────────────────────────────────── */
+.hotWrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  text-align: center;
+  width: 100%;
+  /* Subtle scrollbar so long verdicts read fully on the screen */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 160, 80, 0.4) transparent;
+}
+.hotWrap::-webkit-scrollbar { width: 5px; }
+.hotWrap::-webkit-scrollbar-thumb {
+  background: rgba(196, 160, 80, 0.35);
+  border-radius: 100px;
+}
+.hotTake {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.79rem;
+  color: rgba(244, 236, 224, 0.56);
+  line-height: 1.68;
+  margin: 0;
+  transition: filter 0.3s ease;
+}
+.revealHint {
+  margin-top: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.46rem;
+  letter-spacing: 0.16em;
+  color: rgba(196, 160, 80, 0.48);
+}
+
+/* ── Screen CTA button — play-button pill (desktop + mobile) */
+.screenBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid currentColor;
+  border-radius: 100px;
+  margin-top: 0.7rem;
+  text-decoration: none;
+  transition: box-shadow 0.25s ease, background 0.2s ease, transform 0.15s ease;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+/* Little play triangle drawn from the current accent colour */
+.screenBtn::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 7px;
+  border-color: transparent transparent transparent currentColor;
+}
+.screenBtn:hover {
+  background: rgba(0, 0, 0, 0.52);
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px -3px currentColor;
+}
+
+/* ── Stats bar — pinned bottom of screen ─────────────────── */
+.statsBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.55rem 1.4rem;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(196, 160, 80, 0.14);
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.14rem;
+}
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: 0.42rem;
+  letter-spacing: 0.16em;
+  color: rgba(196, 160, 80, 0.48);
+  text-transform: uppercase;
+}
+.statVal {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: rgba(244, 236, 224, 0.72);
+  letter-spacing: 0.05em;
+}
+.statDivider {
+  width: 1px;
+  height: 22px;
+  background: rgba(196, 160, 80, 0.18);
+  flex-shrink: 0;
+}
+.genreTags {
+  display: flex;
+  gap: 0.38rem;
+  flex-wrap: wrap;
+}
+.genreTag {
+  font-family: var(--font-mono);
+  font-size: 0.42rem;
+  letter-spacing: 0.1em;
+  color: rgba(244, 236, 224, 0.48);
+  padding: 0.16rem 0.48rem;
+  border: 1px solid rgba(244, 236, 224, 0.14);
+  border-radius: 2px;
+}
+
+/* ── Velvet curtain overlay ──────────────────────────────── */
+.curtainOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  pointer-events: none;
+}
+.curtainLeft,
+.curtainRight {
+  width: 50%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.curtainLeft {
+  transform: translateX(-100%);
+  box-shadow: 8px 0 28px rgba(0, 0, 0, 0.75);
+}
+.curtainRight {
+  transform: translateX(100%);
+  box-shadow: -8px 0 28px rgba(0, 0, 0, 0.75);
+}
+/* Fold texture overlay */
+.curtainLeft::after,
+.curtainRight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.07) 0px 10px,
+    rgba(0, 0, 0, 0.45) 10px 14px,
+    rgba(255, 255, 255, 0.04) 14px 26px,
+    rgba(0, 0, 0, 0.28) 26px 28px,
+    rgba(255, 255, 255, 0.06) 28px 42px
+  );
+  pointer-events: none;
+}
+/* Top gather ruffle */
+.curtainLeft::before,
+.curtainRight::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 0px 5px,
+    rgba(0, 0, 0, 0.55) 5px 9px,
+    rgba(255, 255, 255, 0.07) 9px 14px,
+    rgba(0, 0, 0, 0.38) 14px 18px
+  );
+  z-index: 1;
+}
+/* Closed state */
+.curtainsClosed .curtainLeft {
+  transform: translateX(0);
+  transition: transform 0.3s ease-in;
+}
+.curtainsClosed .curtainRight {
+  transform: translateX(0);
+  transition: transform 0.3s ease-in;
+}
+
+/* ── Full-width 35mm film-strip ticker ───────────────────── */
+.filmReel {
+  position: relative;
+  margin: 2.75rem -3rem 0;
+  height: 74px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #1d160c 0%, #0d0a05 50%, #1d160c 100%);
+  border-top: 1px solid rgba(196, 160, 80, 0.3);
+  border-bottom: 1px solid rgba(196, 160, 80, 0.3);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.65);
+}
+
+/* Sprocket-hole rows — little light gates top & bottom */
+.sprocketRow {
+  flex-shrink: 0;
+  height: 13px;
+  background-color: #0a0703;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 7px,
+    rgba(240, 224, 180, 0.82) 7px 16px,
+    transparent 16px 23px
+  );
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.85);
+}
+
+/* Scrolling band of film frames */
+.frameTrack {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  white-space: nowrap;
+  animation: marqueeScroll 46s linear infinite;
+}
+.filmFrame {
+  flex: 0 0 auto;
+  height: 100%;
+  min-width: 220px;
+  padding: 0 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  position: relative;
+  border-right: 1px solid rgba(196, 160, 80, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(196, 160, 80, 0.07);
+}
+.frameStar {
+  font-size: 0.55rem;
+  color: rgba(196, 160, 80, 0.6);
+  flex-shrink: 0;
+}
+.frameTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 0.98rem;
+  letter-spacing: 0.04em;
+  color: #ecd9a6;
+  text-shadow: 0 0 12px rgba(196, 160, 80, 0.4);
+}
+
+/* Warm projector-gate light drifting over the strip */
+.filmGate {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(ellipse 34% 130% at 50% 50%, rgba(255, 238, 190, 0.1) 0%, transparent 70%);
+  animation: projectorBreath 5s ease-in-out infinite;
+}
+
+/* Edge fades */
+.filmReel::before,
+.filmReel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 90px;
+  z-index: 3;
+  pointer-events: none;
+}
+.filmReel::before {
+  left: 0;
+  background: linear-gradient(90deg, #0d0a05 0%, transparent 100%);
+}
+.filmReel::after {
+  right: 0;
+  background: linear-gradient(-90deg, #0d0a05 0%, transparent 100%);
+}
+
+/* ── Seat indicator ──────────────────────────────────────── */
+.seatIndicator {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+  text-align: right;
+  /* Sits snug under the film strip — no big bottom pad adding to the seam. */
+  padding: 0.55rem 0 0;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ── Ticket list ─────────────────────────────────────────── */
+.ticketList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* ── Movie ticket (desktop + mobile share the face) ──────── */
+.ticket,
+.mobileTicket {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  background: #f0e8d4;
+  border: 1px solid rgba(160, 120, 56, 0.32);
+  border-radius: 3px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, transform 0.16s ease;
+  box-shadow:
+    0 1px 2px rgba(80, 50, 0, 0.14),
+    0 4px 12px rgba(80, 50, 0, 0.1);
+}
+/* Halftone print grain */
+.ticket::before,
+.mobileTicket::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(rgba(160, 120, 56, 0.05) 1px, transparent 1.4px) 0 0 / 5px 5px;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+.ticket:hover,
+.mobileTicket:hover {
+  background: #f6efdd;
+  transform: translateX(3px);
+  box-shadow:
+    0 2px 6px rgba(80, 50, 0, 0.18),
+    0 6px 18px rgba(80, 50, 0, 0.14);
+}
+.ticketActive,
+.mobileTicketActive {
+  background: #fbf6ea;
+  border-color: var(--gold);
+  transform: translateX(3px);
+  box-shadow:
+    0 0 0 1px rgba(196, 160, 80, 0.5),
+    0 4px 18px rgba(196, 160, 80, 0.3);
+}
+
+/* ── Accent spine ────────────────────────────────────────── */
+.ticketAccent {
+  width: 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: inset -1px 0 2px rgba(0, 0, 0, 0.25);
+}
+.ticketAccent::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), transparent 60%);
+}
+
+/* ── Ticket body ─────────────────────────────────────────── */
+.ticketBody {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 0.85rem;
+  position: relative;
+  z-index: 1;
+}
+.ticketHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+.ticketTheater {
+  font-family: var(--font-mono);
+  font-size: 0.4rem;
+  letter-spacing: 0.22em;
+  color: rgba(160, 120, 56, 0.6);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ticketStatusGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.ticketTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.12rem;
+  color: var(--ink);
+  line-height: 1.08;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ticketMetaRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.34rem;
+}
+.ticketMeta {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ticketVerdict {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.95;
+}
+
+/* ── Perforated tear seam ────────────────────────────────── */
+.ticketSeam {
+  flex-shrink: 0;
+  width: 14px;
+  align-self: stretch;
+  position: relative;
+  z-index: 1;
+  background-image: radial-gradient(circle at 7px 7px, var(--bg) 3.2px, transparent 3.6px);
+  background-size: 14px 14px;
+  background-repeat: repeat-y;
+}
+.ticketSeam::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 1.4px dashed rgba(160, 120, 56, 0.45);
+}
+
+/* ── Tear-off stub ───────────────────────────────────────── */
+.ticketStub {
+  flex-shrink: 0;
+  width: 52px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.35rem 0;
+}
+.admitLabel {
+  font-family: var(--font-mono);
+  font-size: 0.38rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(160, 120, 56, 0.62);
+  line-height: 1.15;
+}
+.stubNum {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--ink-mid);
+  line-height: 1;
+  margin: 0.12rem 0 0.2rem;
+}
+.barcode {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 11px;
+}
+.barcode span {
+  display: block;
+  height: 100%;
+  background: rgba(40, 28, 12, 0.7);
+}
+.ticketActive .stubNum,
+.mobileTicketActive .stubNum {
+  color: var(--gold-dim);
+}
+.ticketActive .barcode span,
+.mobileTicketActive .barcode span {
+  background: rgba(40, 28, 12, 0.88);
+}
+
+/* ── LOADED indicator dot ────────────────────────────────── */
+.ticketLoaded {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #5a8c3a;
+  flex-shrink: 0;
+  box-shadow: 0 0 7px rgba(90, 140, 58, 0.65);
+  animation: blink 2.4s ease-in-out infinite;
+}
+
+/* ── Status badge ────────────────────────────────────────── */
+.statusBadge {
+  font-family: var(--font-mono);
+  font-size: 0.43rem;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid;
+  border-radius: 100px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.statusBadge[data-status="COMPLETED"] { color: #5a7840; border-color: #5a7840; }
+.statusBadge[data-status="ONGOING"]   { color: var(--gold-dim); border-color: var(--gold-dim); }
+.statusBadge[data-status="ABANDONED"] { color: #a04028; border-color: #a04028; }
+
+/* ── Mobile wrapper ──────────────────────────────────────── */
+.mobileWrap {
+  background: var(--bg);
+  /* Mirrors Writing/The Desk mobile wrap. */
+  padding: 3.5rem 0 2.5rem;
+}
+
+/* ── Mobile header ───────────────────────────────────────── */
+.mobileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0 1.25rem 1.5rem;
+}
+.mobileSectionTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 2rem;
+  color: var(--ink);
+  line-height: 1;
+  margin: 0.2rem 0 0.35rem;
+}
+.mobileSub {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.91rem;
+  color: var(--ink-mid);
+  margin: 0;
+}
+
+/* ── Mobile projector screen ─────────────────────────────── */
+.mobileScreen {
+  position: relative;
+  width: 100%;
+  min-height: 432px;
+  overflow: hidden;
+  transition: background 0.5s ease;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.45);
+  cursor: default;
+  scroll-margin-top: 64px;
+}
+.mobileScreenContent {
+  position: relative;
+  z-index: 3;
+  padding: 1.5rem 1.4rem 1.75rem;
+  animation: screenFadeIn 0.4s ease;
+}
+
+/* ── Mobile lobby head (poster + title/verdict) ──────────── */
+.mobileLobbyHead {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  margin-bottom: 0.95rem;
+}
+.posterPanelMobile {
+  width: clamp(96px, 30vw, 120px);
+  aspect-ratio: 1;
+}
+.mobileHeadText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mobileHeadText .showTitle {
+  font-size: clamp(1.4rem, 6.4vw, 2rem);
+  text-align: left;
+  margin-bottom: 0.35rem;
+}
+.mobileHeadText .seasonLine {
+  text-align: left;
+  margin-bottom: 0.6rem;
+}
+.mobileHeadText .verdictStamp {
+  margin-bottom: 0;
+}
+
+/* ── NOW SCREENING row ───────────────────────────────────── */
+.nowScreeningRow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.8rem;
+}
+.screeningLine {
+  flex: 1;
+  height: 1px;
+  opacity: 0.35;
+}
+.nowScreening {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.95;
+}
+
+/* ── Verdict stamp ───────────────────────────────────────── */
+.verdictStamp {
+  display: inline-flex;
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.85rem;
+  border: 1px solid;
+  border-radius: 2px;
+  margin-bottom: 0.9rem;
+  transform: rotate(-1.5deg);
+}
+
+/* ── Mobile hot take on screen ───────────────────────────── */
+.mobileHotWrap {
+  margin-top: 0.1rem;
+}
+.mobileHotTake {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.81rem;
+  color: rgba(244, 236, 224, 0.55);
+  line-height: 1.65;
+  margin: 0;
+  transition: filter 0.3s ease;
+}
+
+/* ── Draggable crosshair (drives the mobile spotlight) ───── */
+.crosshair {
+  position: absolute;
+  z-index: 7;
+  transform: translate(-50%, -50%);
+  touch-action: none;
+  pointer-events: all;
+  opacity: 0.85;
+  /* Smooth crosshair repositioning */
+  transition: left 0.06s ease, top 0.06s ease;
+}
+/* Pulsing ring invites the user to drag */
+.crosshair::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 242, 200, 0.5);
+  animation: crosshairPulse 2.6s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes crosshairPulse {
+  0%   { transform: scale(0.55); opacity: 0.75; }
+  100% { transform: scale(2);    opacity: 0; }
+}
+.crosshairSvg {
+  display: block;
+  position: relative;
+  filter: drop-shadow(0 0 6px rgba(255, 242, 200, 0.5));
+}
+
+/* ── Mobile ticket list ──────────────────────────────────── */
+.mobileTicketList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem 1.25rem 0;
+}
+/* Mobile tickets reuse the shared .ticket/.mobileTicket face above.
+   The film reel runs full-bleed on phones. */
+.mobileWrap .filmReel {
+  /* Gap above so the strip reads as the section ender, not glued to the last
+     ticket — mirrors the section's bottom rhythm. */
+  margin: 2.5rem 0 0;
+  height: 62px;
+}

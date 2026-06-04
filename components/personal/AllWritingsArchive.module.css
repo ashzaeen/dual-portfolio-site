@@ -1,0 +1,919 @@
+/* ─────────────────────────────────────────────────────────
+   ALL WRITINGS ARCHIVE — Newsstand popup
+───────────────────────────────────────────────────────── */
+
+/* ── Overlay backdrop ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(22, 14, 4, 0.72);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ── Archive panel ── */
+.archive {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 88vw;
+  max-width: 1160px;
+  height: 86vh;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(100, 65, 15, 0.35),
+    0 50px 120px rgba(12, 6, 0, 0.72),
+    0 14px 42px rgba(12, 6, 0, 0.44);
+}
+
+/* ─────────────────────────────────────────────────────────
+   HEADER — the newsstand sign
+───────────────────────────────────────────────────────── */
+.header {
+  flex-shrink: 0;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.012) 0 1px,
+      transparent 1px 4px
+    ),
+    linear-gradient(180deg, #1c1208 0%, #291908 50%, #221408 100%);
+  border-bottom: 1px solid rgba(100, 62, 10, 0.4);
+  position: relative;
+}
+
+/* Decorative gold rule at header bottom */
+.header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 2.5rem;
+  right: 2.5rem;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(196, 160, 80, 0.3) 15%,
+    rgba(196, 160, 80, 0.55) 50%,
+    rgba(196, 160, 80, 0.3) 85%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.headerOrn {
+  font-size: 0.58rem;
+  color: rgba(196, 160, 80, 0.52);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(1rem, 2.2vw, 1.4rem);
+  color: #f0e8d2;
+  letter-spacing: 0.04em;
+  margin: 0;
+  line-height: 1;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.pieceCount {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: rgba(196, 160, 80, 0.42);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.closeBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(196, 160, 80, 0.28);
+  background: transparent;
+  color: rgba(240, 232, 210, 0.62);
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.closeBtn:hover {
+  background: rgba(196, 160, 80, 0.14);
+  color: #f0e8d2;
+  border-color: rgba(196, 160, 80, 0.55);
+}
+
+/* ─────────────────────────────────────────────────────────
+   FILTER BAR
+───────────────────────────────────────────────────────── */
+.filterBar {
+  flex-shrink: 0;
+  padding: 0.7rem 2rem 0.65rem;
+  background: #d0c4a8;
+  border-bottom: 1px solid rgba(120, 80, 30, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.filterSection {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(60, 40, 15, 0.5);
+  flex-shrink: 0;
+  min-width: 52px;
+}
+
+.filterPills {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.26rem 0.72rem;
+  border-radius: 2px;
+  border: 1px solid rgba(120, 80, 30, 0.3);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(60, 40, 15, 0.72);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  white-space: nowrap;
+}
+
+.pill:hover {
+  background: rgba(120, 80, 30, 0.1);
+  border-color: rgba(120, 80, 30, 0.45);
+}
+
+.pillActiveAll {
+  background: var(--gold, #c4a050);
+  border-color: var(--gold, #c4a050);
+  color: #1c1208;
+}
+
+.pillActiveCat {
+  background: var(--pill-bg, var(--gold, #c4a050));
+  border-color: var(--pill-bg, var(--gold, #c4a050));
+  color: #1c1208;
+}
+
+.pillDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.filterTags {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.tagChip {
+  padding: 0.2rem 0.58rem;
+  border-radius: 10px;
+  border: 1px solid rgba(196, 160, 80, 0.32);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.53rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(60, 40, 15, 0.6);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  white-space: nowrap;
+}
+
+.tagChip:hover {
+  background: rgba(196, 160, 80, 0.1);
+  border-color: rgba(196, 160, 80, 0.55);
+}
+
+.tagChipActive {
+  background: rgba(196, 160, 80, 0.2);
+  border-color: rgba(196, 160, 80, 0.65);
+  color: rgba(60, 40, 15, 0.88);
+}
+
+/* ─────────────────────────────────────────────────────────
+   SCROLLABLE CONTENT
+───────────────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #e8dfc8;
+  padding: 1.8rem 2.5rem 2.2rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 115, 44, 0.28) transparent;
+}
+
+.content::-webkit-scrollbar { width: 5px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb {
+  background: rgba(156, 115, 44, 0.28);
+  border-radius: 3px;
+}
+
+/* ── Card grid ── */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 1.6rem;
+  row-gap: 1.8rem;
+  padding-top: 0.25rem;
+  align-items: start;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SHELF DIVIDER — the real wood
+───────────────────────────────────────────────────────── */
+.shelf {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: stretch;
+  height: 28px;
+  /* extend past content padding to full archive width */
+  margin: 0.2rem -2.5rem;
+  filter: drop-shadow(0 7px 12px rgba(20, 12, 4, 0.55));
+}
+
+/* Metal bracket on each side */
+.shelfBracket {
+  width: 18px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    90deg,
+    #2a1c0c 0%,
+    #4a3218 30%,
+    #5a3c20 52%,
+    #3e2a14 75%,
+    #281808 100%
+  );
+  position: relative;
+  box-shadow:
+    inset 1px 0 1px rgba(255, 200, 100, 0.07),
+    inset -1px 0 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Brass bolt / rivet on bracket */
+.shelfBracket::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 33% 28%,
+    #e8cc68 0%,
+    #c09838 45%,
+    #7a5c1c 78%,
+    #3e300a 100%
+  );
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.65),
+    inset 0 1px 1px rgba(255, 245, 180, 0.18);
+}
+
+/* Wooden shelf surface */
+.shelfSurface {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    /* top light catch — light hitting the leading edge */
+    rgba(255, 240, 165, 0.3) 0px 2px,
+    /* warm upper face */
+    #a87e34 2px 7px,
+    /* main grain surface */
+    #8e6a28 7px 17px,
+    /* front edge transition */
+    #7a5a20 17px 22px,
+    /* deep front face */
+    #503810 22px 26px,
+    /* bottom shadow */
+    #2e1e08 26px 100%
+  );
+  box-shadow:
+    0 8px 18px rgba(20, 12, 4, 0.62),
+    0 3px 6px rgba(20, 12, 4, 0.68),
+    inset 0 1px 0 rgba(255, 240, 165, 0.16),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.42);
+  border-bottom: 2px solid #1e1206;
+}
+
+/* Wood grain texture overlays */
+.shelfGrain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    /* Short vertical grain marks */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 40px,
+      rgba(0, 0, 0, 0.042) 40px 41px
+    ),
+    /* Long diagonal grain lines */
+    repeating-linear-gradient(
+      176deg,
+      rgba(255, 215, 100, 0.068) 0 1.5px,
+      transparent 1.5px 24px
+    );
+}
+
+/* Bright top-edge highlight — light catching the shelf lip */
+.shelfTopEdge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 248, 195, 0.18) 0%,
+    rgba(255, 248, 195, 0.58) 22%,
+    rgba(255, 248, 195, 0.65) 50%,
+    rgba(255, 248, 195, 0.58) 78%,
+    rgba(255, 248, 195, 0.18) 100%
+  );
+}
+
+/* Section label — left */
+.shelfLabelL {
+  position: absolute;
+  left: 14px;
+  top: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 228, 130, 0.42);
+  user-select: none;
+  line-height: 1;
+}
+
+/* Centre ornament ✦ */
+.shelfOrn {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  transform: translateX(-50%);
+  font-size: 0.52rem;
+  color: rgba(255, 228, 130, 0.52);
+  user-select: none;
+  line-height: 1;
+}
+
+/* Section label — right */
+.shelfLabelR {
+  position: absolute;
+  right: 14px;
+  top: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 228, 130, 0.42);
+  user-select: none;
+  line-height: 1;
+}
+
+/* Front fascia — decorative dental molding along bottom edge */
+.shelfFascia {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  /* Repeating notch pattern (dental molding) layered on dark wood */
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 16px,
+      rgba(0, 0, 0, 0.2) 16px 18px
+    ),
+    linear-gradient(180deg, #3c2a10 0%, #201408 100%);
+  border-top: 1px solid rgba(196, 160, 80, 0.1);
+}
+
+/* ─────────────────────────────────────────────────────────
+   ARCHIVE CARD
+───────────────────────────────────────────────────────── */
+.archiveCard {
+  position: relative;
+  background: #ede5d0;
+  padding: 1.05rem 1.15rem 1.2rem;
+  border: 1px solid rgba(160, 120, 56, 0.2);
+  border-radius: 1px;
+  cursor: pointer;
+  transform: rotate(var(--rot, 0deg));
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.48, 0.64, 1),
+    box-shadow 0.3s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    opacity 0.22s ease,
+    filter 0.22s ease;
+  box-shadow:
+    3px 6px 14px rgba(20, 12, 4, 0.4),
+    1px 2px 4px rgba(20, 12, 4, 0.22);
+  background-image: linear-gradient(
+    180deg,
+    transparent 0 10px,
+    rgba(160, 120, 56, 0.04) 10px 11px
+  );
+}
+
+.archiveCard:hover {
+  background: #f5f0e8;
+  transform: rotate(calc(var(--rot, 0deg) * 0.2)) translateY(-7px) scale(1.025);
+  box-shadow:
+    6px 14px 30px rgba(20, 12, 4, 0.48),
+    1px 2px 6px rgba(20, 12, 4, 0.28);
+  border-color: var(--gold, #c4a050);
+  z-index: 10;
+}
+
+.archiveCard:active {
+  transform: rotate(var(--rot, 0deg)) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+/* Shadow stack: layered papers behind */
+.cardShadow1 {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: translate(3px, 4px) rotate(2deg);
+  background: #ede5d0;
+  border: 1px solid rgba(160, 120, 56, 0.15);
+  box-shadow: 1px 2px 4px rgba(20, 12, 4, 0.18);
+  border-radius: 1px;
+}
+
+.cardShadow2 {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  transform: translate(-3px, 6px) rotate(-1.5deg);
+  background: #e0d4ba;
+  border: 1px solid rgba(160, 120, 56, 0.12);
+  box-shadow: 1px 2px 4px rgba(20, 12, 4, 0.14);
+  border-radius: 1px;
+}
+
+/* Category colour bar — left edge */
+.cardBar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--cat-accent, #c4a050);
+  border-radius: 1px 0 0 1px;
+}
+
+/* Subtle paper-grain texture */
+.cardTexture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 2px,
+    rgba(120, 80, 30, 0.02) 2px 3px
+  );
+}
+
+.cardContent {
+  position: relative;
+  padding-left: 0.6rem;
+}
+
+.cardMeta {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--cat-deep, #8a6020);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.42rem;
+  line-height: 1;
+}
+
+.cardTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.02rem;
+  color: var(--ink, #2a1e0e);
+  line-height: 1.18;
+  margin-bottom: 0.5rem;
+}
+
+.cardExcerpt {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.7rem;
+  color: var(--ink-mid, #5a4020);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.cardTags {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.45rem;
+}
+
+.cardTagPill {
+  font-family: var(--font-mono);
+  font-size: 0.46rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.14rem 0.44rem;
+  border-radius: 8px;
+  border: 1px solid rgba(196, 160, 80, 0.3);
+  color: rgba(60, 40, 15, 0.6);
+}
+
+.cardAction {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--ink-faint, #8a7050);
+  letter-spacing: 0.14em;
+  transition: color 0.25s ease;
+}
+
+.cardActionHov {
+  color: var(--cat-deep, #8a6020);
+}
+
+/* ── Dimmed state (non-matching filter) ── */
+.cardDimmed {
+  opacity: 0.24;
+  filter: saturate(0.4);
+  pointer-events: none;
+}
+
+/* ── Counter edge (bottom trim of popup) ── */
+.counterEdge {
+  flex-shrink: 0;
+  height: 10px;
+  background: linear-gradient(180deg, #bead88 0%, #aca07a 100%);
+  border-top: 1px solid rgba(120, 80, 30, 0.3);
+}
+
+/* ─────────────────────────────────────────────────────────
+   READER OVERLAY — above the archive
+───────────────────────────────────────────────────────── */
+.readerBg {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(10, 6, 2, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  animation: readerFadeIn 0.22s ease;
+}
+
+@keyframes readerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.readerCard {
+  position: relative;
+  width: min(936px, 100%);
+  max-height: min(82vh, 780px);
+  background: #f5f0e8;
+  display: flex;
+  flex-direction: column;
+  border-radius: 2px;
+  box-shadow:
+    0 24px 64px rgba(10, 6, 2, 0.65),
+    0 6px 18px rgba(10, 6, 2, 0.4);
+  overflow: hidden;
+  animation: readerRise 0.32s cubic-bezier(0.34, 1.28, 0.64, 1);
+}
+
+@keyframes readerRise {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.readerProgress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(160, 120, 56, 0.15);
+  z-index: 2;
+}
+
+.readerProgressFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: height 0.1s linear;
+}
+
+.readerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem 1.5rem;
+  border-bottom: 1px solid rgba(160, 120, 56, 0.18);
+  flex-shrink: 0;
+  background: rgba(245, 240, 232, 0.95);
+}
+
+.readerMeta {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.placeBack {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint, #8a7050);
+  padding: 0.4rem 0.85rem;
+  border: 1px solid rgba(160, 120, 56, 0.35);
+  border-radius: 1px;
+  background: none;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.placeBack:hover {
+  color: var(--ink, #2a1e0e);
+  border-color: var(--gold, #c4a050);
+  background: rgba(196, 160, 80, 0.08);
+}
+
+.readerBody {
+  overflow-y: auto;
+  flex: 1;
+  padding: 1.75rem 2rem 1.75rem 2.25rem;
+  scroll-behavior: smooth;
+}
+
+.readerTitle {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-style: italic;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: var(--ink, #2a1e0e);
+  line-height: 1.12;
+  margin-bottom: 0.85rem;
+}
+
+.readerExcerpt {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--ink-mid, #5a4020);
+  line-height: 1.55;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(160, 120, 56, 0.18);
+}
+
+.readerText {
+  font-family: var(--font-body);
+  font-size: 0.97rem;
+  color: var(--ink, #2a1e0e);
+  line-height: 1.72;
+}
+
+.dropCap {
+  float: left;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-style: italic;
+  font-size: 4rem;
+  line-height: 0.78;
+  margin: 0.12em 0.1em 0 0;
+}
+
+.readerFooter {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(160, 120, 56, 0.15);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--ink-faint, #8a7050);
+  letter-spacing: 0.1em;
+}
+
+/* ── Filter separator — gold rule between matched top and dimmed rest ── */
+.filterSeparator {
+  grid-column: 1 / -1;
+  height: 1px;
+  margin: 0.5rem 0 0.2rem;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(196, 160, 80, 0.28) 12%,
+    rgba(196, 160, 80, 0.55) 50%,
+    rgba(196, 160, 80, 0.28) 88%,
+    transparent 100%
+  );
+  position: relative;
+}
+
+/* Small label on the separator */
+.filterSeparator::after {
+  content: "· all pieces ·";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #e8dfc8;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.46rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(196, 160, 80, 0.55);
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────────────────
+   MOBILE
+───────────────────────────────────────────────────────── */
+@media (max-width: 680px) {
+  .overlay {
+    padding: 1rem;
+  }
+
+  .archive {
+    width: 92vw;
+    height: 82vh;
+    max-width: none;
+  }
+
+  .header {
+    height: 54px;
+    padding: 0 1.25rem;
+  }
+
+  .headerTitle {
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+  }
+
+  .headerOrn {
+    display: none;
+  }
+
+  .pieceCount {
+    font-size: 0.52rem;
+  }
+
+  /* Single horizontal-scrolling filter row */
+  .filterBar {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0.65rem 1.25rem;
+    gap: 0.45rem;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .filterBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filterSection {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 0.4rem;
+  }
+
+  .filterLabel {
+    display: none;
+  }
+
+  .filterPills {
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+  }
+
+  .content {
+    padding: 1.1rem 1.25rem 1.5rem;
+  }
+
+  /* Single-column stack */
+  .cardGrid {
+    grid-template-columns: 1fr;
+    row-gap: 0.9rem;
+    column-gap: 0;
+    padding-top: 0;
+  }
+
+  /* No shelves on mobile */
+  .shelf {
+    display: none;
+  }
+
+  /* Hide non-matching cards on mobile */
+  .cardDimmed {
+    display: none;
+  }
+
+  /* No card rotation on mobile */
+  .archiveCard {
+    transform: none !important;
+  }
+
+  .archiveCard:hover {
+    transform: translateY(-3px) scale(1.01) !important;
+  }
+
+  .counterEdge {
+    height: 7px;
+  }
+
+  /* Full-height reader on mobile */
+  .readerBg {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .readerCard {
+    max-height: 100%;
+    border-radius: 0;
+  }
+}

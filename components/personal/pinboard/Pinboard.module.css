@@ -1,0 +1,1816 @@
+/* ─────────────────────────────────────────────────────────
+   Pinboard module
+   Ported from `Pinboard (3).html` and wired to the personal-
+   side tokens (var(--bg), var(--gold), var(--ink), etc.) where
+   they overlap. The wall itself stays on its own raw palette
+   (wood / cream / paper) because the texture work depends on
+   exact hex values, not theme variables.
+   ───────────────────────────────────────────────────────── */
+
+/* ── SECTION ──────────────────────────────────────── */
+.wallSection {
+  background: var(--bg);
+  /* Parchment breathing room below the board so the corkboard terminates
+     cleanly on the wall instead of bleeding into the dark footer. Mirrors
+     the parchment header space above the board. */
+  padding-bottom: 4.5rem;
+  position: relative;
+  /* The header only sits 2rem from the top, so a #gallery jump from the
+     navbar would tuck "The Wall" under the fixed nav. Offset the anchor
+     stop so the title lands ~100px down — matching Travel/Writing. */
+  scroll-margin-top: 3rem;
+}
+.wallHdr {
+  /* Header text + button stack vertically so the button drops below
+     the gold rule (matching Writing's ViewMore placement). Top padding
+     reduced from 5rem → 2rem to tighten the empty space coming off
+     the Series section above. */
+  padding: 2rem 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.wallHdrText { min-width: 0; }
+.sLabel {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 0.5rem;
+}
+.sTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  color: var(--ink);
+  line-height: 1;
+  margin: 0.2rem 0 0.6rem;
+}
+.sSub {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.98rem;
+  color: var(--ink-mid);
+  max-width: 480px;
+  margin: 0.5rem 0 0;
+}
+.goldRule {
+  width: 44px;
+  height: 1px;
+  background: var(--gold-dim);
+  margin-top: 1rem;
+}
+/* ── Open Immersive View CTA ──────────────────────────────
+   Centred above the board, deliberately loud: a filled gold pill with
+   a breathing aura, a periodic light-sheen sweep and a nudging arrow so
+   the eye is pulled to it before anything else on the board. */
+.ctaRow {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 1.5rem 2.25rem;
+}
+.wallCTA {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 2.3rem;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #2a1c08;
+  background: linear-gradient(135deg, #e8c878 0%, #c4a050 48%, #dcb95f 100%);
+  box-shadow:
+    0 4px 18px rgba(196, 160, 80, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition: transform 0.18s var(--ease-spring), box-shadow 0.2s ease;
+}
+.ctaAura {
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #e8c878, #c4a050);
+  filter: blur(11px);
+  opacity: 0.55;
+  animation: ctaPulse 2.6s ease-in-out infinite;
+}
+.ctaSheen {
+  position: absolute;
+  top: 0;
+  left: -130%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: skewX(-18deg);
+  animation: ctaSheen 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.ctaText { position: relative; z-index: 1; }
+.ctaArrow {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  animation: ctaArrow 1.7s ease-in-out infinite;
+}
+.wallCTA:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 9px 28px rgba(196, 160, 80, 0.6),
+    0 3px 10px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+.wallCTA:active { transform: translateY(0); }
+@keyframes ctaPulse {
+  0%, 100% { opacity: 0.4;  transform: scale(0.985); }
+  50%      { opacity: 0.75; transform: scale(1.045); }
+}
+@keyframes ctaSheen {
+  0%        { left: -130%; }
+  55%, 100% { left: 150%; }
+}
+@keyframes ctaArrow {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ctaAura, .ctaSheen, .ctaArrow { animation: none; }
+}
+
+/* ── BOARD FRAME ──────────────────────────────────── */
+.boardFrame {
+  position: relative;
+  margin: 0 64px;
+  min-height: 1760px;
+  overflow: hidden;
+  background-color: #1e1308;
+  background-image:
+    linear-gradient(to bottom, transparent 74%, rgba(0, 0, 0, 0.5) 100%),
+    radial-gradient(ellipse at 50% 104%, rgba(210, 145, 55, 0.12) 0%, transparent 46%),
+    radial-gradient(ellipse at 50% -5%, rgba(210, 145, 55, 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 0% 50%, rgba(0, 0, 0, 0.22) 0%, transparent 28%),
+    radial-gradient(ellipse at 100% 50%, rgba(0, 0, 0, 0.22) 0%, transparent 28%),
+    repeating-linear-gradient(0.35deg, transparent 0 28px, rgba(255, 195, 80, 0.016) 28px 30px),
+    repeating-linear-gradient(0.85deg, transparent 0 58px, rgba(0, 0, 0, 0.05) 58px 61px),
+    repeating-linear-gradient(180deg, transparent 0 149px, rgba(0, 0, 0, 0.08) 149px 151px);
+  border: 1.5px solid rgba(0, 0, 0, 0.65);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.5),
+    0 8px 22px rgba(0, 0, 0, 0.4),
+    inset 0 0 55px rgba(0, 0, 0, 0.25),
+    inset 55px 0 75px rgba(0, 0, 0, 0.18),
+    inset -55px 0 75px rgba(0, 0, 0, 0.18),
+    inset 0 -70px 90px rgba(0, 0, 0, 0.5);
+}
+.boardFrame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='4'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+.nail {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  z-index: 60;
+  background: radial-gradient(circle at 38% 32%, #d0c8b8, #8a7a60 50%, #3a2e1e 85%);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+}
+.nail::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+/* Bottom-centre nail — sits on the board's lower edge to close the frame. */
+.nailBottom {
+  top: auto;
+  bottom: -7px;
+}
+.boardAbs {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+.boardFlex {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 36px 28px;
+  padding: 80px 28px 60px;
+  position: relative;
+  z-index: 10;
+}
+.item {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+/* ── FRAMES ───────────────────────────────────────── */
+.photoF {
+  background: #f5f0e8;
+  padding: 3px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.photoF img {
+  display: block;
+}
+.photoF.aged {
+  background: #ece4d2;
+  padding: 6px 6px 26px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.45);
+  position: relative;
+}
+.photoF.aged .agedLbl {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-hand);
+  font-size: 12px;
+  color: rgba(40, 22, 6, 0.45);
+  pointer-events: none;
+}
+.photoF.aged::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-color: transparent;
+  transition: border-width 0.28s ease, box-shadow 0.28s ease;
+  pointer-events: none;
+}
+.item:hover .photoF.aged::after {
+  border-width: 0 0 28px 28px;
+  border-color: transparent transparent #c0b49a transparent;
+  box-shadow: -5px -5px 9px rgba(0, 0, 0, 0.28);
+}
+.posterF {
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.78), 0 3px 8px rgba(0, 0, 0, 0.5);
+}
+.posterF img {
+  display: block;
+}
+
+/* ── MOUNTS ───────────────────────────────────────── */
+.pin {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  z-index: 20;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.82), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+}
+.pin::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 6px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  transform: rotate(-20deg);
+}
+.tape {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 66px;
+  height: 24px;
+  z-index: 20;
+  border-radius: 1px;
+  background: rgba(196, 160, 80, 0.32);
+  border-top: 1.5px dashed rgba(196, 160, 80, 0.5);
+  border-bottom: 1.5px dashed rgba(196, 160, 80, 0.5);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.28);
+}
+.ctape {
+  position: absolute;
+  width: 22px;
+  height: 13px;
+  background: rgba(196, 160, 80, 0.38);
+  z-index: 20;
+  border-radius: 1px;
+}
+.ctape.tl { top: -3px; left: -5px; transform: rotate(-38deg); }
+.ctape.tr { top: -3px; right: -5px; transform: rotate(38deg); }
+.ctape.bl { bottom: -3px; left: -5px; transform: rotate(38deg); }
+.ctape.br { bottom: -3px; right: -5px; transform: rotate(-38deg); }
+
+/* ── ANIMATIONS ───────────────────────────────────── */
+@keyframes pinboardGlow {
+  0%, 100% { opacity: 0.72; filter: drop-shadow(0 0 3px rgba(255, 196, 70, 0.55)); }
+  50%      { opacity: 1;    filter: drop-shadow(0 0 7px rgba(255, 196, 70, 0.9)); }
+}
+@keyframes pinboardBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.005); }
+}
+@keyframes pinboardDevelop {
+  from { filter: brightness(2.8) contrast(0.08) saturate(0) sepia(0.75); }
+  to   { filter: none; }
+}
+/* pinboardConfetti lives in styles/globals.css — the confetti pieces reference
+   it from an inline style (literal name), which a module-scoped @keyframes can't
+   satisfy. */
+@keyframes pinboardEggPulse {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(1.15); }
+}
+@keyframes pinboardEggGlow {
+  0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(0.85); }
+  50%      { opacity: 0.8;  transform: translate(-50%, -50%) scale(1.12); }
+}
+@keyframes pinboardEggBob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-3px) rotate(2.5deg); }
+}
+@keyframes pinboardEggTwinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  50%      { opacity: 1; transform: scale(1) rotate(90deg); }
+}
+
+/* ── MODALS ───────────────────────────────────────── */
+.modalBg {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(10, 6, 2, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modalBox {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  max-width: min(92vw, 700px);
+}
+.modalImg {
+  max-width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  display: block;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.75);
+}
+.modalImg.agedModal {
+  border: 7px solid #ece4d2;
+}
+.modalTxt {
+  text-align: center;
+  max-width: 520px;
+}
+.modalLbl {
+  font-family: var(--font-hand);
+  font-size: 28px;
+  color: #f4f0e8;
+  margin-bottom: 5px;
+}
+.modalStory {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.85;
+  color: rgba(244, 240, 232, 0.68);
+  text-wrap: pretty;
+}
+.modalNote {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(196, 160, 80, 0.07);
+  border: 1px solid rgba(196, 160, 80, 0.22);
+  border-radius: 3px;
+  color: #f4f0e8;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  padding: 9px 13px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.modalNote::placeholder { color: rgba(196, 160, 80, 0.3); }
+.modalNote:focus { border-color: rgba(196, 160, 80, 0.5); }
+.modalX {
+  position: absolute;
+  top: -13px;
+  right: -13px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.12);
+  border: 1px solid rgba(196, 160, 80, 0.32);
+  color: var(--gold);
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+}
+.modalX:hover {
+  background: rgba(196, 160, 80, 0.28);
+  transform: rotate(90deg);
+}
+
+/* Cinema (poster) modal */
+.cinemaBg {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  background: #030200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  flex-direction: column;
+  gap: 28px;
+}
+.cinemaGrain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.85;
+}
+.cinemaPoster {
+  max-height: 64vh;
+  max-width: min(90vw, 400px);
+  object-fit: contain;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.95);
+  display: block;
+}
+.cinemaCard { text-align: center; max-width: 520px; }
+.cinemaLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+.cinemaPoem {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 22px;
+  color: #f0ece4;
+  line-height: 1.45;
+  margin-bottom: 16px;
+}
+.cinemaStory {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.85;
+  color: rgba(240, 236, 228, 0.6);
+  text-wrap: pretty;
+}
+.cinemaX {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.1);
+  border: 1px solid rgba(196, 160, 80, 0.35);
+  color: var(--gold);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.25s;
+  backdrop-filter: blur(8px);
+}
+.cinemaX:hover {
+  background: rgba(196, 160, 80, 0.25);
+  transform: rotate(90deg);
+}
+
+/* Subway receipt → memory modal */
+.subwayBg {
+  position: fixed;
+  inset: 0;
+  z-index: 3500;
+  background: rgba(10, 6, 2, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.subwayCard {
+  position: relative;
+  width: min(92vw, 460px);
+  background: #fefefe;
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.18),
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 30px 30px 24px;
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, transparent 40%);
+}
+.subwayCard::before, .subwayCard::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 12px;
+  pointer-events: none;
+}
+.subwayCard::before {
+  top: -1px;
+  background:
+    radial-gradient(circle 7px at 6px 0, transparent 6px, #fefefe 6.5px) repeat-x;
+  background-size: 12px 12px;
+}
+.subwayCard::after {
+  bottom: -1px;
+  background:
+    radial-gradient(circle 7px at 6px 12px, transparent 6px, #fefefe 6.5px) repeat-x;
+  background-size: 12px 12px;
+}
+.subwayBrand {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.subwayBrandName {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a7a1a;
+  letter-spacing: -0.02em;
+}
+.subwayBrandSub {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: #5f5f5f;
+  letter-spacing: 0.18em;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.subwayDivider {
+  border-top: 1.5px dashed #c5c5c5;
+  margin: 12px -30px;
+}
+.subwayMeta {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #555;
+  text-align: center;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.subwayOrder {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: #161616;
+  line-height: 2;
+  margin: 4px 0;
+}
+.subwayLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.subwayLine span:first-child { font-weight: 700; }
+.subwayHowI {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #5f5f5f;
+  margin: 6px 0 4px;
+  text-align: center;
+}
+.subwayDetail {
+  font-family: var(--font-hand);
+  font-size: 17.5px;
+  color: #160d04;
+  line-height: 1.6;
+  text-align: center;
+  padding: 0 6px;
+}
+.subwayDetail em {
+  font-style: italic;
+  color: #15661a;
+}
+.subwayNote {
+  font-family: var(--font-hand);
+  font-size: 15px;
+  color: rgba(31, 18, 8, 0.85);
+  text-align: center;
+  line-height: 1.55;
+  margin-top: 14px;
+  padding: 0 8px;
+}
+.subwayTotal {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  color: #111;
+  padding: 4px 0;
+}
+.subwayThanks {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: #777;
+  letter-spacing: 0.22em;
+  margin-top: 8px;
+}
+.subwayX {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.subwayX:hover {
+  background: rgba(0, 0, 0, 0.12);
+  transform: rotate(90deg);
+}
+
+/* Trip journal (boarding pass) modal */
+.tripBg {
+  position: fixed;
+  inset: 0;
+  z-index: 3500;
+  background: rgba(5, 10, 8, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.tripJournal {
+  position: relative;
+  width: min(92vw, 520px);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: #f2e8d4;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+  padding: 48px 40px 40px;
+  background-image:
+    repeating-linear-gradient(180deg, transparent 0 24px, rgba(100, 70, 20, 0.07) 24px 25px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.25) 0%, transparent 50%);
+}
+.tripImage {
+  display: block;
+  width: calc(100% + 80px);
+  margin: -48px -40px 26px;
+  height: auto;
+  max-height: 380px;
+  object-fit: cover;
+  object-position: center 30%;
+  box-shadow: 0 6px 18px rgba(20, 12, 4, 0.35);
+  filter: saturate(1.04) contrast(1.02);
+}
+.tripStamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid rgba(0, 90, 60, 0.5);
+  border-radius: 2px;
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(0, 90, 60, 0.7);
+  margin-bottom: 24px;
+}
+.tripStampDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(0, 90, 60, 0.5);
+}
+.tripDate {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(42, 30, 14, 0.62);
+  margin-bottom: 4px;
+}
+.tripCity {
+  font-family: var(--font-serif);
+  font-size: 42px;
+  font-style: italic;
+  font-weight: 700;
+  color: #1a1208;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.tripSub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: rgba(42, 30, 14, 0.82);
+  margin-bottom: 22px;
+}
+.tripRule {
+  width: 40px;
+  height: 1.5px;
+  background: rgba(196, 160, 80, 0.6);
+  margin-bottom: 22px;
+}
+.tripBody {
+  font-family: var(--font-hand);
+  font-size: 19.5px;
+  color: #1a1004;
+  line-height: 1.75;
+}
+.tripBody p { margin-bottom: 16px; }
+.tripFooter {
+  margin-top: 24px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgba(42, 30, 14, 0.6);
+  display: flex;
+  justify-content: space-between;
+}
+.tripX {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(100, 70, 20, 0.08);
+  border: 1px solid rgba(100, 70, 20, 0.2);
+  color: rgba(100, 70, 20, 0.5);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.tripX:hover {
+  background: rgba(100, 70, 20, 0.15);
+  transform: rotate(90deg);
+}
+
+/* Easter-egg found modal */
+.eggModal {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eggCard {
+  background: #0e0a04;
+  border: 1px solid rgba(196, 160, 80, 0.4);
+  padding: 48px 52px;
+  text-align: center;
+  max-width: 440px;
+  box-shadow: 0 0 80px rgba(196, 160, 80, 0.15);
+}
+.eggIcon { font-size: 48px; margin-bottom: 20px; }
+.eggTitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 28px;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+.eggMsg {
+  font-family: var(--font-hand);
+  font-size: 19px;
+  color: rgba(245, 240, 232, 0.75);
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+.eggHint {
+  margin: 6px auto 18px;
+  max-width: 330px;
+  padding: 13px 16px;
+  border: 1px dashed rgba(196, 160, 80, 0.4);
+  border-radius: 9px;
+  background: rgba(196, 160, 80, 0.07);
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: rgba(245, 240, 232, 0.72);
+}
+.eggHintLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 8px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(196, 160, 80, 0.82);
+  margin-bottom: 6px;
+}
+.eggSig {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(196, 160, 80, 0.45);
+}
+.eggClose {
+  margin-top: 24px;
+  padding: 8px 22px;
+  border: 1px solid rgba(196, 160, 80, 0.35);
+  background: transparent;
+  color: rgba(196, 160, 80, 0.65);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* ── IMMERSIVE ─────────────────────────────────────── */
+.immOverlay {
+  position: fixed;
+  inset: 10px;
+  z-index: 2000;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #1e1308;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.92);
+}
+.immCanvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.immCanvas.grabbing { cursor: grabbing; }
+.immWall {
+  position: absolute;
+  width: 3700px;
+  height: 2600px;
+  transform-origin: 0 0;
+  background-color: #1e1308;
+  background-image:
+    radial-gradient(ellipse at 22% 18%, rgba(72, 38, 10, 0.5) 0%, transparent 38%),
+    radial-gradient(ellipse at 78% 72%, rgba(48, 22, 4, 0.38) 0%, transparent 38%),
+    repeating-linear-gradient(0.35deg, transparent 0 29px, rgba(255, 195, 80, 0.015) 29px 31px),
+    repeating-linear-gradient(180deg, transparent 0 149px, rgba(0, 0, 0, 0.07) 149px 151px);
+  will-change: transform;
+}
+.immX {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.1);
+  border: 1px solid rgba(196, 160, 80, 0.35);
+  color: var(--gold);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s, transform 0.25s;
+}
+.immX:hover {
+  background: rgba(196, 160, 80, 0.25);
+  transform: rotate(90deg);
+}
+/* "How to explore" card — sits at the bottom-right, stacked just above the
+   minimap. Glassy dark-gold panel matching the minimap / close button; the
+   instruction text is light cream so it stays legible against any photo.
+   The wall underneath remains interactive while the card is open. */
+.hintCard {
+  position: absolute;
+  bottom: 136px; /* clears the 106px-tall minimap (bottom:18) + gap */
+  right: 18px;
+  z-index: 100;
+  width: min(236px, 80vw);
+  padding: 12px 14px 13px;
+  background: rgba(10, 6, 2, 0.82);
+  border: 1px solid rgba(196, 160, 80, 0.3);
+  border-radius: 5px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.hintClose {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: rgba(196, 160, 80, 0.55);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, transform 0.25s;
+}
+.hintClose:hover {
+  color: var(--gold);
+  transform: rotate(90deg);
+}
+.hintTitle {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(196, 160, 80, 0.85);
+  margin-bottom: 9px;
+}
+.hintList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  color: #efe6d2;
+}
+.hintList li {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+.hintLabel {
+  flex-shrink: 0;
+  width: 34px;
+  color: rgba(196, 160, 80, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 9px;
+  /* nudge the small-caps label onto the description's baseline */
+  line-height: inherit;
+}
+.immMute {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.1);
+  border: 1px solid rgba(196, 160, 80, 0.25);
+  color: rgba(196, 160, 80, 0.55);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s;
+}
+.immMute:hover { background: rgba(196, 160, 80, 0.2); }
+
+.minimap {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  z-index: 100;
+  width: 156px;
+  height: 106px;
+  border: 1px solid rgba(196, 160, 80, 0.18);
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(10, 6, 2, 0.72);
+  backdrop-filter: blur(6px);
+}
+.mmDot {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.45);
+  transform: translate(-50%, -50%);
+}
+/* Interactive dots — pulsing brighter gold w/ a soft halo so visitors
+   notice there are "playable" things on the wall before discovering them. */
+.mmInteractive {
+  position: absolute;
+  /* Same footprint as the photo dots — the glow alone signals "playable",
+     so the markers no longer dwarf the photos on the minimap. */
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 218, 110, 1);
+  box-shadow:
+    0 0 6px rgba(255, 200, 90, 0.85),
+    0 0 12px rgba(255, 200, 90, 0.45);
+  transform: translate(-50%, -50%);
+  animation: mmPulse 2.4s ease-in-out infinite;
+  z-index: 2;
+}
+/* Pulse the halo only — the dot itself stays photo-sized. */
+@keyframes mmPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 5px rgba(255, 200, 90, 0.7),
+      0 0 10px rgba(255, 200, 90, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 10px rgba(255, 200, 90, 1),
+      0 0 18px rgba(255, 200, 90, 0.6);
+  }
+}
+/* Easter egg — visible if you study the map, but smaller and dimmer than
+   the regular interactive dots so it still rewards looking carefully. */
+.mmEgg {
+  position: absolute;
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: rgba(255, 180, 80, 0.7);
+  box-shadow: 0 0 3px rgba(255, 180, 80, 0.55);
+  transform: translate(-50%, -50%);
+  animation: mmEggBlink 3.6s ease-in-out infinite;
+  z-index: 2;
+}
+@keyframes mmEggBlink {
+  0%, 90%, 100% { opacity: 0.4; }
+  45%          { opacity: 0.9; }
+}
+.mmVp {
+  position: absolute;
+  border: 1px solid rgba(196, 160, 80, 0.55);
+  background: rgba(196, 160, 80, 0.07);
+  pointer-events: none;
+}
+.wallItem {
+  position: absolute;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+}
+/* :active cursor intentionally not overridden — inline style on the
+   element handles cursor per-mode (pointer in normal mode; grab/grabbing
+   only when item is selected in ?edit=1 mode). */
+.wallDeco {
+  position: absolute;
+  user-select: none;
+  z-index: 25;
+}
+
+/* ── Easter egg ───────────────────────────────────── */
+.eggHotspot {
+  /* generous padding so the click target is bigger than the visible egg */
+  padding: 10px;
+  margin: -10px;
+}
+.eggGlow {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  width: 64px;
+  height: 64px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 120, 0.4) 0%, rgba(255, 200, 90, 0.12) 45%, transparent 68%);
+  animation: pinboardEggGlow 3s ease-in-out infinite;
+  pointer-events: none;
+}
+.eggSvg {
+  position: relative;
+  display: block;
+  filter: drop-shadow(0 3px 6px rgba(20, 12, 4, 0.5));
+  transform-origin: 50% 100%;
+  transition: transform 0.25s ease;
+  animation: pinboardEggBob 4s ease-in-out infinite;
+}
+.eggHotspot:hover .eggSvg {
+  transform: scale(1.18) rotate(-3deg);
+}
+.eggTwinkle {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 12px;
+  color: #fff2c0;
+  text-shadow: 0 0 7px rgba(255, 230, 150, 0.95);
+  animation: pinboardEggTwinkle 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.eggFound svg {
+  filter: drop-shadow(0 0 8px rgba(255, 220, 140, 0.55));
+}
+
+/* ── WALL EDITOR (?edit=1) ────────────────────────────
+   Floating panel on the left side of the immersive view
+   that surfaces live (x, y) for every wall item so coords
+   can be copied into Notion's Wall X / Wall Y columns.
+   Grid overlay is in PinboardEditor.jsx as inline SVG.
+   ──────────────────────────────────────────────────── */
+.editorPanel {
+  position: absolute;
+  top: 18px;
+  left: 75px; /* clear of .immMute (top:18, left:18, w:44) */
+  z-index: 110;
+  width: 300px;
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(8, 6, 4, 0.95);
+  border: 1px solid rgba(196, 160, 80, 0.45);
+  border-radius: 4px;
+  padding: 10px;
+  font: 11px/1.4 var(--font-mono);
+  color: #e8dcc4;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(196, 160, 80, 0.2);
+}
+.editorBtn {
+  background: rgba(196, 160, 80, 0.1);
+  border: 1px solid rgba(196, 160, 80, 0.4);
+  color: #c4a050;
+  font: 9px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  padding: 4px 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.editorBtn:hover { background: rgba(196, 160, 80, 0.22); }
+.editorCoords {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: rgba(196, 160, 80, 0.55);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding: 4px 6px;
+  background: rgba(196, 160, 80, 0.05);
+  border-radius: 2px;
+}
+.editorMono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #e8dcc4;
+  letter-spacing: 0.04em;
+}
+.editorList {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0 -4px 8px;
+  padding: 0 4px;
+}
+.editorRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 6px;
+  margin-bottom: 3px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(196, 160, 80, 0.12);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.editorRow:hover { background: rgba(196, 160, 80, 0.06); }
+.editorRowMoved {
+  background: rgba(196, 160, 80, 0.1);
+  border-color: rgba(196, 160, 80, 0.35);
+}
+.editorRowSel {
+  border-color: rgba(196, 160, 80, 0.75);
+  background: rgba(196, 160, 80, 0.14);
+}
+.editorRowName {
+  font-size: 11px;
+  color: #e8dcc4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+.editorRowCoords {
+  display: flex;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(196, 160, 80, 0.95);
+  letter-spacing: 0.04em;
+  min-width: 76px;
+  justify-content: flex-end;
+}
+.editorFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(196, 160, 80, 0.2);
+}
+.editorFooter .editorBtn { flex: 1; }
+.editorHint {
+  margin-top: 10px;
+  font-size: 9px;
+  opacity: 0.55;
+  line-height: 1.55;
+}
+
+/* ── EXPIRED-PHOTOS OVERLAY ───────────────────────────
+   When a Notion-hosted image fails to load (signed URL
+   expired), this card surfaces over the immersive wall.
+   Themed as a torn note pinned to the wall: cream paper,
+   Caveat handwriting, gold tape across the top.
+   ──────────────────────────────────────────────────── */
+.expiredOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 6, 2, 0.78);
+  backdrop-filter: blur(6px);
+  padding: 24px;
+}
+.expiredCard {
+  position: relative;
+  width: min(92vw, 460px);
+  background: #f2e8d4;
+  padding: 48px 38px 34px;
+  background-image:
+    repeating-linear-gradient(180deg, transparent 0 24px, rgba(100, 70, 20, 0.08) 24px 25px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.3) 0%, transparent 55%);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.75),
+    0 4px 0 rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(140, 100, 30, 0.08);
+}
+.expiredCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+/* Tape strip across the top, like the note was actually pinned. */
+.expiredTape {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 110px;
+  height: 28px;
+  background: rgba(196, 160, 80, 0.42);
+  border-top: 1.5px dashed rgba(196, 160, 80, 0.6);
+  border-bottom: 1.5px dashed rgba(196, 160, 80, 0.6);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.expiredTitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 28px;
+  color: #2a1a08;
+  text-align: center;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 2;
+}
+.expiredBody {
+  font-family: var(--font-hand);
+  font-size: 20px;
+  line-height: 1.55;
+  color: rgba(42, 26, 8, 0.85);
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.expiredBody p { margin-bottom: 10px; }
+.expiredBody p:last-child { margin-bottom: 0; }
+.expiredSig {
+  font-family: var(--font-hand);
+  font-size: 18px;
+  color: rgba(100, 70, 20, 0.55);
+  text-align: right;
+  margin-top: 14px;
+  margin-right: 8px;
+  position: relative;
+  z-index: 2;
+}
+.expiredBtn {
+  display: block;
+  margin: 22px auto 0;
+  background: transparent;
+  border: 1px solid rgba(100, 70, 20, 0.45);
+  color: rgba(60, 38, 10, 0.85);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  padding: 9px 22px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 2;
+}
+.expiredBtn:hover {
+  background: rgba(100, 70, 20, 0.1);
+  border-color: rgba(60, 38, 10, 0.7);
+  letter-spacing: 0.3em;
+}
+
+/* ── COMPASS MODAL ────────────────────────────────────
+   Wood-and-gold card lifted off the wall. Compass dial
+   front and center, big enough to read each tick.
+   ──────────────────────────────────────────────────── */
+.compassBg {
+  position: fixed;
+  inset: 0;
+  z-index: 3500;
+  background: rgba(10, 6, 2, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.compassCard {
+  position: relative;
+  width: min(92vw, 380px);
+  background: linear-gradient(180deg, #1a1108 0%, #120a04 100%);
+  border: 1px solid rgba(196, 160, 80, 0.32);
+  padding: 36px 32px 28px;
+  text-align: center;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.75),
+    inset 0 0 80px rgba(196, 160, 80, 0.04);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(196, 160, 80, 0.06) 0%, transparent 60%),
+    repeating-linear-gradient(0.4deg, transparent 0 28px, rgba(255, 195, 80, 0.02) 28px 30px);
+}
+.compassEyebrow {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.compassTitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 28px;
+  color: rgba(245, 240, 232, 0.92);
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.compassInstruction {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: rgba(245, 240, 232, 0.5);
+  max-width: 290px;
+  margin: 0 auto 22px;
+  text-wrap: pretty;
+}
+.compassDial {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 26px;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.7));
+}
+.compassSpinBtn {
+  background: transparent;
+  border: 1px solid rgba(196, 160, 80, 0.55);
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  padding: 12px 26px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.compassSpinBtn:hover:not(:disabled) {
+  background: rgba(196, 160, 80, 0.14);
+  border-color: var(--gold);
+  letter-spacing: 0.34em;
+}
+.compassSpinBtn:disabled {
+  color: rgba(196, 160, 80, 0.35);
+  border-color: rgba(196, 160, 80, 0.18);
+  cursor: not-allowed;
+}
+.compassX {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.1);
+  border: 1px solid rgba(196, 160, 80, 0.28);
+  color: var(--gold);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.compassX:hover:not(:disabled) {
+  background: rgba(196, 160, 80, 0.25);
+  transform: rotate(90deg);
+}
+.compassX:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── DUAL-CLOCK MODAL — 7-segment LCD on dark wood ────── */
+.clockBg {
+  position: fixed;
+  inset: 0;
+  z-index: 3500;
+  background: rgba(10, 6, 2, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.clockCard {
+  position: relative;
+  width: min(94vw, 660px);
+  background: linear-gradient(180deg, #2a1a0c 0%, #1a1006 100%);
+  border: 1px solid rgba(196, 160, 80, 0.32);
+  padding: 34px 32px 28px;
+  text-align: center;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.78),
+    inset 0 0 0 1px rgba(255, 200, 100, 0.04);
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(196, 160, 80, 0.08) 0%, transparent 50%),
+    repeating-linear-gradient(0.3deg, transparent 0 28px, rgba(255, 195, 80, 0.015) 28px 30px),
+    repeating-linear-gradient(180deg, transparent 0 149px, rgba(0, 0, 0, 0.07) 149px 151px);
+}
+.clockEyebrow {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.clockTitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 26px;
+  color: rgba(245, 240, 232, 0.92);
+  margin-bottom: 24px;
+}
+.clockGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-bottom: 18px;
+}
+.clockFoot {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(196, 160, 80, 0.45);
+  margin-top: 6px;
+}
+.clockX {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.1);
+  border: 1px solid rgba(196, 160, 80, 0.28);
+  color: var(--gold);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.clockX:hover {
+  background: rgba(196, 160, 80, 0.25);
+  transform: rotate(90deg);
+}
+.lcdClock {
+  background: linear-gradient(180deg, #1a1a14 0%, #0a0a08 100%);
+  border: 1px solid rgba(196, 160, 80, 0.22);
+  padding: 16px 14px 14px;
+  text-align: center;
+}
+.lcdLabel { margin-bottom: 12px; }
+.lcdCity {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: rgba(245, 181, 64, 0.85);
+}
+.lcdSub {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  color: rgba(245, 181, 64, 0.35);
+  margin-top: 3px;
+}
+.lcdScreen {
+  position: relative;
+  background: #060503;
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 200, 100, 0.04);
+  padding: 14px 10px 8px;
+  overflow: hidden;
+}
+.lcdScan {
+  /* Faint horizontal scan lines for "old display" feel */
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, transparent 0 2px, rgba(0, 0, 0, 0.25) 2px 3px);
+  opacity: 0.6;
+}
+.lcdDigits {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  position: relative;
+}
+.lcdColon {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 0.8;
+  color: #f5b540;
+  text-shadow: 0 0 4px rgba(255, 180, 60, 0.7);
+  padding: 0 1px;
+  transition: opacity 0.18s;
+}
+.lcdColon.lcdColonDim { opacity: 0.18; }
+.lcdMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.24em;
+  color: rgba(245, 181, 64, 0.55);
+  position: relative;
+}
+
+/* ── TIC-TAC-TOE ─────────────────────────────────────
+   Notebook page torn out and pinned to the wall. Cream
+   paper with horizontal rule, red margin line on the
+   left, hand-drawn grid + handwritten X/O marks.
+   ─────────────────────────────────────────────────── */
+.tictacPaper {
+  width: 240px;
+  background: #f4ecd5;
+  padding: 18px 18px 14px 28px;
+  position: relative;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(140, 100, 30, 0.08);
+  background-image:
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(60, 90, 150, 0.18) 22px 23px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 55%);
+}
+/* Red vertical margin line + torn-edge feel */
+.tictacPaper::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(185, 60, 40, 0.42);
+}
+.tictacPaper::after {
+  /* subtle paper grain */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+.tictacTitle {
+  font-family: var(--font-hand);
+  font-size: 19px;
+  font-weight: 600;
+  color: rgba(40, 22, 10, 0.78);
+  text-align: center;
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+  position: relative;
+  z-index: 2;
+}
+.tictacStatus {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(40, 22, 10, 0.45);
+  text-align: center;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
+  min-height: 10px;
+}
+.tictacBoard {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  z-index: 2;
+}
+.tictacGrid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+.tictacCell {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 42px;
+  line-height: 0.9;
+  color: #1a3a8a;
+  padding: 0;
+  transition: background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tictacCell[data-mark="O"] { color: #9a3a2a; }
+.tictacCell:hover:not(:disabled):empty { background: rgba(196, 160, 80, 0.1); }
+.tictacCell:disabled { cursor: default; }
+.tictacGridSvg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.tictacFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-left: 0;
+  position: relative;
+  z-index: 2;
+}
+.tictacScore {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: rgba(40, 22, 10, 0.55);
+  text-transform: uppercase;
+}
+.tictacScore b { color: #1a3a8a; font-weight: 700; }
+.tictacScore i { color: #9a3a2a; font-style: normal; font-weight: 700; }
+.tictacReset {
+  background: transparent;
+  border: 1px solid rgba(196, 160, 80, 0.4);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(120, 80, 30, 0.75);
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 4px 9px;
+  border-radius: 2px;
+  transition: all 0.18s;
+}
+.tictacReset:hover {
+  color: var(--gold);
+  border-color: rgba(196, 160, 80, 0.7);
+  background: rgba(196, 160, 80, 0.08);
+}
+/* Result text — sits where the .tictacStatus line was, between the
+   title and the board, so the board (with its freshly drawn win line)
+   stays unobstructed. Bigger + handwritten so it reads as the outcome,
+   not a continuation of the status. */
+.tictacStatusResult {
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 19px;
+  color: rgba(40, 22, 10, 0.88);
+  text-align: center;
+  margin-bottom: 10px;
+  min-height: 10px;
+  position: relative;
+  z-index: 2;
+  animation: tictacInk 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes tictacInk {
+  from { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.tictacInk {
+  display: inline-block;
+  animation: tictacInk 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── RESPONSIVE (static board only) ─────────────────────── */
+@media (max-width: 1100px) {
+  .wallHdr {
+    /* Top tightened in step with the desktop value; horizontal gutter
+       drops to mobile gutter. */
+    padding: 2rem 1.25rem 1.5rem;
+    gap: 1.25rem;
+  }
+  .boardFrame {
+    margin: 0;
+    border-left: none;
+    border-right: none;
+    min-height: auto;
+  }
+  .boardAbs { display: none; }
+  .boardFlex { display: flex; }
+  .sTitle { font-size: 2rem; }
+  .sSub { font-size: 0.94rem; }
+}
+@media (min-width: 1101px) {
+  .boardFlex { display: none !important; }
+}

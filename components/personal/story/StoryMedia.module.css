@@ -1,0 +1,347 @@
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: transparent; /* lets the ambient backdrop in mediaSide show through */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  z-index: 1;
+  /* Establishes a size query container so the arrows below can be positioned
+     at the gutter midline using container query units (cqw/cqh). */
+  container-type: size;
+}
+
+/* ── Header bar (IG-style: flag + city + counter) ── */
+.header {
+  position: absolute;
+  top: 22px; /* sits BELOW the progress bars */
+  left: 16px;
+  right: 60px; /* leave room for close/back buttons */
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: default;
+}
+.headerLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.headerFlag {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.headerCity {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(245, 240, 232, 0.96);
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.headerCountry {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.7);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.headerRight {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: rgba(245, 240, 232, 0.78);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+/* ── Progress bars — flush with the very top of the media ── */
+.progressBars {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  right: 16px;
+  z-index: 13;
+  display: flex;
+  gap: 4px;
+  cursor: default;
+}
+.barTrack {
+  flex: 1;
+  height: 2.5px;
+  background: rgba(160, 120, 56, 0.28); /* gold-dim @ 28% */
+  border-radius: 2px;
+  overflow: hidden;
+}
+.barFill {
+  height: 100%;
+  width: 100%;
+  /* Driven by scaleX (not width) so it flows on the compositor — smooth,
+     sub-pixel, no per-frame layout. transform-origin keeps it filling
+     left→right. The track's overflow:hidden clips the leading edge clean. */
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: var(--gold, #c4a050);
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(196, 160, 80, 0.55);
+  will-change: transform;
+}
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.barFillAnim {
+  animation: barGrow linear forwards;
+}
+
+/* ── Media area — fills the entire pane vertically ── */
+.mediaArea {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  position: relative;
+}
+.mediaFrame {
+  /* Constrain to 9:16 portrait. Height fills the parent; width auto-follows. */
+  height: 100%;
+  aspect-ratio: 9 / 16;
+  max-width: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px;
+  /* The dark rule around the frame is drawn via the first box-shadow with 2px
+     spread — that puts it OUTSIDE the element instead of a real border which
+     would eat into the 9:16 content box. */
+  box-shadow:
+    0 0 0 2px rgba(20, 12, 4, 0.75),
+    0 22px 70px rgba(20, 12, 4, 0.62),
+    0 6px 16px rgba(20, 12, 4, 0.42),
+    inset 0 0 0 1px rgba(196, 160, 80, 0.18);
+}
+
+.mediaEl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Overlays on the frame ── */
+.videoBadge {
+  position: absolute;
+  top: 56px; /* below the new header */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  color: rgba(245, 240, 232, 0.8);
+  background: rgba(42, 30, 14, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 0.22em 0.6em;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* Play-gesture overlay — shown on the first direct-landing story per
+   session. Tap dismisses it and starts playback. Sits above the video
+   but below the modal close button. */
+.playOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 6, 0, 0.18) 0%,
+    rgba(12, 6, 0, 0.42) 60%,
+    rgba(12, 6, 0, 0.52) 100%
+  );
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  color: rgba(245, 240, 232, 0.95);
+  transition: background 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.playOverlay:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(12, 6, 0, 0.22) 0%,
+    rgba(12, 6, 0, 0.48) 60%,
+    rgba(12, 6, 0, 0.58) 100%
+  );
+}
+.playOverlayIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.96);
+  transition: transform 0.18s ease, background 0.18s ease,
+    border-color 0.18s ease;
+  /* Subtle nudge to suggest where to tap. */
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.42);
+}
+.playOverlay:hover .playOverlayIcon,
+.playOverlay:active .playOverlayIcon {
+  transform: scale(1.06);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.78);
+}
+.playOverlayIcon svg {
+  /* Shift the triangle ~2px right so its visual centre aligns with the
+     circle's geometric centre. */
+  margin-left: 3px;
+}
+.playOverlayLabel {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.88);
+}
+
+.caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.6rem 1rem 1.1rem;
+  background: linear-gradient(transparent, rgba(38, 22, 8, 0.7));
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: rgba(245, 240, 232, 0.92);
+  line-height: 1.45;
+  z-index: 6;
+}
+
+/* ── Nav arrows (desktop only) ──
+   Each arrow is positioned at the gutter midline so it sits centered between
+   the pane edge and the 9:16 frame, regardless of viewport width. Container
+   query units on .container give us pane width (100cqw) and height (100cqh);
+   the frame's width is height * 9/16, so each gutter is half of what's left. */
+.arrows {
+  --gutter: max(0px, calc((100cqw - 100cqh * 9 / 16) / 2));
+  --arrow-size: clamp(26px, calc(var(--gutter) - 4px), 36px);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+.arrowBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: all;
+  width: var(--arrow-size);
+  height: var(--arrow-size);
+  border-radius: 50%;
+  border: 1px solid rgba(196, 160, 80, 0.35);
+  background: rgba(20, 12, 4, 0.6);
+  color: #c4a050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  padding: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.arrowLeft {
+  left: max(2px, calc(var(--gutter) / 2 - var(--arrow-size) / 2));
+}
+.arrowRight {
+  right: max(2px, calc(var(--gutter) / 2 - var(--arrow-size) / 2));
+}
+.arrowBtn:not(:disabled):hover {
+  background: rgba(20, 12, 4, 0.85);
+  border-color: rgba(196, 160, 80, 0.7);
+  color: #f5f0e8;
+}
+.arrowBtn:disabled {
+  opacity: 0.18;
+  cursor: default;
+}
+@media (max-width: 768px) {
+  .arrows { display: none; }
+}
+
+/* ── Mute toggle ── */
+.muteBtn {
+  position: absolute;
+  top: 60px;
+  right: 14px;
+  z-index: 11;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(196, 160, 80, 0.35);
+  background: rgba(20, 12, 4, 0.6);
+  color: rgba(245, 240, 232, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.muteBtn:hover {
+  background: rgba(20, 12, 4, 0.85);
+  border-color: rgba(196, 160, 80, 0.7);
+  color: #f5f0e8;
+}
+@media (max-width: 768px) {
+  .muteBtn { top: 70px; right: 12px; width: 34px; height: 34px; }
+}
+
+/* ── Slide counter (legacy — header now shows count; keep position for parity) ── */
+.counter {
+  display: none;
+}
+
+/* ── Mobile: fills parent completely ── */
+@media (max-width: 768px) {
+  .mediaArea { padding: 0; }
+  .mediaFrame {
+    height: 100%;
+    width: 100%;
+    aspect-ratio: auto;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

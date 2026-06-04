@@ -1,0 +1,126 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 12, 4, 0.62);
+  cursor: pointer;
+  z-index: 0;
+}
+
+.modal {
+  position: relative;
+  z-index: 1;
+  width: 64vw;
+  height: 92vh;
+  max-width: 1100px;
+  max-height: 900px;
+  background: var(--cream, #f5f0e8);
+  border-radius: 6px;
+  border: 1px solid rgba(150, 112, 45, 0.22);
+  box-shadow:
+    0 50px 120px rgba(20, 12, 4, 0.55),
+    0 8px 24px rgba(20, 12, 4, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Close button — top-right, floats above content */
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 30;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(20, 12, 4, 0.55);
+  border: 1px solid rgba(196, 160, 80, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: rgba(245, 240, 232, 0.85);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.closeBtn:hover {
+  background: rgba(20, 12, 4, 0.82);
+  border-color: rgba(196, 160, 80, 0.65);
+  color: #f5f0e8;
+}
+.closeBtn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Back button — sits just left of close */
+.backBtn {
+  position: absolute;
+  top: 12px;
+  right: 52px;
+  z-index: 30;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  background: rgba(20, 12, 4, 0.55);
+  border: 1px solid rgba(196, 160, 80, 0.32);
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: rgba(245, 240, 232, 0.85);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.backBtn:hover {
+  background: rgba(20, 12, 4, 0.82);
+  border-color: rgba(196, 160, 80, 0.65);
+  color: #f5f0e8;
+}
+.backBtn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Tablet — collapse to fullscreen edge-to-edge */
+@media (max-width: 1100px) {
+  .modal {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .overlay { align-items: flex-end; }
+  .modal {
+    box-shadow: none;
+  }
+  .closeBtn { top: 14px; right: 14px; }
+  .backBtn  { top: 14px; right: 56px; }
+}

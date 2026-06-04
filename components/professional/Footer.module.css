@@ -1,0 +1,256 @@
+.footer {
+  position: relative;
+  background: var(--bg, #0f0e0c);
+  border-top: 1px solid rgba(196, 160, 80, 0.15);
+  overflow: hidden;
+}
+
+.cadGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(196, 160, 80, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196, 160, 80, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Avatar ── */
+.avatarWrap {
+  position: relative;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.trackingLine {
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  top: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(196, 160, 80, 0.12), transparent);
+  pointer-events: none;
+}
+.glowBlob {
+  position: absolute;
+  width: 4rem; height: 4rem;
+  background: var(--gold, #c4a050);
+  filter: blur(32px);
+  opacity: 0.15;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.glassLens {
+  width: 3rem; height: 3rem;
+  background: rgba(15, 14, 12, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(196, 160, 80, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.glassLens::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -150%; width: 50%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(196, 160, 80, 0.6), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: autoShimmer 3.5s ease-in-out infinite;
+}
+.glassGlyph {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--gold, #c4a050);
+  filter: drop-shadow(0 0 8px rgba(196, 160, 80, 0.6));
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Name + quote ── */
+.nameBlock { text-align: center; margin-bottom: 3rem; }
+.name {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  color: var(--ink, #ede8df);
+  margin: 0 0 0.75rem;
+}
+.quote {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: rgba(237, 232, 223, 0.5);
+  font-style: italic;
+  margin: 0;
+}
+.blinkCursor {
+  color: var(--gold, #c4a050);
+  font-style: normal;
+  margin-left: 0.2em;
+  animation: blinkCursor 1s step-start infinite;
+}
+
+/* ── Socials ── */
+.socials {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 1.5rem;
+  margin-bottom: 2rem;
+}
+.socialLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  text-decoration: none;
+}
+.socialIcon {
+  width: 2.75rem; height: 2.75rem;
+  border-radius: 50%;
+  background: var(--surface, #1a1814);
+  border: 1px solid rgba(196, 160, 80, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(237, 232, 223, 0.5);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, color 0.25s, box-shadow 0.25s;
+}
+.socialLink:hover .socialIcon {
+  border-color: var(--gold, #c4a050);
+  color: var(--gold, #c4a050);
+  box-shadow: 0 0 12px rgba(196, 160, 80, 0.2);
+}
+.socialName {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(237, 232, 223, 0.4);
+  transition: color 0.25s;
+}
+.socialLink:hover .socialName { color: var(--gold, #c4a050); }
+
+/* ── Switch link ── */
+.switchRow { margin-bottom: 3rem; }
+.switchLink {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: rgba(237, 232, 223, 0.4);
+  text-decoration: none;
+  border: 1px solid rgba(196, 160, 80, 0.2);
+  padding: 0.4em 1em;
+  border-radius: 20px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.switchLink:hover { color: var(--gold, #c4a050); border-color: rgba(196, 160, 80, 0.5); }
+
+/* ── Archive stamp ── */
+.archiveWrap { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+.archiveLabel {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.8rem;
+  color: rgba(237, 232, 223, 0.4);
+}
+.archiveStamp {
+  display: block;
+  background: var(--surface, #1a1814);
+  border: 1px solid rgba(196, 160, 80, 0.2);
+  padding: 1rem 1.5rem;
+  text-align: center;
+  text-decoration: none;
+  max-width: 240px;
+  transition: border-color 0.2s;
+}
+.archiveStamp:hover { border-color: var(--gold, #c4a050); }
+.stampTitle {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--gold, #c4a050);
+  letter-spacing: 0.12em;
+  margin-bottom: 0.3em;
+}
+.stampSchool {
+  font-size: 0.72rem;
+  color: rgba(237, 232, 223, 0.5);
+  font-family: var(--font-mono);
+}
+.stampYear {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(196, 160, 80, 0.3);
+  margin-top: 0.5em;
+}
+
+/* ── Bottom bar ── */
+.bottomBar {
+  width: 100%;
+  background: var(--bg, #0f0e0c);
+  border-top: 1px solid rgba(196, 160, 80, 0.12);
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+.bottomInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+.copyright {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(237, 232, 223, 0.3);
+  display: none;
+}
+.poweredBy {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: rgba(196, 160, 80, 0.6);
+  text-align: center;
+}
+.sideLabel {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(237, 232, 223, 0.3);
+  display: none;
+}
+@media (min-width: 768px) {
+  .bottomInner { justify-content: space-between; }
+  .copyright { display: block; }
+  .sideLabel { display: block; }
+}

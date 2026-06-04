@@ -1,0 +1,52 @@
+.section {
+  /* Mirrors Writing/The Desk so all sections share the same vertical
+     rhythm and horizontal gutter. Mobile override at the bottom. */
+  padding: 5rem 3rem 4rem;
+  background: var(--bg);
+  position: relative;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mapWrap {
+  padding: 0 48px;
+  margin-top: 1rem;
+}
+
+@media (min-width: 769px) {
+  .section {
+    min-height: 100svh;
+  }
+}
+
+.subtle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  margin-top: 1.4rem;
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* Mobile equivalent of the desktop .subtle hint that sits under the map.
+   Slightly tighter type + side padding so the longer instruction wraps
+   gracefully on small viewports without crowding the carousel below. */
+.mobileTip {
+  font-size: 0.74rem;
+  margin-top: 1rem;
+  padding: 0 0.5rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 3.5rem 1.25rem 2.5rem;
+  }
+  .mapWrap {
+    padding: 0;
+  }
+}

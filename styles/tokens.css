@@ -1,0 +1,61 @@
+/* ─────────────────────────────────────────
+   DESIGN TOKENS — both palettes
+   Gold #c4a050 is the thread connecting both sides.
+───────────────────────────────────────── */
+
+:root {
+  /* Shared gold thread */
+  --gold: #c4a050;
+  --gold-dim: #a07838;
+  --gold-mute: rgba(196, 160, 80, 0.22);
+
+  /* Type scale variables — overridable per side.
+     Next.js-loaded fonts FIRST (always available, deterministic), then literal names
+     (matches local installs if user has them), then generic fallback. */
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-body: var(--font-lora), "Lora", Georgia, serif;
+  --font-hand: var(--font-caveat), "Caveat", cursive;
+  --font-note: var(--font-kalam), "Kalam", "Segoe Print", "Comic Sans MS", cursive;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
+
+  /* Easing */
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.48, 0.64, 1);
+}
+
+/* ── PROFESSIONAL — Obsidian Gold ── */
+[data-theme="pro"] {
+  /* Override Lora body inheritance — matches Gemini Final files' `sans` stack */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --bg: #0f0e0c;
+  --surface: #1a1814;
+  --surface-2: #221f19;
+  --paper: #2a2620;
+
+  --ink: #ede8df;
+  --ink-mid: rgba(237, 232, 223, 0.55);
+  --ink-faint: rgba(237, 232, 223, 0.3);
+
+  /* Nav glass */
+  --nav-glass: rgba(15, 14, 12, 0.78);
+  --nav-border: rgba(196, 160, 80, 0.18);
+}
+
+/* ── PERSONAL — Aged Parchment ── */
+[data-theme="personal"] {
+  --bg: #e8dfc8;
+  --surface: #ddd3b8;
+  --surface-2: #d5c9ae;
+  --surface-3: #cfc4a8;
+  --paper: #ede5d0;
+  --cream: #f5f0e8;
+
+  --ink: #2a1e0e;
+  --ink-mid: #5a4020;
+  --ink-faint: #8a7050;
+
+  /* Nav glass */
+  --nav-glass: rgba(232, 223, 200, 0.88);
+  --nav-border: rgba(196, 160, 80, 0.22);
+}

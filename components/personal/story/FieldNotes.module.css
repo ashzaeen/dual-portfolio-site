@@ -1,0 +1,75 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--paper, #ede5d0);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 112, 45, 0.28) transparent;
+}
+.container::-webkit-scrollbar { width: 4px; }
+.container::-webkit-scrollbar-thumb {
+  background: rgba(150, 112, 45, 0.28);
+  border-radius: 2px;
+}
+.container::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Header ── */
+.header {
+  padding: 1.8rem 2rem 1.1rem;
+  flex-shrink: 0;
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-dim, #a07838);
+  margin-bottom: 0.55rem;
+}
+.title {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--ink, #2a1e0e);
+  line-height: 1.15;
+  margin: 0;
+}
+.divider {
+  margin-top: 1.1rem;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(150, 112, 45, 0.35) 0%,
+    rgba(150, 112, 45, 0.08) 70%,
+    transparent 100%
+  );
+}
+
+/* ── Body ── */
+.content {
+  padding: 1.4rem 2rem 1.5rem;
+  flex: 1;
+}
+
+/* ── Footer ── */
+.footer {
+  padding: 0.8rem 2rem 1.6rem;
+  flex-shrink: 0;
+  text-align: center;
+}
+.footerLabel {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(150, 112, 45, 0.32);
+}
+
+@media (max-width: 768px) {
+  .header { padding: 1.4rem 1.5rem 0.9rem; }
+  .title { font-size: 1.5rem; }
+  .content { padding: 1.1rem 1.5rem 1.2rem; }
+  .footer { padding: 0.6rem 1.5rem 1.2rem; }
+}

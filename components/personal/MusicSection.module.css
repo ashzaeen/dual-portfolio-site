@@ -1,0 +1,1322 @@
+/* ── MUSIC SECTION — "The Crate" ───────────────────────── */
+
+/* keyframes (shared) */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.95); }
+}
+/* NOTE: eqBar lives in styles/globals.css (not here). The equalizer sets its
+   animation via an inline style with the literal name "eqBar"; CSS-module
+   @keyframes get scoped/renamed, so the literal name would never resolve.
+   Global keyframes (like vinylSpin) are referenced the same way. */
+
+/* ── Desktop wrapper ─────────────────────────────────── */
+.desktopWrap {
+  position: relative;
+  /* Mirrors Writing/The Desk — same vertical rhythm + horizontal gutter
+     as every other section. */
+  padding: 5rem 3rem 4rem;
+  background: var(--bg);
+  overflow: hidden;
+}
+@media (min-width: 769px) {
+  .desktopWrap { min-height: 900px; }
+}
+
+.desktopBgGrain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.32;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.desktopBgGlow {
+  position: absolute;
+  inset: 0;
+  transition: background 1s ease;
+  pointer-events: none;
+}
+
+.desktopInner {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Section header (Writing/The Desk tokens) ───────── */
+.sectionHead {
+  margin-bottom: 2.5rem;
+  flex-shrink: 0;
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--gold-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  color: var(--ink);
+  line-height: 1;
+  margin: 0.2rem 0 0.6rem;
+}
+.sectionSub {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.98rem;
+  color: var(--ink-mid);
+  margin: 0.5rem 0 0;
+  max-width: 480px;
+}
+.rule {
+  width: 44px;
+  height: 1px;
+  margin-top: 1rem;
+  background: var(--gold-dim);
+  transition: background 0.6s ease;
+}
+
+/* ── Hero row & main row ────────────────────────────── */
+.heroRow {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.mainRow {
+  display: grid;
+  grid-template-columns: 1fr 1.45fr 1fr;
+  gap: 1rem;
+  flex: 1;
+  min-height: 440px;
+}
+.desktopFooter {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ── Last Played card ───────────────────────────────── */
+.lpCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: 220px;
+  background: var(--paper);
+  border: 1px solid rgba(160, 120, 56, 0.18);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(20, 12, 4, 0.1);
+}
+.lpSkeleton {
+  background: rgba(196, 160, 80, 0.05);
+}
+.lpTape {
+  position: absolute;
+  top: 14px;
+  left: -16px;
+  width: 78px;
+  height: 16px;
+  background: linear-gradient(180deg, rgba(244, 232, 180, 0.7), rgba(220, 200, 140, 0.7));
+  transform: rotate(-32deg);
+  box-shadow: 1px 2px 3px rgba(20, 12, 4, 0.18);
+  z-index: 5;
+  opacity: 0.9;
+}
+.lpArt { border-radius: 0 !important; height: 220px !important; }
+.lpArtEmpty {
+  width: 200px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(140deg, #6a6055 0%, #2a221a 100%);
+  color: rgba(244, 238, 224, 0.4);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 2.2rem;
+}
+.lpBody {
+  padding: 1.2rem 1.4rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lpEyebrowRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+.lpEyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+.lpEyebrow > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lpGenrePill {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-radius: 11px;
+  border: 1px solid;
+}
+.lpTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.95rem;
+  color: var(--ink);
+  line-height: 1.02;
+  margin-top: 0.3rem;
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.lpMeta {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: 0.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lpNote {
+  margin-top: auto;
+  font-family: var(--font-hand);
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--ink-mid);
+  line-height: 1.3;
+  padding-left: 0.7rem;
+  border-left: 2px solid;
+}
+
+/* ── Most Played card ───────────────────────────────── */
+.mpCard {
+  position: relative;
+  height: 220px;
+  background: var(--paper);
+  border: 1px solid rgba(160, 120, 56, 0.18);
+  border-radius: 4px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 6px 18px rgba(20, 12, 4, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+.mpHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px dashed rgba(160, 120, 56, 0.25);
+  margin-bottom: 0.6rem;
+}
+.mpEyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.mpWindow {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+}
+.mpEmpty {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  padding: 0.6rem 0;
+}
+.mpList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.mpRow {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.3rem 0.2rem;
+  border-radius: 2px;
+  transition: background 0.18s ease;
+}
+.mpRow:hover { background: rgba(196, 160, 80, 0.07); }
+.mpRank {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-align: right;
+  line-height: 1;
+}
+.mpText { min-width: 0; }
+.mpTitle {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: 0.92rem;
+  color: var(--ink);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mpArtist {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 0.18rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mpCount { text-align: right; }
+.mpCountNum {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+  line-height: 1;
+}
+.mpCountLbl {
+  font-family: var(--font-mono);
+  font-size: 0.45rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.16em;
+  margin-top: 0.18rem;
+  text-transform: uppercase;
+}
+
+/* ── Album Art (generated tile + real img) ─────────── */
+.albumArtImg {
+  display: block;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 8px 22px rgba(20, 12, 4, 0.45);
+  flex-shrink: 0;
+}
+.albumArtGen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: 0 8px 22px rgba(20, 12, 4, 0.45), inset 0 0 40px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+.albumArtGrain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+.albumArtCornerTL {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 18px;
+  height: 18px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.42);
+  border-top: 1.5px solid rgba(255, 255, 255, 0.42);
+}
+.albumArtCornerBR {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 18px;
+  height: 18px;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.42);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.42);
+}
+.albumArtStreak {
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 60%;
+  height: 140%;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.18) 50%, transparent 65%);
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.albumArtTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 1.1rem 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.albumArtBottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 1.1rem 1rem;
+}
+.albumArtTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.8rem;
+  color: rgba(255, 255, 255, 0.96);
+  line-height: 0.96;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.albumArtMeta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.78);
+  text-transform: uppercase;
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Equalizer bars ─────────────────────────────────── */
+.eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+}
+.eqBar {
+  width: 3px;
+  height: 100%;
+  border-radius: 1px;
+  transform-origin: bottom;
+}
+
+/* ── Vinyl (full + mini) ────────────────────────────── */
+.vinylWrap {
+  position: relative;
+  flex-shrink: 0;
+  filter: drop-shadow(0 8px 22px rgba(20, 12, 4, 0.4));
+}
+.miniVinylDisc {
+  position: relative;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: radial-gradient(circle at 30% 28%, #2a201a 0%, #15110c 60%, #0a0604 100%);
+  box-shadow: 0 3px 8px rgba(20, 12, 4, 0.4), inset 0 0 4px rgba(255, 255, 255, 0.04);
+}
+.miniVinylRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 0.5px solid rgba(255, 255, 255, 0.05);
+}
+.miniVinylLabel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.4);
+}
+.miniVinylHole {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #0a0604;
+}
+
+/* ── Crate ──────────────────────────────────────────── */
+.crateCard {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid rgba(160, 120, 56, 0.18);
+  border-radius: 4px;
+  padding: 0.9rem 0.9rem 0.95rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 18px rgba(20, 12, 4, 0.1);
+  overflow: hidden;
+}
+.crateDense {
+  padding: 0.7rem 0.7rem 0.75rem;
+}
+.crateHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.55rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed rgba(160, 120, 56, 0.25);
+  flex-shrink: 0;
+}
+.crateEyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.crateCount {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+}
+.crateScroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 0 -0.3rem;
+  padding: 0 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.crateScroll::-webkit-scrollbar { width: 4px; }
+.crateScroll::-webkit-scrollbar-track { background: transparent; }
+.crateScroll::-webkit-scrollbar-thumb {
+  background: rgba(196, 160, 80, 0.4);
+  border-radius: 2px;
+}
+.crateRow {
+  display: grid;
+  grid-template-columns: 18px 40px 1fr auto;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.38rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: grab;
+  transition: background 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+.crateRow:hover {
+  background: rgba(244, 238, 224, 0.55);
+}
+.crateRowRank {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-align: right;
+  line-height: 1;
+}
+.crateRowText { min-width: 0; }
+.crateRowTitle {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crateRowMeta {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+.crateDragHandle {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--ink-faint);
+  opacity: 0.7;
+}
+.crateFooter {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(160, 120, 56, 0.25);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.46rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* ── Deck ───────────────────────────────────────────── */
+.deck {
+  position: relative;
+  height: 100%;
+  background: linear-gradient(160deg, #2a221a 0%, #15110c 100%);
+  border-radius: 6px;
+  border: 1px solid rgba(196, 160, 80, 0.12);
+  padding: 1rem 1.1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+}
+.deckGlow {
+  position: absolute;
+  inset: 0;
+  transition: background 0.8s ease;
+  pointer-events: none;
+}
+.deckInset {
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(196, 160, 80, 0.06);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.deckTop {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+.deckLabel {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: rgba(196, 160, 80, 0.6);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.speedBtns {
+  display: flex;
+  gap: 6px;
+}
+.speedBtn {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.05em;
+  padding: 0.18rem 0.5rem;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+.deckPlatterWrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  z-index: 1;
+}
+.deckPlatter {
+  position: relative;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #4a3e30 0%, #2a221a 35%, #15110c 80%);
+  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.65), 0 6px 20px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.deckSlipmat {
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 4px);
+  pointer-events: none;
+}
+.deckDropRing {
+  position: absolute;
+  inset: 24px;
+  border-radius: 50%;
+  border: 2px dashed var(--gold);
+  animation: pulse 1.3s ease infinite;
+  pointer-events: none;
+}
+
+/* Tonearm */
+.tonearmWrap {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 140px;
+  height: 220px;
+  pointer-events: none;
+  z-index: 6;
+}
+.tonearmBase {
+  position: absolute;
+  top: 0;
+  right: 18px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #5a4828 0%, #2a2014 80%);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(196, 160, 80, 0.25);
+}
+.tonearmPivot {
+  position: absolute;
+  top: 8px;
+  right: 26px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #c4a050 0%, #7a5a20 100%);
+  box-shadow: inset 0 -2px 2px rgba(0, 0, 0, 0.5);
+}
+.tonearmArm {
+  position: absolute;
+  top: 14px;
+  right: 32px;
+  width: 4px;
+  height: 180px;
+  background: linear-gradient(180deg, #d8b870 0%, #a07838 70%, #7a5a20 100%);
+  border-radius: 2px;
+  transform-origin: top center;
+  transition: transform 1.1s cubic-bezier(0.34, 1.4, 0.5, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.tonearmHead {
+  position: absolute;
+  bottom: -6px;
+  left: -7px;
+  width: 18px;
+  height: 12px;
+  background: linear-gradient(180deg, #1f1610 0%, #0a0604 100%);
+  border-radius: 1px 1px 3px 3px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+.tonearmStylus {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 4px;
+  background: var(--gold);
+  border-radius: 1px;
+}
+.tonearmCounter {
+  position: absolute;
+  top: -8px;
+  left: -3px;
+  width: 10px;
+  height: 14px;
+  background: linear-gradient(180deg, #2a2014 0%, #0a0604 100%);
+  border-radius: 1px;
+}
+
+/* Deck footer */
+.deckFooter {
+  position: relative;
+  z-index: 2;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+.deckCue {
+  font-family: var(--font-hand);
+  font-style: italic;
+  font-size: 0.86rem;
+  color: rgba(196, 160, 80, 0.6);
+  margin-bottom: 0.35rem;
+}
+.deckStatus {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+  transition: color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.deckStatusTri {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent currentColor;
+  position: relative;
+  top: -0.5px;
+}
+.deckTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: #f5f0e8;
+  line-height: 1.05;
+  padding: 0 0.5rem;
+}
+.deckMeta {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: rgba(245, 240, 232, 0.5);
+  letter-spacing: 0.12em;
+  margin-top: 0.2rem;
+}
+.deckControls {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.6rem;
+}
+.playBtn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.pauseIcon {
+  display: flex;
+  gap: 3px;
+}
+.pauseIcon div {
+  width: 4px;
+  height: 14px;
+  background: var(--ink);
+  border-radius: 1px;
+}
+.playIcon {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 8px 0 8px 13px;
+  border-color: transparent transparent transparent #fff;
+  margin-left: 3px;
+}
+
+/* ── Liner Notes ────────────────────────────────────── */
+.liner {
+  position: relative;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 250, 238, 0.5) 0%, transparent 55%),
+    linear-gradient(180deg, #f1e9d6 0%, var(--paper) 38%, #e7ddc6 100%);
+  border: 1px solid rgba(160, 120, 56, 0.22);
+  border-radius: 4px;
+  padding: 1rem 1.1rem;
+  height: 100%;
+  box-shadow:
+    0 6px 18px rgba(20, 12, 4, 0.12),
+    inset 0 1px 0 rgba(255, 252, 244, 0.6);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.linerGrain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.linerRingStain {
+  position: absolute;
+  top: -42px;
+  right: -32px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 38%, rgba(80, 45, 15, 0.14) 41%, rgba(80, 45, 15, 0.077) 46%, transparent 52%);
+  pointer-events: none;
+}
+.linerCornerTL {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 12px;
+  height: 12px;
+  border-left: 1px solid var(--gold);
+  border-top: 1px solid var(--gold);
+  opacity: 0.55;
+}
+.linerCornerBR {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+  opacity: 0.55;
+}
+.linerEyebrow {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.linerHeader {
+  position: relative;
+  margin-top: 0.6rem;
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+.linerCover {
+  width: 92px !important;
+  height: 92px !important;
+}
+.linerHeaderText {
+  min-width: 0;
+  flex: 1;
+}
+.linerTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--ink);
+  line-height: 1.05;
+}
+.linerArtist {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+  margin-top: 0.3rem;
+  text-transform: uppercase;
+}
+.linerGenre {
+  display: inline-block;
+  margin-top: 0.45rem;
+  padding: 0.12rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 11px;
+  border: 1px solid;
+}
+.linerRule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold-mute), transparent);
+  margin: 0.9rem 0 0.85rem;
+  position: relative;
+}
+.linerNoteBlock {
+  position: relative;
+  flex: 1;
+  padding: 0.35rem 0.1rem 0.2rem;
+}
+.linerNote {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ink);
+  line-height: 1.62;
+  letter-spacing: 0.002em;
+}
+
+/* ── The writer's prose ── */
+.proseLine {
+  margin: 0 0 0.7em;
+}
+.proseLine:last-child {
+  margin-bottom: 0;
+}
+/* Editorial drop cap on the opening prose line — printed-sleeve essay feel.
+   Marked in JSX (NoteBody) so it lands on the first prose line even when a
+   quote/lyric block opens the note. */
+.linerNote .dropCap::first-letter {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 600;
+  /* Inline (not floated) so NO line wraps around it — every line beneath stays
+     left-justified. The tight line-height keeps the (larger) letter from
+     growing the first line and pushing line 2 down. */
+  font-size: 1.85em;
+  line-height: 0.85;
+  float: none;
+  margin: 0 0.05em 0 0;
+  color: #855314;
+}
+
+/* ── Quoted lyric lines → set as verse ──
+   A gold hairline rule + indent reads as "pulled from the record". Consecutive
+   lyric lines abut into one continuous block; the serif italic gives the
+   lyrics their own lilting voice against the steadier Lora prose. */
+.lyricLine {
+  margin: 0;
+  padding: 0.1em 0 0.1em 0.95rem;
+  border-left: 2px solid var(--gold-mute);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.24em;
+  line-height: 1.34;
+  color: var(--ink);
+  letter-spacing: 0.008em;
+}
+.proseLine + .lyricLine { margin-top: 0.6em; }
+.lyricLine + .proseLine { margin-top: 0.75em; }
+.lyricLine:first-child { padding-top: 0; }
+.lyricLine:last-child { padding-bottom: 0; }
+
+/* ── Inline emphasis within prose ── */
+.proseLine em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.12em;
+}
+.linerNote strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.linerNote u {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--gold-mute);
+}
+.linerNote code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: rgba(160, 120, 56, 0.1);
+  padding: 0.05em 0.3em;
+  border-radius: 3px;
+}
+.linerNote a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--gold-mute);
+}
+.linerFooter {
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--gold-mute);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.linerKey { color: var(--gold-dim); }
+
+/* ── Mobile ─────────────────────────────────────────── */
+.mobileWrap {
+  position: relative;
+  background: var(--bg);
+  overflow: hidden;
+  min-height: 100vh;
+}
+.mobileBgGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: background 1s ease;
+}
+.mobileInner {
+  position: relative;
+  /* Mirrors Writing/The Desk mobile wrap. */
+  padding: 3.5rem 1.25rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.mobileHead {
+  flex-shrink: 0;
+  margin-bottom: 1.5rem;
+}
+.mobileSectionTitle {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 2rem;
+  color: var(--ink);
+  line-height: 1;
+  margin: 0.15rem 0 0.3rem;
+}
+.mobileSubtitle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.86rem;
+  color: var(--ink-mid);
+  margin: 0;
+}
+/* ── Mobile interactive trio — Shelf + Deck + Liner in one viewport */
+.mobileTrio {
+  /* min-height (not a fixed height) so a long liner note can push the trio
+     past the viewport rather than clipping. */
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.mobileTrioShelf {
+  flex: 0 0 auto;
+  height: clamp(140px, 22svh, 180px);
+}
+.mobileTrioDeck {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.mobileTrioLiner {
+  flex: 0 0 auto;
+  /* min-height keeps the card a reasonable size when the note is short, but
+     lets it expand to fit longer notes instead of clipping them. */
+  min-height: clamp(160px, 24svh, 210px);
+}
+
+/* ── Shelf (V3 side-view) ──────────────────────────────── */
+.shelf {
+  position: relative;
+  height: 100%;
+  background: linear-gradient(180deg, #3a2f24 0%, #2a2014 100%);
+  border-radius: 5px 5px 7px 7px;
+  padding: 1.2rem 0.7rem 0.55rem;
+  box-shadow: 0 8px 22px rgba(20, 12, 4, 0.32), inset 0 1px 0 rgba(196, 160, 80, 0.18), inset 0 -8px 16px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.shelfGrain {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(178deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 7px);
+  pointer-events: none;
+}
+.shelfLabel {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  letter-spacing: 0.18em;
+  color: rgba(196, 160, 80, 0.6);
+  text-transform: uppercase;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shelfTrack {
+  flex: 1;
+  display: flex;
+  gap: 5px;
+  align-items: flex-end;
+  padding: 0.4rem 2px 0.3rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.shelfTrack::-webkit-scrollbar { display: none; }
+.dividerTab {
+  width: 22px;
+  align-self: stretch;
+  margin-right: 4px;
+  background: linear-gradient(180deg, #c4a050, #8a6020);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  color: #15110c;
+  font-size: 0.8rem;
+  transform: translateY(-6px);
+  flex-shrink: 0;
+}
+.shelfSlot {
+  width: 38px;
+  align-self: stretch;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.34, 1.48, 0.64, 1);
+}
+.shelfSlotBg {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px 2px 0 0;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  transition: box-shadow 0.25s ease;
+}
+.slotCorner {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, rgba(0, 0, 0, 0.35), transparent 25%);
+}
+.slotLabel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center;
+  white-space: nowrap;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.52rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+.shelfMiniVinyl {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* mobile-only sizing tweaks */
+@media (max-width: 768px) {
+  .lpCard {
+    grid-template-columns: 120px 1fr;
+    height: 140px;
+  }
+  .lpArt { height: 140px !important; }
+  .lpArtEmpty {
+    width: 120px;
+    height: 140px;
+    font-size: 1.4rem;
+  }
+  .lpBody { padding: 0.8rem 0.9rem; }
+  .lpTitle { font-size: 1.15rem; }
+  .lpMeta { font-size: 0.5rem; margin-top: 0.25rem; }
+  .lpNote {
+    font-size: 0.92rem;
+    line-height: 1.25;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .lpEyebrow { font-size: 0.45rem; }
+  .lpTape { display: none; }
+
+  .mpCard {
+    height: auto;
+    padding: 0.85rem 1rem;
+  }
+  .mpRow { padding: 0.32rem 0.1rem; }
+  .mpTitle { font-size: 0.88rem; }
+
+  /* compact deck for the viewport-fit constraint */
+  .mobileTrioDeck .deck { padding: 0.7rem 0.8rem 0.6rem; }
+  .mobileTrioDeck .deckTitle { font-size: 1rem; }
+  .mobileTrioDeck .deckCue { font-size: 0.78rem; margin-bottom: 0.2rem; }
+  .mobileTrioDeck .deckTop { margin-bottom: 0.4rem; }
+  .mobileTrioDeck .deckFooter { margin-top: 0.3rem; }
+  .mobileTrioDeck .deckControls { margin-top: 0.4rem; }
+  .mobileTrioDeck .playBtn { width: 40px; height: 40px; }
+  .mobileTrioDeck .tonearmWrap {
+    top: 12px; right: 14px;
+    width: 110px; height: 170px;
+    transform: scale(0.78);
+    transform-origin: top right;
+  }
+
+  /* compact liner for the viewport-fit constraint */
+  .mobileTrioLiner .liner { padding: 0.7rem 0.85rem; }
+  .mobileTrioLiner .linerCover { width: 64px !important; height: 64px !important; }
+  .mobileTrioLiner .linerHeader { gap: 0.65rem; margin-top: 0.45rem; }
+  .mobileTrioLiner .linerTitle { font-size: 1rem; }
+  .mobileTrioLiner .linerArtist { font-size: 0.5rem; margin-top: 0.2rem; }
+  .mobileTrioLiner .linerGenre { font-size: 0.45rem; padding: 0.1rem 0.4rem; margin-top: 0.3rem; }
+  .mobileTrioLiner .linerRule { margin: 0.5rem 0 0.45rem; }
+  .mobileTrioLiner .linerNoteBlock { padding: 0.2rem 0.05rem 0.3rem; }
+  .mobileTrioLiner .linerNote {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+  .mobileTrioLiner .lyricLine { font-size: 1.14em; padding-left: 0.7rem; }
+  /* Small initial on mobile — barely larger than body text, inline (no float).
+     Deeper gold than the desktop cap so it still reads as a highlighted letter
+     at this small size instead of looking washed out. */
+  .mobileTrioLiner .linerNote .dropCap::first-letter {
+    font-size: 1.7em;
+    float: none;
+    line-height: inherit;
+    margin: 0;
+    color: #855314;
+  }
+  /* No clamping — show every line of prose and lyrics in full. The card grows
+     to fit and may extend past the viewport, which is acceptable here. */
+  /* Prose only — lyric lines keep margin:0 so consecutive quote lines abut and
+     their gold rule reads as one continuous bar (matches desktop). */
+  .mobileTrioLiner .linerNote .proseLine {
+    margin-bottom: 0.3em;
+  }
+  .mobileTrioLiner .linerFooter {
+    margin-top: 0.4rem;
+    padding-top: 0.35rem;
+    font-size: 0.42rem;
+    gap: 0.2rem 0.6rem;
+  }
+  .mobileTrioLiner .linerRingStain {
+    width: 90px; height: 90px;
+    top: -32px; right: -24px;
+  }
+}

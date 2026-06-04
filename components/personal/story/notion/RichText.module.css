@@ -1,0 +1,22 @@
+.bold { font-weight: 600; }
+.italic { font-style: italic; }
+.strikethrough { text-decoration: line-through; }
+.underline { text-decoration: underline; }
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: rgba(150, 112, 45, 0.12);
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+  color: var(--ink);
+}
+
+.link {
+  color: var(--gold-dim);
+  text-decoration: underline;
+  text-decoration-color: rgba(160, 120, 56, 0.4);
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+.link:hover { color: var(--gold); }

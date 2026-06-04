@@ -1,0 +1,445 @@
+/* ─────────────────────────────────────────
+   TRAVEL MAP — desktop & mobile
+───────────────────────────────────────── */
+
+.frame {
+  position: relative;
+  margin: 0 0;
+}
+
+.frame::before,
+.frame::after,
+.cornerBL,
+.cornerBR {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: rgba(196, 160, 80, 0.45);
+  border-style: solid;
+  z-index: 5;
+  pointer-events: none;
+}
+.frame::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+  border-radius: 2px 0 0 0;
+}
+.frame::after {
+  top: -1px;
+  right: -1px;
+  border-width: 2px 2px 0 0;
+  border-radius: 0 2px 0 0;
+}
+.cornerBL {
+  bottom: -1px;
+  left: -1px;
+  border-width: 0 0 2px 2px;
+  border-radius: 0 0 0 2px;
+}
+.cornerBR {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 2px 0;
+}
+
+.shell {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  aspect-ratio: 1060 / 620;
+  width: min(100%, calc((100svh - 80px) * 1060 / 620));
+  margin: 0 auto;
+  background: #7aabc5;
+  border: 1px solid rgba(170, 145, 90, 0.32);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 20px 70px rgba(80, 50, 10, 0.15),
+    0 4px 16px rgba(80, 50, 10, 0.09);
+  user-select: none;
+}
+
+.shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+}
+.shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 40%,
+    rgba(50, 32, 8, 0.26) 100%
+  );
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── REGION SELECTOR ── */
+.rsel {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(244, 238, 224, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(196, 160, 80, 0.28);
+  border-radius: 4px;
+  padding: 5px;
+  box-shadow: 0 6px 28px rgba(80, 50, 10, 0.13),
+    0 1px 0 rgba(255, 255, 255, 0.5) inset;
+}
+.rbtn {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint, #8a7050);
+  background: transparent;
+  padding: 0.4rem 0.9rem;
+  border-radius: 2px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.rbtn:hover {
+  color: var(--gold-dim);
+  background: rgba(196, 160, 80, 0.1);
+}
+.rbtn.on {
+  background: var(--gold);
+  color: var(--cream, #f5f0e8);
+  box-shadow: 0 1px 5px rgba(140, 100, 20, 0.28);
+}
+
+/* ── COMPASS ── */
+.compass {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  z-index: 40;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(244, 238, 224, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(196, 160, 80, 0.24);
+  box-shadow: 0 3px 14px rgba(80, 50, 10, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1px;
+}
+.compassN {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--gold-dim);
+}
+.compassStar {
+  font-size: 0.5rem;
+  color: rgba(160, 120, 56, 0.45);
+}
+
+/* ── META BAR ── */
+.meta {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.metaRegion {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(90, 64, 32, 0.78);
+  background: rgba(244, 238, 224, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 0.32rem 0.78rem;
+  border-radius: 3px;
+  border: 1px solid rgba(196, 160, 80, 0.18);
+  box-shadow: 0 2px 8px rgba(80, 50, 10, 0.07);
+}
+.metaCycle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.78rem;
+  color: rgba(90, 64, 32, 0.62);
+  background: rgba(244, 238, 224, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 0.22rem 0.72rem;
+  border-radius: 3px;
+  border: 1px solid rgba(196, 160, 80, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.cdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+  animation: pulse 2.2s ease infinite;
+}
+.cdot.paused {
+  animation: none;
+  background: rgba(120, 95, 45, 0.32);
+}
+
+/* Mobile cycle toggle — tappable play/pause control that replaces the
+   read-only metaCycle indicator. Same visual chassis (parchment glass
+   pill + italic body) so it sits naturally where the indicator did. */
+.cycleBtn {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.78rem;
+  color: rgba(90, 64, 32, 0.78);
+  background: rgba(244, 238, 224, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 0.32rem 0.78rem 0.32rem 0.58rem;
+  border-radius: 3px;
+  border: 1px solid rgba(196, 160, 80, 0.28);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.cycleBtn:hover,
+.cycleBtn:active {
+  background: rgba(244, 238, 224, 1);
+  border-color: rgba(196, 160, 80, 0.5);
+  color: var(--ink);
+}
+.cycleIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--gold-dim);
+  flex-shrink: 0;
+}
+
+/* ── PROGRESS BAR ── */
+.pbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  height: 2px;
+  background: rgba(196, 160, 80, 0.1);
+  overflow: hidden;
+}
+.pfill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(
+    90deg,
+    rgba(160, 120, 50, 0.5),
+    var(--gold)
+  );
+  box-shadow: 0 0 8px rgba(196, 160, 80, 0.4);
+}
+
+/* ── TOOLTIP ── */
+.tip {
+  position: absolute;
+  z-index: 50;
+  pointer-events: none;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 0.88rem;
+  line-height: 1.25;
+  letter-spacing: 0;
+  color: var(--ink);
+  background: rgba(244, 238, 224, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(196, 160, 80, 0.28);
+  padding: 0.42rem 0.85rem;
+  border-radius: 2px;
+  box-shadow: 0 4px 16px rgba(80, 50, 10, 0.12);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  white-space: nowrap;
+}
+.tip.visible {
+  opacity: 1;
+}
+
+.tipMobile {
+  top: 14px;
+  left: 50%;
+  transform: translate(-50%, -6px);
+  transition: opacity 0.2s ease, transform 0.28s var(--ease-spring);
+}
+.tipMobile.visible {
+  transform: translate(-50%, 0);
+}
+
+/* ── POSTCARD OVERLAY ── */
+.pcOverlay {
+  position: absolute;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+  opacity: 0;
+  transform: scale(0.88) translateY(-8px);
+  transform-origin: top center;
+  transition: opacity 0.28s ease,
+    transform 0.32s var(--ease-spring);
+}
+.pcOverlay.flipped {
+  flex-direction: column-reverse;
+}
+.pcOverlay.show {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.pcPin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+.pcPinHead {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 32%,
+    #f0d870,
+    #c4a050 55%,
+    #8a6020
+  );
+  box-shadow: 0 2px 8px rgba(80, 50, 10, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(120, 85, 18, 0.42);
+}
+.pcPinShaft {
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(180deg, #c4a050, #7a5020);
+  border-radius: 0 0 1px 1px;
+  box-shadow: 1px 0 2px rgba(80, 50, 10, 0.16);
+}
+
+/* ── MOBILE ── */
+.mobileSelectorRow {
+  display: flex;
+  gap: 7px;
+  padding: 0;
+  margin-bottom: 14px;
+}
+.mobileSelectorRow .rbtn {
+  flex: 1;
+  justify-content: center;
+  border: 1px solid var(--gold-mute);
+  border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+  .shell {
+    aspect-ratio: auto;
+    height: 260px;
+  }
+  .compass {
+    width: 38px;
+    height: 38px;
+    bottom: 12px;
+    right: 12px;
+  }
+  .compassN {
+    font-size: 0.58rem;
+  }
+  .compassStar {
+    font-size: 0.44rem;
+  }
+}
+
+/* ── FEATURED POSTCARD RAIL ──
+   Shared by the mobile carousel and the desktop "featured" row that sits
+   below the map. Mobile uses the full width and scroll-snaps; desktop
+   shrinks to fit content and centers (see media query below). */
+.mobileRail {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 24px 16px 28px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+@media (min-width: 769px) {
+  .mobileRail {
+    /* Match the map's horizontal padding (mapWrap uses 0 48px) so the rail's
+       first/last cards align with the map's left/right edges. Center so
+       any sub-pixel leftover from the clamp() lands evenly on both sides
+       rather than flush-left. */
+    padding: 24px 48px 28px;
+    justify-content: center;
+  }
+  .mobileRail .mobileCard {
+    /* Scale 6 cards to fill the map's content area:
+       inner_width (capped at 1244) − 96px rail padding − 70px for 5 gaps,
+       divided by 6. The 230px = section padding 64 + rail padding 96 + gaps 70.
+       Clamped to the mobile size at the low end and ~205px at the high end. */
+    width: clamp(158px, calc((min(100vw, 1244px) - 230px) / 6), 205px) !important;
+  }
+}
+.mobileRail::-webkit-scrollbar {
+  height: 3px;
+}
+.mobileRail::-webkit-scrollbar-thumb {
+  background: var(--gold-dim);
+  border-radius: 2px;
+}
+.mobileRail .mobileCardWrap {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+.mobileRail .mobileCard {
+  width: 158px !important;
+  transition: box-shadow 0.25s var(--ease-soft);
+}
+.mobileRail .mobileCard:hover {
+  box-shadow: 0 12px 28px rgba(80, 50, 10, 0.18);
+}

@@ -1,0 +1,116 @@
+/* ── Desktop: story | notes (story gets the bigger share now) ── */
+.desktopRoot {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mediaSide {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Base dark warm color shows when there's no ambient backdrop yet */
+  background: #100a04;
+  border-right: 1px solid rgba(20, 12, 4, 0.45);
+  overflow: hidden;
+}
+
+/* Ambient backdrop — blurred current slide fills the pane behind the 9:16 frame */
+.ambient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.ambient video,
+.ambient img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* contrast(0.85) shifts deep blacks toward mid-grey before the brightness drop,
+     so dark stories still show a visible ambient blur. Bright pixels are barely
+     affected (0.62 → ~0.60), keeping the original look. */
+  filter: blur(48px) saturate(1.4) brightness(0.62) contrast(0.85);
+  transform: scale(1.2); /* hide blur edges */
+}
+/* Warm dim overlay so the blurred slide reads as part of the parchment theme
+   instead of competing with the 9:16 media on top of it. */
+.ambientDim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(20, 12, 4, 0.18) 0%,
+    rgba(20, 12, 4, 0.55) 70%,
+    rgba(8, 4, 0, 0.78) 100%
+  );
+  pointer-events: none;
+}
+
+.notesSide {
+  overflow: hidden;
+}
+
+/* ── Mobile fullscreen ── */
+.mobileRoot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1c1410;
+}
+
+.mobileBg {
+  position: absolute;
+  inset: 0;
+}
+
+.drawerArea {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+}
+
+.drawerTab {
+  width: 100%;
+  padding: 0.65rem 1.25rem 0.7rem;
+  background: rgba(237, 229, 208, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(150, 112, 45, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.38rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.drawerTab:hover {
+  background: rgba(237, 229, 208, 0.94);
+}
+
+.tabHandle {
+  width: 32px;
+  height: 3px;
+  background: rgba(150, 112, 45, 0.38);
+  border-radius: 2px;
+}
+
+.tabLabel {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mid, #5a4020);
+}
+
+.drawer {
+  height: 75dvh;
+  background: var(--paper, #ede5d0);
+  overflow: hidden;
+  border-top: 1px solid rgba(150, 112, 45, 0.18);
+}

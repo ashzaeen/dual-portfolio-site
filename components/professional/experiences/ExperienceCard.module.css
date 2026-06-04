@@ -1,0 +1,186 @@
+.card {
+  position: relative;
+  background: transparent;
+  border-bottom: 1px solid rgba(196, 160, 80, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: filter 0.5s ease, opacity 0.5s ease;
+}
+
+/* When a sibling is active: dim non-active cards */
+:global(.has-active) .card:not(.active) {
+  opacity: 0.35;
+}
+@media (hover: hover) {
+  :global(.has-active) .card:not(.active) {
+    filter: blur(2px) grayscale(60%);
+    opacity: 0.35;
+  }
+}
+@media (hover: none) {
+  :global(.has-active) .card:not(.active) { opacity: 0.45; }
+}
+
+.active {
+  background: rgba(196, 160, 80, 0.025);
+  border-color: transparent;
+}
+
+/* ── Data-flow animated border ── */
+.dataFlowBorder {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--angle, 0deg), transparent 70%, #c4a050 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.dataFlowBorderActive {
+  opacity: 1;
+  animation: borderSpin 3s linear infinite;
+}
+
+@property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes borderSpin { from { --angle: 0deg; } to { --angle: 360deg; } }
+
+/* Mobile scroll highlight */
+@media (max-width: 768px) {
+  .card:not(.active):global(.mobile-highlight) {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 35px -10px rgba(196, 160, 80, 0.2);
+    border-color: rgba(196, 160, 80, 0.5);
+  }
+}
+
+/* ── Header / click row ── */
+.header {
+  padding: 2rem 1.5rem 2rem 1.5rem;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  outline: none;
+}
+.header:focus-visible {
+  outline: 2px solid var(--gold, #c4a050);
+  outline-offset: -2px;
+}
+
+@media (min-width: 768px) {
+  .header { padding: 2rem 3rem 2rem 2rem; }
+}
+
+.dateCol {
+  flex-shrink: 0;
+  width: 10rem;
+  padding-top: 0.2em;
+}
+@media (max-width: 768px) {
+  .dateCol { width: auto; }
+}
+
+.date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--ink, #ede8df);
+  margin-bottom: 0.2em;
+}
+.category {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(196, 160, 80, 0.5);
+}
+
+.mainCol { flex: 1; }
+
+.role {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  color: var(--ink, #ede8df);
+  line-height: 1.1;
+  margin: 0 0 0.25em;
+  transition: color 0.3s ease;
+}
+.roleActive { color: var(--gold, #c4a050); }
+
+.org {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: rgba(237, 232, 223, 0.55);
+  margin-bottom: 0.85em;
+}
+
+.techStack { display: flex; flex-wrap: wrap; gap: 0.4em; }
+.techPill {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid rgba(196, 160, 80, 0.2);
+  color: rgba(237, 232, 223, 0.45);
+  background: rgba(15, 14, 12, 0.5);
+  padding: 0.2em 0.6em;
+  border-radius: 2px;
+  transition: border-color 0.3s, color 0.3s, background 0.3s;
+}
+.techPillActive {
+  border-color: var(--gold, #c4a050);
+  color: var(--gold, #c4a050);
+  background: rgba(196, 160, 80, 0.08);
+}
+
+.chevron {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: rgba(196, 160, 80, 0.4);
+  flex-shrink: 0;
+  padding-top: 0.3em;
+  transition: color 0.2s;
+  user-select: none;
+}
+.card:hover .chevron, .active .chevron { color: var(--gold, #c4a050); }
+
+/* ── Expanded body ── */
+.expandedBody { overflow: hidden; position: relative; z-index: 1; }
+.bodyInner {
+  padding: 0 1.5rem 2.5rem 1.5rem;
+}
+@media (min-width: 768px) {
+  .bodyInner { padding: 0 3rem 2.5rem calc(10rem + 3rem); }
+}
+
+.divider {
+  height: 1px;
+  background: rgba(196, 160, 80, 0.15);
+  margin-bottom: 2rem;
+}
+
+.detailLinkRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+.detailLink {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(196, 160, 80, 0.45);
+  text-decoration: none;
+  border: 1px solid rgba(196, 160, 80, 0.2);
+  padding: 0.3em 0.8em;
+  border-radius: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.detailLink:hover { color: var(--gold, #c4a050); border-color: rgba(196, 160, 80, 0.5); }

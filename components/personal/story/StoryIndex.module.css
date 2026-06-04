@@ -1,0 +1,304 @@
+/* ─────────────────────────────────────────
+   STORY INDEX — opens inside StoryModal.
+   Visual recipe mirrors AllStopsBook so a
+   multi-story location feels like flipping
+   the same field journal to a new chapter,
+   just with story cards instead of stops.
+───────────────────────────────────────── */
+
+.book {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* ── Leather spine ── */
+.spine {
+  position: relative;
+  width: 54px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    93deg,
+    #190902 0%,
+    #2e1408 38%,
+    #261006 68%,
+    #180802 100%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 1.5rem 0;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.5) inset;
+  flex-shrink: 0;
+}
+.spine::before,
+.spine::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  background: rgba(130, 82, 14, 0.22);
+}
+.spine::before { top: 12px; }
+.spine::after  { bottom: 12px; }
+
+.spineOrn {
+  font-size: 0.52rem;
+  color: rgba(196, 160, 80, 0.42);
+  flex-shrink: 0;
+  line-height: 1;
+}
+.spineTitle {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  color: rgba(196, 160, 80, 0.80);
+  text-transform: uppercase;
+  white-space: nowrap;
+  max-height: 56%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spineRule {
+  width: 1px;
+  height: 38px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(196, 160, 80, 0.36),
+    transparent
+  );
+  flex-shrink: 0;
+}
+.spineYear {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-mono);
+  font-size: 0.40rem;
+  letter-spacing: 0.18em;
+  color: rgba(148, 105, 36, 0.48);
+  text-transform: uppercase;
+  white-space: nowrap;
+  max-height: 30%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Parchment page ── */
+.page {
+  flex: 1;
+  min-width: 0;
+  background: #f2ead8;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  padding: 2.5rem 2.8rem 3.5rem 3rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 115, 44, 0.28) transparent;
+}
+.page::-webkit-scrollbar { width: 4px; }
+.page::-webkit-scrollbar-thumb {
+  background: rgba(156, 115, 44, 0.28);
+  border-radius: 2px;
+}
+
+/* Binding shadow cast from spine */
+.page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    rgba(70, 38, 4, 0.14),
+    transparent
+  );
+}
+
+/* ── Page header ── */
+.pageHeader {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 2.8rem;
+  padding-right: 2.5rem;
+}
+.pageHeaderLabel {
+  font-family: var(--font-mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(106, 74, 22, 0.50);
+  margin-bottom: 0.45rem;
+}
+.pageTitle {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 600;
+  font-style: italic;
+  color: #221004;
+  line-height: 1;
+  margin-bottom: 0.82rem;
+  letter-spacing: -0.01em;
+}
+.pageRule {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(136, 96, 26, 0.50),
+    rgba(136, 96, 26, 0.14) 58%,
+    transparent
+  );
+  margin-bottom: 0.65rem;
+}
+.pageSubtitle {
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  color: rgba(76, 52, 14, 0.66);
+}
+
+/* ── Card grid — 190px tracks match Postcard's natural width
+   (Postcard.module.css .card { width: 190px }); each card gets
+   width: 100% inline to fill the grid cell. Left-aligned like the
+   field-journal AllStopsBook so the cards stream from the page's
+   inner edge instead of centering. */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 190px);
+  justify-content: start;
+  gap: 2.8rem 1.4rem;
+  padding-bottom: 0.25rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Card wrapper (tape + postcard) ── The whole wrapper is the click
+   target so users can grab any part of the card, not just the button.
+   Postcard's internal button still works (its handleViewStory does
+   e.stopPropagation, so the click doesn't double-fire). */
+.cardWrap {
+  position: relative;
+  padding-top: 14px;
+  cursor: pointer;
+  outline: none;
+}
+.cardWrap:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.tape {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 54px;
+  height: 22px;
+  border-radius: 2px;
+  z-index: 3;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(46, 26, 4, 0.18);
+}
+
+/* ── Page footer ── */
+.pageFooter {
+  position: relative;
+  z-index: 2;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+.pageFooterRule {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(136, 96, 26, 0.20),
+    rgba(136, 96, 26, 0.06) 60%,
+    transparent
+  );
+  margin-bottom: 0.75rem;
+}
+.pageFooterText {
+  display: block;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.42rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(106, 74, 22, 0.35);
+}
+
+/* ─────────────────────────────────────────
+   MOBILE
+───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .book {
+    flex-direction: column;
+  }
+  .spine {
+    width: 100%;
+    height: 44px;
+    flex-direction: row;
+    justify-content: center;
+    padding: 0 1.5rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(100, 58, 10, 0.42);
+    box-shadow: none;
+    gap: 0.85rem;
+  }
+  .spine::before,
+  .spine::after { display: none; }
+  .spineOrn { display: none; }
+  .spineTitle {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 0.76rem;
+    letter-spacing: 0.2em;
+    max-height: none;
+  }
+  .spineRule {
+    width: 18px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(196, 160, 80, 0.36),
+      transparent
+    );
+  }
+  .spineYear {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 0.40rem;
+    max-height: none;
+  }
+  .page {
+    flex: 1;
+    padding: 1.5rem 1.25rem 2.5rem;
+    overflow-y: auto;
+  }
+  .page::before { display: none; }
+  .pageHeader {
+    padding-right: 2rem;
+    margin-bottom: 2rem;
+  }
+  .pageTitle { font-size: 1.7rem; }
+  .pageSubtitle { font-size: 0.88rem; }
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.2rem 0.9rem;
+  }
+}

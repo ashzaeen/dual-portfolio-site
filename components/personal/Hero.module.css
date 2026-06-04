@@ -1,0 +1,919 @@
+.section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 130px 2.5rem 5rem;
+  overflow: hidden;
+}
+
+.glowTopRight,
+.glowBottomLeft {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.glowTopRight {
+  top: 8%;
+  right: 6%;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(
+    circle,
+    rgba(196, 160, 80, 0.12) 0%,
+    transparent 65%
+  );
+}
+.glowBottomLeft {
+  bottom: 14%;
+  left: 4%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(
+    circle,
+    rgba(160, 120, 56, 0.08) 0%,
+    transparent 70%
+  );
+}
+
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* Two-column layout: typography left, journal-photo right. Collapses to
+   single column on tablet/mobile (photo above text — feels more like a
+   journal cover that way). */
+.inner {
+  position: relative;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: center;
+}
+
+.typeCol {
+  position: relative;
+  max-width: 620px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.eyebrow::before {
+  content: "✦";
+  color: var(--gold);
+}
+
+.name {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(2.6rem, 6.5vw, 5rem);
+  color: var(--ink);
+  line-height: 0.95;
+  letter-spacing: -0.012em;
+  margin-bottom: 0.85rem;
+}
+.last {
+  display: block;
+  color: var(--gold-dim);
+}
+
+.roles {
+  position: relative;
+  height: 1.6em;
+  font-family: var(--font-mono);
+  font-size: clamp(0.72rem, 1.5vw, 0.85rem);
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 1.85rem;
+  overflow: hidden;
+}
+.role {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.role::before {
+  content: "✦";
+  color: var(--gold);
+}
+
+.rule {
+  width: 44px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  margin-bottom: 1.85rem;
+}
+
+.bio {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: clamp(0.96rem, 1.7vw, 1.1rem);
+  color: var(--ink-mid);
+  line-height: 1.85;
+  max-width: 540px;
+  margin-bottom: 2.1rem;
+}
+
+/* ── Status line (replaces the old stat blocks) ────────────────────────
+   Same data as the professional Hero's "live status," rendered as a
+   journal margin note: a tiny mono RIGHT-NOW label + handwritten body. */
+.status {
+  position: relative;
+  max-width: 540px;
+  min-height: 4em;
+  border-left: 1px solid rgba(196, 160, 80, 0.32);
+  padding: 0.15rem 0 0.15rem 1rem;
+}
+.statusLabel {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--gold);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  margin-bottom: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(196, 160, 80, 0.55);
+  animation: heroStatusPulse 1.8s ease-in-out infinite;
+}
+@keyframes heroStatusPulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.25); }
+}
+.statusText {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: clamp(1rem, 1.6vw, 1.18rem);
+  line-height: 1.5;
+  color: rgba(60, 38, 14, 0.86);
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* ── Right column: layered polaroid "scene" ──────────────────────────
+   The polaroid stack sits inside a perspective host so the parallax
+   tilt reads as 3D. Behind the main polaroid: two background layers
+   (no photo, just cream paper) suggest a pile of memories. Gold dust
+   drifts around the whole scene. Main polaroid is click-to-expand. */
+.photoCol {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.stackHost {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+}
+
+/* Stack wrapper — pure motion entry, no perspective / 3D. The hover
+   lift on .polaroid below is the only rotation in play. */
+.polaroidStack {
+  position: relative;
+  width: 100%;
+}
+
+/* Background polaroids — same cream paper as the front, but each holds
+   a real photo (no chrome). The "far" one peeks lower-right with +5°;
+   the "near" one peeks lower-left with -7°. Non-interactive — just
+   teases that more memories exist (carousel modal reveals them). */
+.bgPolaroid {
+  position: absolute;
+  inset: 0;
+  background: #f1e7d2;
+  padding: 12px 12px 36px;
+  border-radius: 1px;
+  box-shadow:
+    0 18px 40px rgba(40, 22, 6, 0.32),
+    0 4px 10px rgba(40, 22, 6, 0.18);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.bgPhoto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(40, 22, 6, 0.18);
+  filter: brightness(0.92) saturate(0.85);
+}
+.bgFar {
+  transform: translate(28px, 28px) rotate(5deg) scale(0.94);
+  z-index: 0;
+}
+.bgNear {
+  transform: translate(-20px, 18px) rotate(-7deg) scale(0.97);
+  z-index: 1;
+}
+
+/* Main polaroid — button so it's keyboard-clickable. Cream paper, NOT
+   pure white (cathedral sky in the photo would wash out otherwise). */
+.polaroid {
+  position: relative;
+  display: block;
+  width: 100%;
+  background: #f1e7d2;
+  padding: 14px 14px 58px;
+  border: none;
+  cursor: pointer;
+  text-align: inherit;
+  font: inherit;
+  color: inherit;
+  box-shadow:
+    0 26px 56px rgba(40, 22, 6, 0.34),
+    0 6px 14px rgba(40, 22, 6, 0.22),
+    inset 0 0 0 1px rgba(140, 100, 30, 0.07);
+  transform: rotate(-4deg);
+  transform-origin: 50% 50%;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.45s ease;
+  z-index: 2;
+}
+.polaroid:hover,
+.polaroid:focus-visible {
+  transform: rotate(-2deg) translateY(-4px);
+  box-shadow:
+    0 36px 72px rgba(40, 22, 6, 0.4),
+    0 10px 20px rgba(40, 22, 6, 0.26),
+    inset 0 0 0 1px rgba(140, 100, 30, 0.07);
+  outline: none;
+}
+
+/* Washi tape strip — gold-tinted, dashed top/bottom, rotated like it
+   was applied by hand to the top-left corner. */
+.tape {
+  position: absolute;
+  top: -14px;
+  left: -22px;
+  width: 124px;
+  height: 28px;
+  background: linear-gradient(180deg, rgba(196, 160, 80, 0.55) 0%, rgba(196, 160, 80, 0.42) 100%);
+  border-top: 1.5px dashed rgba(120, 90, 30, 0.55);
+  border-bottom: 1.5px dashed rgba(120, 90, 30, 0.55);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.28);
+  transform: rotate(-32deg);
+  transform-origin: 50% 50%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Subtle paper grain over the cream backing. */
+.grainOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+.photoFrame {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+.photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(40, 22, 6, 0.18), 0 2px 6px rgba(40, 22, 6, 0.2);
+  animation: heroDevelop 2s ease 1.2s both;
+}
+@keyframes heroDevelop {
+  from { filter: brightness(2.8) contrast(0.08) saturate(0) sepia(0.75); }
+  to   { filter: none; }
+}
+
+/* Postmark + stamp overlays. Both partially transparent so the photo
+   reads underneath. Postmark top-right, stamp top-left (just under the
+   tape). Travelogue texture. */
+.postmark {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 110px;
+  height: 110px;
+  opacity: 0.65;
+  transform: rotate(-14deg);
+  pointer-events: none;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35));
+  z-index: 3;
+}
+.stamp {
+  position: absolute;
+  bottom: 14px;
+  right: 16px;
+  width: 50px;
+  height: 65px;
+  opacity: 0.92;
+  transform: rotate(8deg);
+  filter: drop-shadow(0 2px 4px rgba(20, 12, 4, 0.35));
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Handwritten caption — types in character by character after the
+   develop animation completes. Blinking cursor while typing, cursor
+   fades out once done. */
+.caption {
+  position: relative;
+  z-index: 2;
+  margin-top: 16px;
+  font-family: var(--font-hand);
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+  color: rgba(40, 22, 8, 0.78);
+  text-align: center;
+  transform: rotate(-0.8deg);
+  min-height: 1.6em;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1px;
+}
+.typeCursor {
+  display: inline-block;
+  color: rgba(40, 22, 8, 0.55);
+  animation: heroCaret 0.85s steps(2, end) infinite;
+  margin-left: 1px;
+}
+.typeCursorDone {
+  animation: heroCaretFade 0.6s ease 0.4s forwards;
+}
+@keyframes heroCaret {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+@keyframes heroCaretFade {
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo { animation: none; }
+  .typeCursor { animation: none; opacity: 0; }
+  .polaroidStack { transform: none !important; }
+}
+
+/* ── Gold dust particles drifting around the polaroid ────────────── */
+.dustField {
+  position: absolute;
+  inset: -8% -8%;
+  pointer-events: none;
+  z-index: 0;
+}
+.dustMote {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(218, 180, 90, 0.5);
+  box-shadow: 0 0 4px rgba(218, 180, 90, 0.45);
+  animation: heroDustDrift linear infinite;
+  opacity: 0;
+}
+@keyframes heroDustDrift {
+  0%   { transform: translate(0, 0) scale(0.85); opacity: 0; }
+  12%  { opacity: 0.55; }
+  88%  { opacity: 0.5; }
+  100% { transform: translate(12px, -100px) scale(1); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dustMote { animation: none; opacity: 0.4; }
+}
+
+/* ── Cork-board fade at the bottom of the hero ──────────────────────
+   Foreshadows the wall section that comes next. Pseudo-element on
+   .section drawing a soft cork texture, transparent at the top of
+   the band and ~12% at the very bottom edge of the hero. */
+.corkFade {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 220px;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(ellipse at 50% 100%, rgba(60, 36, 12, 0.18) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23c)' opacity='0.18'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 70%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 70%);
+  opacity: 0.55;
+}
+
+/* ── Laptop / short-viewport hero tuning ──────────────────────────────
+   Triggered on viewports ≤900 / ≤800 tall (typical Windows laptops
+   at 100% / 125% DPI). Guarded with `min-width: 769px` so the existing
+   mobile rule below isn't accidentally overridden on landscape phones.
+   Reduces section padding, scales typography down, shrinks the polaroid
+   so its 1.5× aspect-ratio card height fits in the visible area, and
+   rebalances the horizontal layout — tighter column gap, more side
+   padding — so the writing and polaroid feel closer to each other and
+   farther from the page edges. */
+@media (max-height: 900px) and (min-width: 769px) {
+  .section {
+    padding: 72px 4rem 32px;
+  }
+  .inner {
+    max-width: 1180px;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+  }
+  /* Tuner-baked visual offsets (captured via ?tune=1 on the Katana A15
+     viewport). The transforms scale + nudge each column to the size and
+     position the user picked. Transforms don't affect grid layout, so
+     the cell widths stay as defined above. */
+  .typeCol {
+    max-width: 580px;
+    transform: translate(50px, 5px) scale(1.276);
+    transform-origin: center center;
+  }
+  .photoCol {
+    transform: translate(-5px, -8px) scale(1.152);
+    transform-origin: center center;
+  }
+  .name {
+    font-size: clamp(2.4rem, 5.2vw, 3.8rem);
+    margin-bottom: 0.7rem;
+  }
+  .roles { margin-bottom: 1.4rem; }
+  .rule { margin-bottom: 1.4rem; }
+  .bio {
+    font-size: clamp(0.92rem, 1.4vw, 1rem);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    max-width: 500px;
+  }
+  .status {
+    min-height: 3.4em;
+    padding: 0.1rem 0 0.1rem 0.9rem;
+    max-width: 500px;
+  }
+  .statusLabel { margin-bottom: 0.45rem; }
+  .statusText {
+    font-size: clamp(0.95rem, 1.3vw, 1.05rem);
+    line-height: 1.45;
+  }
+  /* Smaller polaroid stack so the right column's card height fits the
+     section's now-tighter content area. 322px width → ~485px card
+     height including padding, leaves room for the bg-polaroid offsets. */
+  .stackHost { max-width: 322px; }
+  .polaroid { padding: 12px 12px 48px; }
+  .caption { font-size: 1.25rem; margin-top: 13px; }
+  .corkFade { height: 160px; }
+}
+@media (max-height: 800px) and (min-width: 769px) {
+  .section {
+    padding: 56px 3.5rem 24px;
+  }
+  .name {
+    font-size: clamp(2.2rem, 4.8vw, 3.4rem);
+    margin-bottom: 0.55rem;
+  }
+  .roles { margin-bottom: 1.1rem; }
+  .rule { margin-bottom: 1.1rem; }
+  .bio {
+    font-size: clamp(0.88rem, 1.3vw, 0.96rem);
+    margin-bottom: 1.25rem;
+    line-height: 1.7;
+  }
+  .status { min-height: 3em; }
+  .statusText {
+    font-size: clamp(0.9rem, 1.2vw, 1rem);
+    line-height: 1.42;
+  }
+  .stackHost { max-width: 292px; }
+  .polaroid { padding: 10px 10px 44px; }
+  .caption { font-size: 1.15rem; margin-top: 11px; }
+  .corkFade { height: 120px; }
+  .glowTopRight, .glowBottomLeft {
+    /* slightly smaller ambient glows so they don't dominate the section */
+    width: 280px; height: 280px;
+  }
+}
+
+/* ── Responsive: collapse to single column ─────────────────────────── */
+@media (max-width: 960px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 2.4rem;
+  }
+  .typeCol { max-width: 100%; }
+  .photoCol { justify-content: flex-start; }
+  .perspectiveHost { max-width: 320px; }
+  /* Drop the deepest background polaroid on tablet — keep just one peek
+     behind for depth without crowding the column width. */
+  .bgFar { display: none; }
+  .bgNear {
+    transform: translate(10px, 8px) rotate(-5deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 90px 1.25rem 3.5rem;
+    min-height: auto;
+  }
+  .name {
+    font-size: clamp(2.6rem, 13vw, 3.4rem);
+  }
+  .perspectiveHost { max-width: 280px; }
+  .polaroid {
+    padding: 12px 12px 50px;
+  }
+  .caption {
+    font-size: 1.2rem;
+  }
+  /* Stamp + postmark scale down so they don't dominate the small photo. */
+  .postmark {
+    width: 84px;
+    height: 84px;
+    top: 8px;
+    right: 8px;
+  }
+  .stamp {
+    width: 40px;
+    height: 52px;
+    bottom: 10px;
+    right: 12px;
+  }
+  .tape {
+    width: 96px;
+    height: 22px;
+    top: -10px;
+    left: -16px;
+  }
+  /* Fewer / smaller dust motes look right at this scale — and the
+     drift distance shortens so they don't fly into the type column. */
+  .dustMote {
+    transform: scale(0.8);
+  }
+  .status {
+    padding-left: 0.85rem;
+  }
+  .corkFade {
+    height: 140px;
+  }
+}
+
+/* ── Photo carousel modal — album spread, not lightbox ────────────────
+   The modal is an aged-paper desk surface (warm dark cream-on-brown
+   gradient, paper grain, vignette, slow dust) with THREE polaroid cards
+   floating across it. The active polaroid sits center; left + right
+   peeks are smaller-and-blurred but never see-through. Spring
+   transitions between slots. Visible nav buttons with Caveat labels +
+   ink-dot row beneath the stage. */
+.carouselBg {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  /* Warm aged-paper gradient — NOT cinematic black. Fully opaque so no
+     page content shows through. */
+  background-color: #1a1208;
+  background-image:
+    radial-gradient(ellipse 80% 70% at 50% 50%, rgba(80, 50, 18, 0.55) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 110%, rgba(40, 22, 6, 0.85) 0%, transparent 50%),
+    linear-gradient(180deg, #1f160a 0%, #0e0804 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  flex-direction: column;
+  gap: 22px;
+  overflow: hidden;
+}
+/* Subtle paper grain overlay — gives the backdrop tactility. */
+.carouselGrain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='280' height='280' filter='url(%23c)' opacity='0.16'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+/* Vignette — darker at edges so the polaroids feel "lit" toward center. */
+.carouselVignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(0, 0, 0, 0.55) 100%);
+}
+/* Floating gold dust — same vocabulary as the wall. */
+.carouselDust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.carouselX {
+  position: fixed;
+  top: 22px;
+  right: 26px;
+  z-index: 100;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.12);
+  border: 1px solid rgba(196, 160, 80, 0.4);
+  color: var(--gold);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.25s;
+  backdrop-filter: blur(8px);
+}
+.carouselX:hover {
+  background: rgba(196, 160, 80, 0.28);
+  transform: rotate(90deg);
+}
+
+.carouselStage {
+  position: relative;
+  width: 100%;
+  max-width: 1080px;
+  height: clamp(420px, 62vh, 640px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: pan-y;
+  z-index: 5;
+}
+
+/* Each polaroid card — cream paper around the photo with caveat
+   caption beneath. Photos themselves stay 100% opaque; the recession
+   feel for side peeks comes from blur + scale + a tiny saturation dip,
+   driven by motion targets in JS (not CSS class swaps). */
+.polaroidCard {
+  position: absolute;
+  width: clamp(280px, 38vw, 380px);
+  background: #f1e7d2;
+  padding: 14px 14px 56px;
+  box-shadow:
+    0 36px 70px rgba(0, 0, 0, 0.55),
+    0 10px 24px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(140, 100, 30, 0.08);
+  will-change: transform, filter, opacity;
+  cursor: default;
+  border: none;
+  font: inherit;
+}
+.polaroidCard:where(:not(:focus-visible)) { outline: none; }
+.polaroidCard[role="button"] { cursor: pointer; }
+.polaroidCard[role="button"]:hover { filter: brightness(1.08); }
+.polaroidCard::before {
+  /* Paper grain on each polaroid */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+.cardTape {
+  position: absolute;
+  top: -12px;
+  left: -18px;
+  width: 100px;
+  height: 24px;
+  background: linear-gradient(180deg, rgba(196, 160, 80, 0.55) 0%, rgba(196, 160, 80, 0.4) 100%);
+  border-top: 1.5px dashed rgba(120, 90, 30, 0.55);
+  border-bottom: 1.5px dashed rgba(120, 90, 30, 0.55);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transform: rotate(-28deg);
+  z-index: 3;
+  pointer-events: none;
+}
+.cardPhotoFrame {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+.cardPhoto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(40, 22, 6, 0.2);
+}
+.cardCaption {
+  position: relative;
+  z-index: 2;
+  margin-top: 14px;
+  font-family: var(--font-hand);
+  font-size: 1.45rem;
+  letter-spacing: 0.02em;
+  color: rgba(40, 22, 8, 0.82);
+  text-align: center;
+  transform: rotate(-0.6deg);
+}
+
+/* Bottom controls row — nav buttons flanking the dot cluster, clearly
+   separated from the polaroid stage. Caveat handwriting + gold trim
+   reads as "vintage album page-turn controls," not modern UI chrome. */
+.carouselNavRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 4vw, 56px);
+  z-index: 20;
+  margin-top: 24px;
+  padding: 8px 16px;
+}
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid rgba(196, 160, 80, 0.4);
+  border-radius: 999px;
+  padding: 10px 18px;
+  color: rgba(245, 235, 210, 0.88);
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(6px);
+}
+.navBtn:hover {
+  background: rgba(196, 160, 80, 0.12);
+  border-color: rgba(196, 160, 80, 0.7);
+  color: rgba(255, 245, 220, 1);
+  transform: translateY(-1px);
+}
+.navBtn:active { transform: translateY(0); }
+.navChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(196, 160, 80, 0.18);
+  border: 1px solid rgba(196, 160, 80, 0.55);
+  color: var(--gold);
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+.navLabel {
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  color: rgba(245, 235, 210, 0.9);
+}
+.carouselDots {
+  display: flex;
+  gap: 12px;
+  padding: 0 14px;
+  /* a faint inline rule on either side of the dot cluster to feel like a
+     ribbon/band on the album page */
+  position: relative;
+}
+.carouselDots::before,
+.carouselDots::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 1px;
+  background: rgba(196, 160, 80, 0.32);
+}
+.carouselDots::before { left: -12px; transform: translateX(-100%); }
+.carouselDots::after  { right: -12px; transform: translateX(100%); }
+.carouselDot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1.5px solid rgba(196, 160, 80, 0.55);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  padding: 0;
+}
+.carouselDot:hover {
+  border-color: rgba(196, 160, 80, 0.9);
+  background: rgba(196, 160, 80, 0.18);
+}
+.carouselDotActive {
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(196, 160, 80, 0.6);
+}
+
+/* Touch devices */
+@media (hover: none) {
+  .navBtn:hover { background: transparent; transform: none; color: rgba(245, 235, 210, 0.88); }
+}
+
+/* ── Laptop / short-viewport tuning ───────────────────────────────────
+   Bigger polaroids (intentionally larger than desktop max — they need
+   to feel proportional on a shorter viewport) paired with a stage that
+   HUGS the polaroid card height. No auto-margin gap — controls sit
+   just below the polaroid with a small breathing gap, the modal stays
+   centered, and bottom margin matches top margin. */
+@media (max-height: 900px) {
+  .carouselBg {
+    justify-content: center;
+    padding: clamp(16px, 3vh, 32px) 24px;
+    gap: clamp(16px, 2.5vh, 24px);
+  }
+  .carouselNavRow {
+    margin-top: 0;   /* no longer pinned to bottom — sits tight to stage */
+  }
+  /* Stage height tracks polaroid card height (card height ≈ width × 1.5
+     incl. padding). The calc() arm of the min() caps stage so it doesn't
+     overshoot the polaroid bottom. */
+  .carouselStage {
+    height: min(clamp(440px, 84vh, 660px), calc(54vh * 1.5 + 12px));
+  }
+  /* Polaroid grows up to 54vh — relative to a 758px laptop viewport
+     that's ~409px wide, noticeably larger than desktop's 380 max.
+     This matches the user's request: "enlarge the photos a bit more." */
+  .polaroidCard {
+    width: min(clamp(280px, 36vw, 440px), 54vh);
+    padding: 14px 14px 52px;
+  }
+  .cardCaption { font-size: 1.45rem; margin-top: 14px; }
+}
+@media (max-height: 800px) {
+  .carouselBg {
+    padding: clamp(14px, 2.5vh, 24px) 24px;
+    gap: clamp(14px, 2vh, 20px);
+  }
+  .polaroidCard {
+    padding: 12px 12px 48px;
+  }
+  .cardCaption { font-size: 1.35rem; margin-top: 12px; }
+  .cardTape { width: 96px; height: 24px; top: -11px; left: -17px; }
+}
+@media (max-height: 700px) {
+  .carouselBg {
+    padding: 12px 24px;
+    gap: 14px;
+  }
+  .carouselStage {
+    height: min(clamp(360px, 80vh, 500px), calc(48vh * 1.5 + 8px));
+  }
+  .polaroidCard {
+    width: min(clamp(240px, 32vw, 360px), 48vh);
+    padding: 10px 10px 42px;
+  }
+  .cardCaption { font-size: 1.2rem; margin-top: 10px; }
+  .cardTape { width: 84px; height: 20px; top: -9px; left: -14px; }
+  .navBtn { padding: 7px 14px; font-size: 1rem; }
+  .navLabel { font-size: 1rem; }
+  .navChevron { width: 22px; height: 22px; font-size: 1.2rem; }
+}
+
+/* ── Mobile (narrow width) tuning ─────────────────────────────────────
+   Targets portrait-oriented small viewports specifically. Height-keyed
+   rules above already cover short-but-wide laptops. */
+@media (max-width: 768px) {
+  .carouselStage {
+    height: clamp(360px, 56vh, 480px);
+  }
+  .polaroidCard {
+    width: clamp(220px, 64vw, 300px);
+    padding: 10px 10px 44px;
+  }
+  .cardCaption { font-size: 1.2rem; margin-top: 10px; }
+  .cardTape { width: 80px; height: 20px; top: -10px; left: -14px; }
+  .carouselNavRow { gap: 14px; flex-wrap: wrap; }
+  .navBtn { padding: 8px 14px; font-size: 1rem; }
+  .navLabel { font-size: 1rem; }
+  .navChevron { width: 22px; height: 22px; font-size: 1.2rem; }
+  .carouselDots { gap: 10px; }
+  .carouselDots::before,
+  .carouselDots::after { width: 16px; }
+  .carouselX { top: 14px; right: 14px; width: 38px; height: 38px; font-size: 18px; }
+}

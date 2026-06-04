@@ -1,0 +1,396 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "./tokens.css";
+
+/* ─────────────────────────────────────────
+   RESET / BASE
+───────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Offsets anchor-link scrolling by the fixed navbar height so the target
+     section's header doesn't hide behind the nav. */
+  scroll-padding-top: 20px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg, #e8dfc8);
+  color: var(--ink, #2a1e0e);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Theme root — applied by each route page */
+.theme-root {
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  transition: background 0.5s var(--ease-soft), color 0.5s var(--ease-soft);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--cream, #f5f0e8);
+}
+
+/* Soft section-ending fade — a cork-textured warm-dark band that
+   fades from transparent at the top to ~12% at the bottom edge of the
+   section it lives inside. Place as an absolutely-positioned child at
+   the bottom of any section to mirror Hero's transition feel. The
+   parent must be `position: relative` (or another containing block). */
+.section-fade {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 220px;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(ellipse at 50% 100%, rgba(60, 36, 12, 0.18) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23c)' opacity='0.18'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 70%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 70%);
+  opacity: 0.55;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gold-dim);
+  border-radius: 3px;
+}
+
+/* ─────────────────────────────────────────
+   KEYFRAMES
+───────────────────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vinylSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Equalizer bars on the Last Played card. Global (not in the CSS module)
+   because the component sets `animation: eqBar ...` inline by literal name. */
+@keyframes eqBar {
+  0%   { transform: scaleY(0.30); }
+  18%  { transform: scaleY(0.92); }
+  34%  { transform: scaleY(0.48); }
+  52%  { transform: scaleY(1); }
+  68%  { transform: scaleY(0.40); }
+  84%  { transform: scaleY(0.74); }
+  100% { transform: scaleY(0.34); }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes needleDrop {
+  0% {
+    transform: rotate(-25deg);
+  }
+  100% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pinPulse {
+  0% {
+    r: 7;
+    opacity: 0.55;
+  }
+  70% {
+    r: 22;
+    opacity: 0;
+  }
+  100% {
+    r: 7;
+    opacity: 0;
+  }
+}
+
+/* ─────────────────────────────────────────
+   D3 SVG CLASSES (global — D3 sets these
+   imperatively on path/circle elements)
+───────────────────────────────────────── */
+.l-base {
+  fill: #c8b88a;
+  stroke: rgba(80, 55, 18, 0.38);
+  stroke-width: 0.4;
+  transition: fill 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.l-dim {
+  fill: #aaa080;
+  stroke: rgba(80, 55, 18, 0.28);
+  stroke-width: 0.35;
+}
+.l-us {
+  fill: #d2c49c;
+  stroke: rgba(75, 52, 14, 0.7);
+  stroke-width: 0.55;
+}
+.l-bd-nbr {
+  fill: #bdb07e;
+  stroke: rgba(80, 55, 18, 0.4);
+  stroke-width: 0.45;
+}
+.l-bd {
+  fill: rgba(220, 200, 145, 0.45);
+  stroke: rgba(110, 80, 10, 0.95);
+  stroke-width: 2.8;
+  filter: drop-shadow(0 2px 4px rgba(80, 50, 10, 0.18));
+}
+.l-bd.l-bd-empty {
+  fill: none;
+}
+.l-bd-div {
+  stroke: none;
+  transition: fill 0.4s ease;
+}
+.l-bd-div-border {
+  fill: none;
+  stroke: rgba(80, 58, 20, 0.55);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.l-bd-div-label {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  fill: rgba(60, 40, 10, 0.78);
+  paint-order: stroke;
+  stroke: rgba(244, 238, 224, 0.7);
+  stroke-width: 2.2;
+  pointer-events: none;
+  user-select: none;
+}
+.l-sphere {
+  fill: #7aabc5;
+}
+.l-grat {
+  fill: none;
+  stroke: rgba(140, 120, 80, 0.1);
+  stroke-width: 0.45;
+}
+.l-grat-maj {
+  fill: none;
+  stroke: rgba(140, 120, 80, 0.2);
+  stroke-width: 0.7;
+}
+.l-borders {
+  fill: none;
+  stroke: rgba(80, 55, 18, 0.38);
+  stroke-width: 0.45;
+}
+.l-states {
+  fill: none;
+  stroke: rgba(78, 55, 15, 0.58);
+  stroke-width: 0.85;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.l-us-outline {
+  fill: none;
+  stroke: rgba(75, 52, 14, 0.72);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.svg-pin {
+  /* pointer-events disabled in JS so the svg-level closest-pin handler
+     can decide hover/click; visual hover comes from .hot, set by JS. */
+  cursor: pointer;
+}
+.pin-pulse {
+  fill: rgba(196, 160, 80, 0.14);
+  animation: pinPulse 2.8s ease-out infinite;
+}
+.svg-pin.hot .pin-pulse,
+.svg-pin.active .pin-pulse {
+  animation: pinPulse 1.7s ease-out infinite;
+}
+.pin-ring {
+  fill: none;
+  stroke: rgba(196, 160, 80, 0.55);
+  stroke-width: 1.5;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.svg-pin.hot .pin-ring,
+.svg-pin.active .pin-ring {
+  opacity: 1;
+}
+.pin-dot {
+  fill: var(--gold);
+  stroke: rgba(243, 236, 220, 0.9);
+  stroke-width: 2.2;
+  filter: drop-shadow(0 2px 5px rgba(80, 50, 10, 0.38));
+  transition: r 0.18s ease;
+}
+.svg-pin.hot .pin-dot,
+.svg-pin.active .pin-dot {
+  r: 7;
+}
+.svg-pin.active .pin-dot {
+  fill: #eece58;
+}
+
+/* ─────────────────────────────────────────
+   SCROLL REVEAL UTILITY
+───────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s var(--ease-soft), transform 0.7s var(--ease-soft);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE HELPERS
+───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────
+   GLOBAL KEYFRAMES
+   Animations referenced by inline styles (literal name) must live in a global
+   stylesheet — CSS-module @keyframes get hashed and won't match the literal.
+   The easter-egg confetti pieces (Decorations.jsx) animate via this.
+───────────────────────────────────────── */
+@keyframes pinboardConfetti {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* Hide horizontal scrollbar on pill rails (mobile nav, postcards, etc.) */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─────────────────────────────────────────
+   REDUCED MOTION (belt + suspenders)
+   Per-component useReducedMotion() guards are
+   the primary mechanism; this is the fallback.
+───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

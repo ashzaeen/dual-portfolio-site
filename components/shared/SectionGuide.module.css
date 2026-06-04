@@ -1,0 +1,29 @@
+.guide {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0.95rem 0 0;
+  max-width: 460px;
+}
+
+.cursor {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--gold-dim);
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.4));
+}
+
+.text {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  color: var(--ink-mid);
+}
+
+@media (max-width: 768px) {
+  .text {
+    font-size: 0.72rem;
+  }
+}

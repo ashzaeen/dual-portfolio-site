@@ -1,0 +1,484 @@
+/* ─────────────────────────────────────────────────────────
+   PERSONAL FOOTER — The colophon
+───────────────────────────────────────────────────────── */
+
+.footer {
+  background: linear-gradient(180deg, #0e0a04 0%, #110c06 55%, #0a0602 100%);
+  position: relative;
+}
+
+/* ── Wax-seal divider ── */
+.sealRow {
+  display: flex;
+  align-items: center;
+  padding: 2.8rem 3rem 0;
+}
+
+.sealRuleL {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(196, 160, 80, 0.38) 100%);
+}
+
+.sealRuleR {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(196, 160, 80, 0.38) 0%, transparent 100%);
+}
+
+/* Outer ribbed ring via ::before, inner wax face via the element itself */
+.seal {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin: 0 1.2rem;
+  position: relative;
+
+  /* Wax face */
+  background: radial-gradient(
+    circle at 36% 30%,
+    #c03848 0%,
+    #8a1e2c 38%,
+    #5e1020 72%,
+    #3a0a14 100%
+  );
+  box-shadow:
+    inset 0 2px 6px rgba(255, 160, 150, 0.12),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(140, 40, 52, 0.5),
+    0 5px 18px rgba(0, 0, 0, 0.7),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ribbed outer ring */
+.seal::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(100, 22, 32, 0.92) 0deg 7deg,
+    rgba(168, 56, 68, 0.75) 7deg 14deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 62%, black 65%);
+  mask: radial-gradient(circle, transparent 62%, black 65%);
+  z-index: 0;
+}
+
+/* Subtle pressed-wax texture inside */
+.seal::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 35%,
+    rgba(255, 140, 120, 0.08) 0%,
+    transparent 55%
+  );
+  border: 1px solid rgba(200, 80, 90, 0.18);
+  z-index: 1;
+}
+
+.sealLetter {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: rgba(255, 200, 195, 0.78);
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(255, 80, 70, 0.14);
+  line-height: 1;
+  user-select: none;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Body ── */
+.body {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+/* Identity */
+.identity {
+  text-align: center;
+}
+
+.name {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  color: rgba(240, 232, 210, 0.84);
+  margin: 0 0 0.55rem;
+  line-height: 1;
+}
+
+.tagline {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.86rem;
+  color: rgba(196, 160, 80, 0.48);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Side toggle ── */
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 218px;
+  height: 34px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(196, 160, 80, 0.06);
+  border: 1px solid rgba(196, 160, 80, 0.2);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.toggle:hover {
+  border-color: rgba(196, 160, 80, 0.34);
+  box-shadow: 0 0 0 3px rgba(196, 160, 80, 0.05),
+    0 6px 22px rgba(0, 0, 0, 0.4);
+}
+
+.toggleIndicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: calc(50% + 0px);
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(196, 160, 80, 0.92), rgba(150, 112, 45, 0.92));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 240, 210, 0.2);
+  z-index: 0;
+  transition: left 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slid to the Professional half just before navigating away */
+.toggleIndicatorGo {
+  left: 3px;
+}
+
+.toggleHalf {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(220, 205, 170, 0.5);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  user-select: none;
+}
+
+.toggleHalf:not(.toggleActive):hover {
+  color: rgba(196, 160, 80, 0.92);
+}
+
+.toggleActive {
+  color: #1a120a;
+  font-weight: 600;
+}
+
+/* ── Social icons ── */
+.socials {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.iconLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.32rem;
+  text-decoration: none;
+  color: rgba(220, 205, 170, 0.48);
+  transition: color 0.22s ease, transform 0.22s ease;
+}
+
+.iconLink:hover {
+  color: rgba(196, 160, 80, 0.88);
+  transform: translateY(-3px);
+}
+
+.iconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(196, 160, 80, 0.14);
+  background: rgba(196, 160, 80, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.iconLink:hover .iconWrap {
+  border-color: rgba(196, 160, 80, 0.38);
+  background: rgba(196, 160, 80, 0.1);
+  box-shadow: 0 0 12px rgba(196, 160, 80, 0.1);
+}
+
+.iconLabel {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.72;
+}
+
+/* ── Postage stamp — high school ── */
+.hsSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hsCaption {
+  font-family: var(--font-hand);
+  font-size: 1.05rem;
+  color: rgba(196, 160, 80, 0.38);
+  letter-spacing: 0.01em;
+}
+
+.hsStamp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  position: relative;
+  padding: 14px 22px 12px;
+  gap: 4px;
+
+  /* Aged, slightly foxed paper */
+  background: #ede0c0;
+  background-image:
+    radial-gradient(ellipse at 18% 22%, rgba(210, 185, 120, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 78%, rgba(175, 145, 80, 0.22) 0%, transparent 50%),
+    radial-gradient(ellipse at 55% 50%, rgba(0, 0, 0, 0.03) 0%, transparent 70%);
+
+  -webkit-mask:
+    radial-gradient(circle at 0%   50%, transparent 5.5px, #fff 5.5px) left  / 11px 13px repeat-y,
+    radial-gradient(circle at 100% 50%, transparent 5.5px, #fff 5.5px) right / 11px 13px repeat-y,
+    radial-gradient(circle at 50% 0%,   transparent 5.5px, #fff 5.5px) top   / 13px 11px repeat-x,
+    radial-gradient(circle at 50% 100%, transparent 5.5px, #fff 5.5px) bottom/ 13px 11px repeat-x,
+    linear-gradient(#fff, #fff);
+  mask:
+    radial-gradient(circle at 0%   50%, transparent 5.5px, #fff 5.5px) left  / 11px 13px repeat-y,
+    radial-gradient(circle at 100% 50%, transparent 5.5px, #fff 5.5px) right / 11px 13px repeat-y,
+    radial-gradient(circle at 50% 0%,   transparent 5.5px, #fff 5.5px) top   / 13px 11px repeat-x,
+    radial-gradient(circle at 50% 100%, transparent 5.5px, #fff 5.5px) bottom/ 13px 11px repeat-x,
+    linear-gradient(#fff, #fff);
+  -webkit-mask-composite: destination-out, destination-out, destination-out, destination-out, destination-in;
+  mask-composite: exclude, exclude, exclude, exclude, intersect;
+
+  transform: rotate(4deg);
+  opacity: 0.68;
+  filter: sepia(0.18) contrast(0.96);
+  transition:
+    opacity 0.28s ease,
+    transform 0.3s cubic-bezier(0.34, 1.48, 0.64, 1),
+    filter 0.28s ease;
+
+  box-shadow:
+    2px 3px 14px rgba(0, 0, 0, 0.58),
+    0 1px 3px rgba(0, 0, 0, 0.32);
+}
+
+.hsStamp:hover {
+  opacity: 0.9;
+  filter: sepia(0.08) contrast(0.98);
+  transform: rotate(2deg) scale(1.06);
+}
+
+.postmark {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  pointer-events: none;
+  opacity: 0.42;
+  display: flex;
+  align-items: center;
+}
+
+.pmCircle {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid #3a2008;
+  box-shadow: inset 0 0 0 3px #3a2008;
+  left: 0;
+  top: 0;
+}
+
+.pmLines {
+  position: absolute;
+  right: -8px;
+  top: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pmLines div {
+  width: 18px;
+  height: 1.5px;
+  background: #3a2008;
+  border-radius: 1px;
+}
+
+.stampSchool {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: rgba(42, 22, 6, 0.86);
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 3px rgba(42, 22, 6, 0.15);
+}
+
+.stampLoc {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.6rem;
+  letter-spacing: 0.01em;
+  color: rgba(52, 28, 8, 0.62);
+  line-height: 1.3;
+  text-align: center;
+  max-width: 105px;
+}
+
+.stampYear {
+  font-family: var(--font-mono);
+  font-size: 0.44rem;
+  letter-spacing: 0.16em;
+  color: rgba(52, 28, 8, 0.42);
+  line-height: 1;
+  margin-top: 1px;
+}
+
+/* ── Utility links ── */
+.utilRow {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.utilLink {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(240, 232, 210, 0.26);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.utilLink:hover {
+  color: rgba(196, 160, 80, 0.58);
+}
+
+/* ── Colophon bar ── */
+.colophon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 3rem 1.4rem;
+  border-top: 1px solid rgba(196, 160, 80, 0.08);
+  margin-top: 0.25rem;
+}
+
+.coloCopy {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.12em;
+  color: rgba(240, 232, 210, 0.2);
+}
+
+.coloPowered {
+  font-family: var(--font-hand);
+  font-size: 1.05rem;
+  color: rgba(196, 160, 80, 0.4);
+  letter-spacing: 0.01em;
+}
+
+.coloEdition {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(240, 232, 210, 0.2);
+}
+
+/* ── Mobile ── */
+@media (max-width: 680px) {
+  .sealRow {
+    padding: 2rem 1.5rem 0;
+  }
+
+  .body {
+    padding: 2rem 1.5rem 1.25rem;
+    gap: 1.5rem;
+  }
+
+  .hsStamp {
+    transform: rotate(3deg);
+  }
+
+  .hsStamp:hover {
+    transform: rotate(1.5deg) scale(1.04);
+  }
+
+  .colophon {
+    padding: 0.9rem 1.5rem 1.25rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .coloCopy,
+  .coloEdition {
+    display: none;
+  }
+
+  .coloPowered {
+    font-size: 0.95rem;
+  }
+}

@@ -1,0 +1,62 @@
+.section {
+  position: relative;
+  background: var(--bg, #0f0e0c);
+  padding: 5rem 1.5rem;
+  overflow: hidden;
+}
+
+.cadGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(196, 160, 80, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196, 160, 80, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header { margin-bottom: 2.5rem; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold, #c4a050);
+  margin-bottom: 0.5rem;
+}
+.heading {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--ink, #ede8df);
+  line-height: 1.1;
+  margin: 0 0 0.4rem;
+}
+.subheading {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: rgba(237, 232, 223, 0.5);
+  margin: 0 0 0.75rem;
+}
+.headingRule {
+  width: 2.75rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold, #c4a050), transparent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
