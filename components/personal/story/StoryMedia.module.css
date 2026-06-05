@@ -334,14 +334,59 @@
   display: none;
 }
 
-/* ── Mobile: fills parent completely ── */
+/* ── Mobile: full-screen Instagram-style story ──────────────────────
+   Every layer is position:absolute so sizing is layout-independent —
+   no flex centering math, no 100%-height chains, no sub-pixel gaps.
+   mobileBg (position:relative) is the sole containing block. ── */
 @media (max-width: 768px) {
-  .mediaArea { padding: 0; }
+  /* Container fills mobileBg wall-to-wall. */
+  .container {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    touch-action: none;
+  }
+
+  /* Gradient scrim behind the progress bars + header so they stay
+     legible over bright photos/video — same pattern Instagram uses. */
+  .container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(
+      to bottom,
+      rgba(6, 3, 0, 0.55) 0%,
+      transparent 100%
+    );
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Media area — absolute fill, no flex centering. */
+  .mediaArea {
+    position: absolute;
+    inset: 0;
+    display: block;
+    padding: 0;
+  }
+
+  /* Frame — absolute fill, no aspect-ratio constraint, no box decorations.
+     object-fit:cover on the child handles the crop. */
   .mediaFrame {
-    height: 100%;
-    width: 100%;
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    max-width: none;
     aspect-ratio: auto;
     border-radius: 0;
     box-shadow: none;
+    overflow: hidden;
+    /* Compositor layer — pinch-scale stays off the main thread. */
+    will-change: transform;
   }
 }

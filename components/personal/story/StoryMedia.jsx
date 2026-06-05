@@ -33,9 +33,14 @@ export default function StoryMedia({
   );
   const videoRef = useRef(null);
   const videoBarRef = useRef(null);
+  const mediaFrameRef = useRef(null);
   const goNextRef = useRef(null);
   const pressTimeRef = useRef(0);
   const wasHeldRef = useRef(false);
+  // Pinch-to-zoom state — all mutations go through the ref for 60fps direct DOM
+  // writes, no React state involved. dist0 = initial finger distance; ox/oy =
+  // transform-origin in % (pinch midpoint inside the mediaFrame).
+  const pinchRef = useRef({ active: false, dist0: 1, ox: 50, oy: 50 });
 
   const current = media[currentIndex];
   const useVideoEl = current?.type === "video" && !isGradient(current?.src);
@@ -126,7 +131,58 @@ export default function StoryMedia({
     return () => cancelAnimationFrame(rafId);
   }, [useVideoEl, currentIndex, effectivePaused]);
 
-  function onPressStart() {
+  // ── Pinch-to-zoom helpers ─────────────────────────────────────────────
+  function pinchDist(t) {
+    const dx = t[0].clientX - t[1].clientX;
+    const dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function applyFrameScale(scale, transition) {
+    const frame = mediaFrameRef.current;
+    if (!frame) return;
+    frame.style.transition = transition
+      ? "transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1)"
+      : "none";
+    frame.style.transform = scale === 1 ? "" : `scale(${scale})`;
+  }
+
+  function startPinch(e) {
+    const frame = mediaFrameRef.current;
+    if (!frame) return;
+    const p = pinchRef.current;
+    p.active = true;
+    p.dist0 = pinchDist(e.touches);
+    const rect = frame.getBoundingClientRect();
+    const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    p.ox = ((mx - rect.left) / rect.width) * 100;
+    p.oy = ((my - rect.top) / rect.height) * 100;
+    frame.style.transformOrigin = `${p.ox}% ${p.oy}%`;
+    // Cancel any hold-to-pause that started before the second finger arrived.
+    setHeld(false);
+    wasHeldRef.current = false;
+  }
+
+  function updatePinch(e) {
+    if (!pinchRef.current.active || e.touches.length < 2) return;
+    const scale = Math.max(1, Math.min(4, pinchDist(e.touches) / pinchRef.current.dist0));
+    applyFrameScale(scale, false);
+  }
+
+  function endPinch() {
+    if (!pinchRef.current.active) return;
+    pinchRef.current.active = false;
+    applyFrameScale(1, true); // spring back
+  }
+
+  // ── Hold-to-pause ─────────────────────────────────────────────────────
+  function onPressStart(e) {
+    // Two-finger touches start a pinch — do not pause.
+    if (e.touches?.length >= 2) {
+      startPinch(e);
+      return;
+    }
     pressTimeRef.current = Date.now();
     wasHeldRef.current = false;
     setHeld(true);
@@ -178,8 +234,9 @@ export default function StoryMedia({
       onClick={handleTap}
       onMouseDown={onPressStart}
       onTouchStart={onPressStart}
-      onTouchEnd={releaseHeld}
-      onTouchCancel={releaseHeld}
+      onTouchMove={(e) => { if (e.touches.length >= 2) { e.preventDefault(); updatePinch(e); } }}
+      onTouchEnd={(e) => { endPinch(); releaseHeld(); }}
+      onTouchCancel={(e) => { endPinch(); releaseHeld(); }}
     >
       {/* Header bar — location flag + city + slide counter (IG-username-style) */}
       {location && (
@@ -242,7 +299,7 @@ export default function StoryMedia({
 
       {/* Media area — 9:16 frame uses all vertical space; instant slide swap */}
       <div className={styles.mediaArea}>
-        <div key={currentIndex} className={styles.mediaFrame}>
+        <div key={currentIndex} className={styles.mediaFrame} ref={mediaFrameRef}>
             {useVideoEl ? (
               <video
                 ref={videoRef}
@@ -253,6 +310,11 @@ export default function StoryMedia({
                 playsInline
                 onEnded={goNext}
                 aria-label={current.alt}
+                /* Prevent Chrome/Safari/browser download & pip overlays on tap. */
+                controlsList="nodownload nofullscreen noremoteplayback"
+                disablePictureInPicture
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ WebkitTouchCallout: "none" }}
               />
             ) : isGradient(current?.src) ? (
               <div

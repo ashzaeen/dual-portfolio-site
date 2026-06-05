@@ -4,30 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import styles from "./StoryModal.module.css";
-
-// Module-level counter so that nested/stacked StoryModals share a single
-// body-scroll lock. The previous per-instance "remember previous overflow"
-// trick was fragile across staggered unmounts: closing the top modal
-// would restore overflow to "hidden" (snapshot taken while the bottom
-// modal already locked it), but closing the bottom modal in turn would
-// only restore to "hidden" too if any sequencing differed — leaving the
-// body permanently scroll-locked after both layers were dismissed. The
-// counter releases the lock exactly when the last open modal unmounts.
-let _modalOpenCount = 0;
-let _bodyOverflowPrev = "";
-function lockBodyScroll() {
-  if (_modalOpenCount === 0) {
-    _bodyOverflowPrev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-  }
-  _modalOpenCount++;
-}
-function unlockBodyScroll() {
-  _modalOpenCount = Math.max(0, _modalOpenCount - 1);
-  if (_modalOpenCount === 0) {
-    document.body.style.overflow = _bodyOverflowPrev;
-  }
-}
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export default function StoryModal({ children, onClose, onBack }) {
   const router = useRouter();
@@ -68,11 +45,7 @@ export default function StoryModal({ children, onClose, onBack }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [isClosing, onBack]);
 
-  // Body scroll lock — counter-based so stacked modals share one lock.
-  useEffect(() => {
-    lockBodyScroll();
-    return () => unlockBodyScroll();
-  }, []);
+  useScrollLock();
 
   // Simple focus trap
   useEffect(() => {
