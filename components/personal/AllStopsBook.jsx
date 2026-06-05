@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useScrollLock } from "@/lib/useScrollLock";
 import Postcard from "./Postcard";
 import styles from "./AllStopsBook.module.css";
 
@@ -68,12 +69,7 @@ export default function AllStopsBook({
     return () => document.removeEventListener("keydown", handler);
   }, [open, ignoreEsc, onClose]);
 
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [open]);
+  useScrollLock(open);
 
   // Field Journal flips the natural ascending Order so the most recent
   // (higher Order) postcards land at the top of each region group.

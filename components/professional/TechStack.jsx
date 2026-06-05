@@ -621,7 +621,7 @@ export default function TechStack({ techStack = FALLBACK_TECHSTACK, copy = FALLB
           className="mobile-only"
           onClick={e => { e.stopPropagation(); analytics.techstackMobileArchToggled(); apiRef.current?.toggleMobileArch(); }}
           style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(26,24,20,0.85)', backdropFilter: 'blur(8px)', border: '1px solid #c4a050', color: '#c4a050', padding: '10px 20px', borderRadius: '30px', fontFamily: "var(--font-mono)", fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s ease', zIndex: 25, display: mode === 'architecture' ? 'block' : 'none' }}
-        >{mobileArchSide === 'right' ? '◂ View Left' : 'View Right ▸'}</button>
+        >{mobileArchSide === 'right' ? 'View Right ▸' : '◂ View Left'}</button>
 
         {/* Mobile FAB */}
         <button id="mobile-fab"

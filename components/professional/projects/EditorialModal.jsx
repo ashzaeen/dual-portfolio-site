@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { analytics } from "@/lib/analytics";
 import PinchZoomImage from "@/components/shared/PinchZoomImage";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 // EditorialModal extracted from Projects.jsx so it can be mounted directly
 // by the intercepting route at app/(pro)/@modal/(.)projects/[slug]. Card
@@ -419,11 +420,7 @@ export default function EditorialModal({ project, onClose }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxSrc]);
 
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
+  useScrollLock();
 
   const handleNextMedia = (e) => {
     e.stopPropagation();
@@ -444,7 +441,7 @@ export default function EditorialModal({ project, onClose }) {
       <motion.div
         layoutId={`container-${project.slug}`}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-4xl max-h-[calc(100vh-104px)] bg-surface border border-gold-dim rounded-lg shadow-2xl flex flex-col relative overflow-hidden"
+        className="w-full max-w-4xl max-h-[calc(100svh-104px)] bg-surface border border-gold-dim rounded-lg shadow-2xl flex flex-col relative overflow-hidden"
       >
         <div
           className="flex-shrink-0 z-40 bg-surface/95 border-b border-gold-dim px-6 flex items-center justify-between"
@@ -458,7 +455,7 @@ export default function EditorialModal({ project, onClose }) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto scroll-smooth">
+        <div className="flex-1 overflow-y-auto scroll-smooth overscroll-contain">
           <div className="w-full bg-obsidian flex flex-col border-b border-gold-dim relative group/gallery">
             <motion.div layoutId={`image-${project.slug}`} className={`w-full aspect-video relative flex flex-col justify-center items-center group ${!isVideo && currentMedia.src ? "cursor-zoom-in" : ""}`} onClick={() => { if (!isVideo && currentMedia.src) openLightbox(currentMedia.src); }}>
               {isVideo ? (

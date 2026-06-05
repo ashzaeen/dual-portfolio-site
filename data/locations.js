@@ -451,8 +451,8 @@ export const LOCATIONS = [
 
 export const VIEWS = {
   world: { center: [5, 15], scale: 155, label: "World View" },
-  us: { center: [-96, 38.5], scale: 920, label: "United States" },
-  bd: { center: [90.6, 23.55], scale: 5800, label: "Bangladesh & Region", zoomMs: 2200 },
+  us: { center: [-96, 38.5], scale: 1280, label: "United States" },
+  bd: { center: [90.6, 23.55], scale: 5974, label: "Bangladesh & Region", zoomMs: 2200 },
 };
 
 export const CYCLE_SEQ = ["world", "us", "world", "bd"];

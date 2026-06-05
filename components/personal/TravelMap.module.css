@@ -404,6 +404,12 @@
   gap: 14px;
   overflow-x: auto;
   padding: 24px 16px 28px;
+  /* Match scroll-padding to padding so the snap port's left edge aligns with
+     the first card's left edge at scrollLeft=0. Without this, the snap port
+     starts at x=0 (viewport edge) while cards start at x=16 (padding), so
+     card 1's snap point is scrollLeft=16 — causing a 16px jerk when
+     scroll-snap-type is re-enabled after a pin tap. */
+  scroll-padding-left: 16px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   position: relative;

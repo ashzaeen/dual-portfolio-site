@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import styles from "./Hero.module.css";
+import { useScrollLock } from "@/lib/useScrollLock";
 import { FALLBACK_ROLES } from "@/data/roles";
 import { FALLBACK_HERO_STATUS } from "@/data/status";
 import { FALLBACK_SECTION_COPY } from "@/data/sections";
@@ -339,6 +340,7 @@ function slotTargets(slot, baseTilt) {
 function PhotoCarousel({ photos, onClose }) {
   const [index, setIndex] = useState(0);
   const n = photos.length;
+  useScrollLock();
 
   const goPrev = useCallback(() => setIndex((i) => (i - 1 + n) % n), [n]);
   const goNext = useCallback(() => setIndex((i) => (i + 1) % n), [n]);

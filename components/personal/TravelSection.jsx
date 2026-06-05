@@ -284,7 +284,7 @@ export default function TravelSection({
           <p className={`${styles.subtle} ${styles.mobileTip}`}>
             Tap a pin to lock its postcard · View Stories to open
           </p>
-          <div className={mapStyles.mobileRail} ref={railRef}>
+          <div className={mapStyles.mobileRail} ref={railRef} style={{ overflowAnchor: "none" }}>
             <AnimatePresence initial={false} mode="popLayout">
               {carouselLocations.map((loc) => {
                 const origIdx = locations.findIndex((l) => l.id === loc.id);
@@ -295,7 +295,13 @@ export default function TravelSection({
                     initial={{ opacity: 0, scale: 0.88 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.88 }}
-                    transition={{ type: "spring", stiffness: 320, damping: 32 }}
+                    transition={{
+                      type: "spring", stiffness: 320, damping: 32,
+                      // Layout animation must be overdamped (damping > 2√stiffness ≈ 35.8)
+                      // so the card never overshoots its final position, which would appear
+                      // as the visible leftward jerk reported on mobile.
+                      layout: { type: "spring", stiffness: 260, damping: 38 },
+                    }}
                     className={mapStyles.mobileCardWrap}
                   >
                     <Postcard

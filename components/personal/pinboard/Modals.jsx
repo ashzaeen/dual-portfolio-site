@@ -5,11 +5,7 @@ import { motion } from "framer-motion";
 import styles from "./Pinboard.module.css";
 import { PHOTOS_FOR_COMPASS } from "@/data/pinboard";
 import WallRichText from "./WallRichText";
-
-// Counter-based body-scroll lock shared across all pinboard modals, so a
-// picture opened over the immersive wall keeps the lock until BOTH close.
-let _scrollLocks = 0;
-let _prevOverflow = "";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 // Shared modal chrome: close on Escape + freeze background scroll while open.
 function useEscape(onClose) {
@@ -19,18 +15,7 @@ function useEscape(onClose) {
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    if (_scrollLocks === 0) {
-      _prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-    }
-    _scrollLocks++;
-    return () => {
-      _scrollLocks = Math.max(0, _scrollLocks - 1);
-      if (_scrollLocks === 0) document.body.style.overflow = _prevOverflow;
-    };
-  }, []);
+  useScrollLock();
 }
 
 // ─── Photo modal ─────────────────────────────────────────────

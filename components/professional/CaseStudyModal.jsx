@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import styles from "./CaseStudyModal.module.css";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export default function CaseStudyModal({ children, onClose }) {
   const router = useRouter();
@@ -27,12 +28,7 @@ export default function CaseStudyModal({ children, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [isClosing]);
 
-  // Body scroll lock
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
+  useScrollLock();
 
   // Focus trap
   useEffect(() => {

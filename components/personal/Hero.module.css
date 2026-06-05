@@ -522,7 +522,7 @@
   }
   .typeCol { max-width: 100%; }
   .photoCol { justify-content: flex-start; }
-  .perspectiveHost { max-width: 320px; }
+  .stackHost { max-width: 300px; }
   /* Drop the deepest background polaroid on tablet — keep just one peek
      behind for depth without crowding the column width. */
   .bgFar { display: none; }
@@ -539,10 +539,15 @@
   .name {
     font-size: clamp(2.6rem, 13vw, 3.4rem);
   }
-  .perspectiveHost { max-width: 280px; }
+  /* Fill the content area gracefully — almost full-width on small phones,
+     capped so it never dominates on larger/landscape viewports. */
+  .stackHost { max-width: min(calc(100vw - 2.5rem), 340px); }
   .polaroid {
     padding: 12px 12px 50px;
   }
+  /* Remove the develop flash animation on mobile — Chrome Android doesn't
+     always complete it cleanly, leaving a washed-out brightness residue. */
+  .photo { animation: none; }
   .caption {
     font-size: 1.2rem;
   }

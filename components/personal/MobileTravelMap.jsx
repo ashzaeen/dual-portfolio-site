@@ -91,15 +91,20 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       .translate([W / 2, H / 2]);
     const pathFn = d3.geoPath().projection(proj);
 
-    const lSphere = svg.append("g");
-    const lGrat = svg.append("g");
-    const lLand = svg.append("g");
-    const lBdFills = svg.append("g");
-    const lBdBorders = svg.append("g");
-    const lBdLabels = svg.append("g");
-    const lStates = svg.append("g");
-    const lBorders = svg.append("g");
-    const lPins = svg.append("g");
+    // Single wrapper group — pinch-to-zoom applies here as an SVG transform,
+    // keeping the D3 projection untouched.
+    const mapGroup = svg.append("g");
+    const mapGroupEl = mapGroup.node();
+
+    const lSphere = mapGroup.append("g");
+    const lGrat = mapGroup.append("g");
+    const lLand = mapGroup.append("g");
+    const lBdFills = mapGroup.append("g");
+    const lBdBorders = mapGroup.append("g");
+    const lBdLabels = mapGroup.append("g");
+    const lStates = mapGroup.append("g");
+    const lBorders = mapGroup.append("g");
+    const lPins = mapGroup.append("g");
 
     lSphere
       .append("path")
@@ -248,6 +253,9 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
     }
 
     function applyLandStyle(r) {
+      // Allow page-vertical-scroll on world; take full touch ownership on
+      // us/bd so the browser doesn't intercept the pinch-to-zoom gesture.
+      shell.style.touchAction = (r === "us" || r === "bd") ? "none" : "pan-y";
       if (!landSel) return;
       landSel.attr("class", (d) => {
         const id = +d.id;
@@ -289,6 +297,9 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
     }
 
     function zoomTo(regionKey, onDone) {
+      // Clear any user pinch-zoom so each region starts clean.
+      uZoom = 1; uTx = 0; uTy = 0;
+      mapGroupEl.removeAttribute("transform");
       const view = VIEWS[regionKey];
       const c0 = proj.center().slice();
       const s0 = proj.scale();
@@ -427,6 +438,55 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
     const ro = new ResizeObserver(() => onResize());
     ro.observe(shell);
 
+    // ── Pinch-to-zoom (US and BD views only) ────────────────────────────
+    // Applies a plain SVG group transform on top of the D3 projection so
+    // projection state stays clean. Zoom is clamped [1×, 3×]; pivot is
+    // kept at the pinch midpoint via the standard scale-around-point math.
+    let uZoom = 1, uTx = 0, uTy = 0;
+    let pinchData = null;
+
+    function pinchDist(t) {
+      const dx = t[0].clientX - t[1].clientX;
+      const dy = t[0].clientY - t[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    function pinchMid(t, rect) {
+      return [
+        (t[0].clientX + t[1].clientX) / 2 - rect.left,
+        (t[0].clientY + t[1].clientY) / 2 - rect.top,
+      ];
+    }
+
+    function onPinchStart(e) {
+      if (e.touches.length < 2) return;
+      const r = stateRef.current.region;
+      if (r !== "us" && r !== "bd") return;
+      const rect = shell.getBoundingClientRect();
+      const [mx, my] = pinchMid(e.touches, rect);
+      pinchData = { dist: pinchDist(e.touches), zoom0: uZoom, tx0: uTx, ty0: uTy, mx, my };
+    }
+
+    function onPinchMove(e) {
+      if (!pinchData || e.touches.length < 2) return;
+      e.preventDefault();
+      const newZoom = Math.max(1, Math.min(3, pinchData.zoom0 * pinchDist(e.touches) / pinchData.dist));
+      // Keep pinch midpoint visually fixed: new_translate = mid - (mid - old_translate) * (newZoom/oldZoom)
+      const r = newZoom / pinchData.zoom0;
+      uZoom = newZoom;
+      uTx = pinchData.mx - (pinchData.mx - pinchData.tx0) * r;
+      uTy = pinchData.my - (pinchData.my - pinchData.ty0) * r;
+      mapGroupEl.setAttribute("transform", `translate(${uTx},${uTy}) scale(${uZoom})`);
+    }
+
+    function onPinchEnd(e) {
+      if (e.touches.length < 2) pinchData = null;
+    }
+
+    shell.addEventListener("touchstart", onPinchStart, { passive: true });
+    shell.addEventListener("touchmove", onPinchMove, { passive: false });
+    shell.addEventListener("touchend", onPinchEnd, { passive: true });
+    shell.addEventListener("touchcancel", onPinchEnd, { passive: true });
+
     return () => {
       cancelled = true;
       clearTimeout(cycleTimer);
@@ -435,6 +495,10 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       shell.removeEventListener("click", onShellTap);
       document.removeEventListener("click", onDocTap);
       window.removeEventListener("resize", onResize);
+      shell.removeEventListener("touchstart", onPinchStart);
+      shell.removeEventListener("touchmove", onPinchMove);
+      shell.removeEventListener("touchend", onPinchEnd);
+      shell.removeEventListener("touchcancel", onPinchEnd);
       ro.disconnect();
       svg.selectAll("*").remove();
       apiRef.current = {};

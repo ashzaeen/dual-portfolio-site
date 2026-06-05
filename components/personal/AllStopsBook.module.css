@@ -22,7 +22,7 @@
   display: flex;
   width: 88vw;
   max-width: 1200px;
-  height: 82vh;
+  height: 82svh;
   border-radius: 6px;
   overflow: hidden;
   box-shadow:
@@ -116,6 +116,7 @@
   background: #f2ead8;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
   position: relative;
   padding: 2.5rem 2.8rem 3.5rem 3rem;
   scrollbar-width: thin;

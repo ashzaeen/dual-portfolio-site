@@ -1236,7 +1236,11 @@
     grid-template-columns: 120px 1fr;
     height: 140px;
   }
-  .lpArt { height: 140px !important; }
+  .lpArt { height: 140px !important; width: 120px !important; }
+  /* Fallback art text was designed for 200px — scale it down for the 120px mobile slot. */
+  .lpArt .albumArtTitle { font-size: 1.05rem; }
+  .lpArt .albumArtTop   { font-size: 7.5px; }
+  .lpArt .albumArtMeta  { font-size: 8px; margin-top: 4px; }
   .lpArtEmpty {
     width: 120px;
     height: 140px;
