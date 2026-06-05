@@ -6,6 +6,22 @@ export const metadata = {
   title: "Ashzaeen Fatmi Khan",
   description:
     "CS + Math at UTA · AI research at the Robotic Vision Lab · builder, writer, traveler.",
+  openGraph: {
+    title: "Ashzaeen Fatmi Khan",
+    description:
+      "CS + Math at UTA · AI research at the Robotic Vision Lab · builder, writer, traveler.",
+    url: "https://www.ashzaeen.com",
+    siteName: "Ashzaeen Fatmi Khan",
+    images: [{ url: "/opengraph-image.png" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ashzaeen Fatmi Khan",
+    description:
+      "CS + Math at UTA · AI research at the Robotic Vision Lab · builder, writer, traveler.",
+    images: ["/opengraph-image.png"],
+  },
 };
 
 export const viewport = {
