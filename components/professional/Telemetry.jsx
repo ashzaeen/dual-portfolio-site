@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useReducedMotion, useInView } from "framer-motion";
 
 // Telemetry: staggered card-entry wrapper for the pro side. Designed to
 // pair with SectionFrame — that handles the section header reveal; this
@@ -30,6 +31,13 @@ const itemVariants = {
 
 export function TelemetryGrid({ children, className = "", as = "div", ...rest }) {
   const reducedMotion = useReducedMotion();
+  // useInView is more reliable than whileInView in Next.js SSR/hydration:
+  // whileInView's IntersectionObserver can miss the initial-load trigger, leaving
+  // cards stuck at opacity:0. useInView fires imperatively on mount, same as
+  // SectionFrame, and correctly handles elements already in the viewport.
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.05 });
+
   if (reducedMotion) {
     const Tag = as;
     return <Tag className={className}>{children}</Tag>;
@@ -37,10 +45,10 @@ export function TelemetryGrid({ children, className = "", as = "div", ...rest })
   const MotionTag = motion[as];
   return (
     <MotionTag
+      ref={ref}
       variants={containerVariants}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-12% 0px -10% 0px" }}
+      animate={inView ? "visible" : "hidden"}
       className={className}
       {...rest}
     >
