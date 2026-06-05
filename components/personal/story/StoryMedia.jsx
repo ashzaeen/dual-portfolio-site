@@ -37,6 +37,9 @@ export default function StoryMedia({
   const goNextRef = useRef(null);
   const pressTimeRef = useRef(0);
   const wasHeldRef = useRef(false);
+  // Delays held state so quick navigation taps never stutter the video.
+  // Instagram only pauses on a genuine hold, not a tap.
+  const holdTimerRef = useRef(null);
   // Pinch-to-zoom state — all mutations go through the ref for 60fps direct DOM
   // writes, no React state involved. dist0 = initial finger distance; ox/oy =
   // transform-origin in % (pinch midpoint inside the mediaFrame).
@@ -178,17 +181,17 @@ export default function StoryMedia({
 
   // ── Hold-to-pause ─────────────────────────────────────────────────────
   function onPressStart(e) {
-    // Two-finger touches start a pinch — do not pause.
-    if (e.touches?.length >= 2) {
-      startPinch(e);
-      return;
-    }
+    if (e.touches?.length >= 2) { startPinch(e); return; }
     pressTimeRef.current = Date.now();
     wasHeldRef.current = false;
-    setHeld(true);
+    // Delay pause by 180ms — quick navigation taps fire and finish in < 150ms,
+    // so they never trigger the hold state. Only deliberate holds reach setHeld.
+    clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = setTimeout(() => setHeld(true), 180);
   }
 
   function releaseHeld() {
+    clearTimeout(holdTimerRef.current);
     setHeld((prev) => {
       if (prev && Date.now() - pressTimeRef.current > 250) {
         wasHeldRef.current = true;
@@ -196,6 +199,9 @@ export default function StoryMedia({
       return false;
     });
   }
+
+  // Clean up hold timer on unmount
+  useEffect(() => () => clearTimeout(holdTimerRef.current), []);
 
   // Global mouseup so release outside container always clears held
   useEffect(() => {
@@ -230,7 +236,7 @@ export default function StoryMedia({
 
   return (
     <div
-      className={styles.container}
+      className={`${styles.container}${held ? ` ${styles.held}` : ""}`}
       onClick={handleTap}
       onMouseDown={onPressStart}
       onTouchStart={onPressStart}

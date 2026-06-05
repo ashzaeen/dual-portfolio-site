@@ -15,6 +15,14 @@
   z-index: 0;
 }
 
+/* Swipe-to-dismiss wrapper — receives direct CSS transforms from the gesture
+   handler; the inner .modal is left untouched so Framer Motion still owns
+   the open/close animation. Sizing comes from the child .modal. */
+.dismissWrap {
+  position: relative;
+  z-index: 1;
+}
+
 .modal {
   position: relative;
   z-index: 1;

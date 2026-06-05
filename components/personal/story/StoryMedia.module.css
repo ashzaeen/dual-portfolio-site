@@ -14,6 +14,21 @@
   container-type: size;
 }
 
+/* ── Hold-to-pause dim overlay — Instagram-style visual feedback ── */
+.held::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  z-index: 14;
+  pointer-events: none;
+  animation: holdDimIn 0.18s ease forwards;
+}
+@keyframes holdDimIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ── Header bar (IG-style: flag + city + counter) ── */
 .header {
   position: absolute;
