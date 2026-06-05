@@ -392,9 +392,13 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       const idx = CYCLE_SEQ.lastIndexOf(r);
       if (idx >= 0) cycleIdx = idx;
       setRegion(r);
-      zoomTo(r, () => {
-        if (!stateRef.current.paused) scheduleNext();
-      });
+      // Skip zoomTo when already in the target region — keeps the user's
+      // current pinch-zoom intact instead of snapping it back to 1×.
+      if (stateRef.current.region !== r) {
+        zoomTo(r, () => {
+          if (!stateRef.current.paused) scheduleNext();
+        });
+      }
     }
 
     apiRef.current.manualZoom = triggerManualZoom;
@@ -495,6 +499,14 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       }
     }
 
+    // Clamp pan so the map always covers ≥ 80% of the viewport in each
+    // dimension — prevents wandering into blank space. Derived from:
+    // overlap([uTx, uTx+W*uZoom], [0,W]) ≥ 0.8*W  →  uTx ∈ [W*(0.8−uZoom), 0.2W].
+    function clampTranslation() {
+      uTx = Math.max(W * (0.8 - uZoom), Math.min(W * 0.2, uTx));
+      uTy = Math.max(H * (0.8 - uZoom), Math.min(H * 0.2, uTy));
+    }
+
     function onPinchMove(e) {
       const r = stateRef.current.region;
       if (r !== "us" && r !== "bd") return;
@@ -506,11 +518,13 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
         uZoom = newZoom;
         uTx = pinchData.mx - (pinchData.mx - pinchData.tx0) * ratio;
         uTy = pinchData.my - (pinchData.my - pinchData.ty0) * ratio;
+        clampTranslation();
         applyMapTransform();
       } else if (panData && e.touches.length === 1 && uZoom > 1) {
         e.preventDefault();
         uTx = panData.tx0 + (e.touches[0].clientX - panData.x0);
         uTy = panData.ty0 + (e.touches[0].clientY - panData.y0);
+        clampTranslation();
         applyMapTransform();
       }
     }
