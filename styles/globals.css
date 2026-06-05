@@ -334,6 +334,12 @@ svg {
 .svg-pin.active .pin-dot {
   fill: #eece58;
 }
+@media (max-width: 768px) {
+  .svg-pin.hot .pin-dot,
+  .svg-pin.active .pin-dot {
+    r: 9;
+  }
+}
 
 /* ─────────────────────────────────────────
    SCROLL REVEAL UTILITY

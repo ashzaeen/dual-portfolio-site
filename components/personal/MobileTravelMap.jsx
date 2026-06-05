@@ -234,9 +234,9 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
           .attr("class", "svg-pin")
           .attr("data-id", loc.id)
           .attr("transform", `translate(${px},${py})`);
-        g.append("circle").attr("class", "pin-pulse").attr("r", 6);
-        g.append("circle").attr("class", "pin-ring").attr("r", 12);
-        g.append("circle").attr("class", "pin-dot").attr("r", 4.5);
+        g.append("circle").attr("class", "pin-pulse").attr("r", 9);
+        g.append("circle").attr("class", "pin-ring").attr("r", 16);
+        g.append("circle").attr("class", "pin-dot").attr("r", 6);
 
         g.on("click", (event) => {
           event.stopPropagation();
