@@ -253,9 +253,7 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
     }
 
     function applyLandStyle(r) {
-      // Allow page-vertical-scroll on world; take full touch ownership on
-      // us/bd so the browser doesn't intercept the pinch-to-zoom gesture.
-      shell.style.touchAction = (r === "us" || r === "bd") ? "none" : "pan-y";
+      updateTouchAction();
       if (!landSel) return;
       landSel.attr("class", (d) => {
         const id = +d.id;
@@ -276,6 +274,7 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       if (bdBordersSel) bdBordersSel.style("display", showBd ? "" : "none");
       if (bdLabelsSel) bdLabelsSel.style("display", showBd ? "" : "none");
       if (bordersSel) bordersSel.style("opacity", r === "world" ? 1 : 0.6);
+      updatePinSizes(r);
     }
 
     function positionBdLabels() {
@@ -482,6 +481,22 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       updatePinPositions(1 / uZoom);
     }
 
+    // touch-action: none captures all touch for pan; pan-y passes single-finger
+    // vertical touches to the browser so the page can be scrolled when not zoomed.
+    function updateTouchAction() {
+      const r = stateRef.current.region;
+      shell.style.touchAction = (r === "us" || r === "bd") && uZoom > 1 ? "none" : "pan-y";
+    }
+
+    // Resize pins so world-view stays at the original small size and US/BD
+    // get the larger tap-friendly size (matches the drawPins initial attrs).
+    function updatePinSizes(r) {
+      const big = r === "us" || r === "bd";
+      lPins.selectAll(".pin-dot").attr("r", big ? 6 : 4.5);
+      lPins.selectAll(".pin-pulse").attr("r", big ? 9 : 6);
+      lPins.selectAll(".pin-ring").attr("r", big ? 16 : 12);
+    }
+
     function onPinchStart(e) {
       const r = stateRef.current.region;
       if (r !== "us" && r !== "bd") return;
@@ -514,11 +529,17 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       if (pinchData && e.touches.length >= 2) {
         e.preventDefault();
         const newZoom = Math.max(1, Math.min(3, pinchData.zoom0 * pinchDist(e.touches) / pinchData.dist));
+        const wasZoomed = uZoom > 1;
         const ratio = newZoom / pinchData.zoom0;
         uZoom = newZoom;
         uTx = pinchData.mx - (pinchData.mx - pinchData.tx0) * ratio;
         uTy = pinchData.my - (pinchData.my - pinchData.ty0) * ratio;
         clampTranslation();
+        updateTouchAction();
+        if (!wasZoomed && uZoom > 1) {
+          stateRef.current.touched = true;
+          setPausedFlag(true);
+        }
         applyMapTransform();
       } else if (panData && e.touches.length === 1 && uZoom > 1) {
         e.preventDefault();
@@ -532,8 +553,8 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
     function onPinchEnd(e) {
       if (e.touches.length < 2) pinchData = null;
       if (e.touches.length === 0) panData = null;
-      // If zoom snapped back to 1 (e.g., pinched in), clear pan too.
       if (uZoom <= 1) { uZoom = 1; uTx = 0; uTy = 0; panData = null; }
+      updateTouchAction();
     }
 
     shell.addEventListener("touchstart", onPinchStart, { passive: true });
