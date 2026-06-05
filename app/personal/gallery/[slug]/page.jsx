@@ -2,14 +2,21 @@ import { notFound } from "next/navigation";
 import PersonalLanding from "@/components/personal/PersonalLanding";
 import GalleryReader from "@/components/personal/pinboard/GalleryReader";
 import SlugLandingChoreography from "@/components/shared/SlugLandingChoreography";
-import { fetchGalleryItems, fetchGalleryBySlug } from "@/lib/notion";
+import { fetchGalleryBySlug } from "@/lib/notion";
+import { ITEMS as CURATED_ITEMS, gallerySlug } from "@/data/pinboard";
 
 export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
-// Pre-render every shareable gallery picture (slug derived from filename).
+// Pre-render only the stable curated gallery items (hardcoded in data/pinboard.js).
+// Notion-added dynamic photos are server-rendered on first visit instead.
+// This avoids fetching all Notion pinboard photos + curated overrides at build
+// time across 25+ workers — a race condition that caused intermittent build
+// timeouts when Notion's API was slow.
 export async function generateStaticParams() {
-  const items = await fetchGalleryItems();
-  return items.filter((i) => i.slug).map((i) => ({ slug: i.slug }));
+  return CURATED_ITEMS
+    .filter((i) => i.type === "photo" || i.type === "poster")
+    .map((i) => ({ slug: gallerySlug(i) }))
+    .filter((i) => i.slug);
 }
 
 // Direct URL visits render the personal landing, then SlugLandingChoreography

@@ -19,11 +19,11 @@ const nextConfig = {
   // PostHog's API needs trailing-slash requests to pass through untouched.
   skipTrailingSlashRedirect: true,
 
-  // Safety net for static generation: the build pre-renders every slug page,
-  // each rendering the full landing. Notion reads are deduped per build (see
-  // lib/notion.js), so this rarely bites — but give slow/retried pages headroom
-  // over the 60s default so a transient hiccup doesn't fail the whole build.
-  staticPageGenerationTimeout: 120,
+  // Safety net for static generation. PersonalLanding fetches are protected by
+  // unstable_cache (cross-worker) and build-phase memoization (within a worker)
+  // but on a cold first build, a slow Notion API can still push close to 120s.
+  // 240s gives comfortable headroom without letting genuinely broken pages hang.
+  staticPageGenerationTimeout: 240,
 };
 
 export default nextConfig;

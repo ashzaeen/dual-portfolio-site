@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState, useMemo } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { TunerProvider, Tunable, useTuner, DEFAULT_TUNE_CONFIG } from "./HeroTuner";
 import { FALLBACK_HERO_STATUS } from "@/data/status";
 import { useActiveStatus } from "@/lib/useActiveStatus";
@@ -95,10 +95,6 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
   const avatarX = useSpring(useTransform(mouseX, [-500, 500], [-10, 10]), { stiffness: 100, damping: 30 });
   const avatarY = useSpring(useTransform(mouseY, [-500, 500], [-10, 10]), { stiffness: 100, damping: 30 });
 
-  const { scrollY } = useScroll();
-  const heroRotateX = useTransform(scrollY, [0, 600], [0, 45]);
-  const heroZ = useTransform(scrollY, [0, 600], [0, -600]);
-  const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
 
   const slamVariants = {
     hidden: { opacity: 0, scale: 3, z: 500, filter: "blur(20px)" },
@@ -193,8 +189,7 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
         <div>Uptime: {time}</div>
       </div>
 
-      <motion.div
-        style={{ opacity: heroOpacity, rotateX: heroRotateX, z: heroZ, transformOrigin: "bottom center" }}
+      <div
         className="hero-outer relative min-h-[100dvh] md:min-h-screen w-full flex flex-col items-center justify-center z-10 pt-16 pb-8 md:pt-12 md:pb-0"
       >
         <div className="hero-stage flex flex-col w-full h-full max-w-5xl mx-auto px-6 my-auto">
@@ -365,7 +360,7 @@ function HeroInner({ config, chips, stats, tickerLogs, status }) {
           </motion.div>
 
         </div>
-      </motion.div>
+      </div>
 
       <style jsx global>{`
         .perspective-stage { perspective: 1500px; transform-style: preserve-3d; }
