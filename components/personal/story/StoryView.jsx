@@ -7,7 +7,12 @@ import FieldNotes from "./FieldNotes";
 import styles from "./StoryView.module.css";
 
 function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(false);
+  // Lazy initializer reads matchMedia synchronously on the client so the
+  // correct layout renders on the FIRST frame — no desktop→mobile flip.
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(`(max-width: ${breakpoint}px)`).matches;
+  });
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
     setIsMobile(mq.matches);

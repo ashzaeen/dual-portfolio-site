@@ -285,21 +285,34 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
         .attr("y", (d) => pathFn.centroid(d)[1]);
     }
 
-    function redrawPaths() {
-      svg.selectAll("path").attr("d", pathFn);
-      positionBdLabels();
+    // Sets every pin's SVG transform to its projected position with an
+    // optional counter-scale so pins keep a consistent visual size when
+    // the map group is zoomed (pinScale = 1/uZoom). At zoom=1 no scale
+    // attribute is written, keeping the DOM clean.
+    function updatePinPositions(pinScale) {
       LOCATIONS.forEach((loc) => {
         const [px, py] = proj(loc.coords);
         lPins
           .select(`g[data-id="${loc.id}"]`)
-          .attr("transform", `translate(${px},${py})`);
+          .attr("transform",
+            pinScale === 1
+              ? `translate(${px},${py})`
+              : `translate(${px},${py}) scale(${pinScale})`
+          );
       });
+    }
+
+    function redrawPaths() {
+      svg.selectAll("path").attr("d", pathFn);
+      positionBdLabels();
+      updatePinPositions(uZoom > 1 ? 1 / uZoom : 1);
     }
 
     function zoomTo(regionKey, onDone) {
       // Clear any user pinch-zoom so each region starts clean.
       uZoom = 1; uTx = 0; uTy = 0;
       mapGroupEl.removeAttribute("transform");
+      updatePinPositions(1);
       const view = VIEWS[regionKey];
       const c0 = proj.center().slice();
       const s0 = proj.scale();
@@ -438,12 +451,14 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
     const ro = new ResizeObserver(() => onResize());
     ro.observe(shell);
 
-    // ── Pinch-to-zoom (US and BD views only) ────────────────────────────
-    // Applies a plain SVG group transform on top of the D3 projection so
-    // projection state stays clean. Zoom is clamped [1×, 3×]; pivot is
-    // kept at the pinch midpoint via the standard scale-around-point math.
+    // ── Pinch-to-zoom + single-finger pan (US and BD views only) ────────
+    // Group transform on mapGroup keeps D3 projection state clean.
+    // Zoom clamped [1×, 3×]; pivot held at pinch midpoint.
+    // After zooming, one finger pans the map freely.
+    // Pins are counter-scaled so they stay visually consistent with zoom.
     let uZoom = 1, uTx = 0, uTy = 0;
-    let pinchData = null;
+    let pinchData = null; // 2-finger pinch state
+    let panData = null;   // 1-finger pan state (only when zoomed)
 
     function pinchDist(t) {
       const dx = t[0].clientX - t[1].clientX;
@@ -457,29 +472,54 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       ];
     }
 
+    // Applies both the group transform AND counter-scales pins.
+    function applyMapTransform() {
+      mapGroupEl.setAttribute("transform", `translate(${uTx},${uTy}) scale(${uZoom})`);
+      updatePinPositions(1 / uZoom);
+    }
+
     function onPinchStart(e) {
-      if (e.touches.length < 2) return;
       const r = stateRef.current.region;
       if (r !== "us" && r !== "bd") return;
-      const rect = shell.getBoundingClientRect();
-      const [mx, my] = pinchMid(e.touches, rect);
-      pinchData = { dist: pinchDist(e.touches), zoom0: uZoom, tx0: uTx, ty0: uTy, mx, my };
+
+      if (e.touches.length >= 2) {
+        // 2-finger pinch zoom — cancel any ongoing pan first.
+        panData = null;
+        const rect = shell.getBoundingClientRect();
+        const [mx, my] = pinchMid(e.touches, rect);
+        pinchData = { dist: pinchDist(e.touches), zoom0: uZoom, tx0: uTx, ty0: uTy, mx, my };
+      } else if (e.touches.length === 1 && uZoom > 1) {
+        // 1-finger pan — only available when already zoomed in.
+        pinchData = null;
+        panData = { x0: e.touches[0].clientX, y0: e.touches[0].clientY, tx0: uTx, ty0: uTy };
+      }
     }
 
     function onPinchMove(e) {
-      if (!pinchData || e.touches.length < 2) return;
-      e.preventDefault();
-      const newZoom = Math.max(1, Math.min(3, pinchData.zoom0 * pinchDist(e.touches) / pinchData.dist));
-      // Keep pinch midpoint visually fixed: new_translate = mid - (mid - old_translate) * (newZoom/oldZoom)
-      const r = newZoom / pinchData.zoom0;
-      uZoom = newZoom;
-      uTx = pinchData.mx - (pinchData.mx - pinchData.tx0) * r;
-      uTy = pinchData.my - (pinchData.my - pinchData.ty0) * r;
-      mapGroupEl.setAttribute("transform", `translate(${uTx},${uTy}) scale(${uZoom})`);
+      const r = stateRef.current.region;
+      if (r !== "us" && r !== "bd") return;
+
+      if (pinchData && e.touches.length >= 2) {
+        e.preventDefault();
+        const newZoom = Math.max(1, Math.min(3, pinchData.zoom0 * pinchDist(e.touches) / pinchData.dist));
+        const ratio = newZoom / pinchData.zoom0;
+        uZoom = newZoom;
+        uTx = pinchData.mx - (pinchData.mx - pinchData.tx0) * ratio;
+        uTy = pinchData.my - (pinchData.my - pinchData.ty0) * ratio;
+        applyMapTransform();
+      } else if (panData && e.touches.length === 1 && uZoom > 1) {
+        e.preventDefault();
+        uTx = panData.tx0 + (e.touches[0].clientX - panData.x0);
+        uTy = panData.ty0 + (e.touches[0].clientY - panData.y0);
+        applyMapTransform();
+      }
     }
 
     function onPinchEnd(e) {
       if (e.touches.length < 2) pinchData = null;
+      if (e.touches.length === 0) panData = null;
+      // If zoom snapped back to 1 (e.g., pinched in), clear pan too.
+      if (uZoom <= 1) { uZoom = 1; uTx = 0; uTy = 0; panData = null; }
     }
 
     shell.addEventListener("touchstart", onPinchStart, { passive: true });

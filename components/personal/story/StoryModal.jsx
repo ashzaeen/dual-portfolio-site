@@ -76,9 +76,11 @@ export default function StoryModal({ children, onClose, onBack }) {
     };
   }, []);
 
+  // No scale — scale forces a new GPU compositing layer on Chrome mobile
+  // which causes a one-frame brightness flash. Pure y+opacity is smoother.
   const animState = isClosing
-    ? { opacity: 0, scale: 0.96, y: 12 }
-    : { opacity: 1, scale: 1, y: 0 };
+    ? { opacity: 0, y: 18 }
+    : { opacity: 1, y: 0 };
 
   return (
     <div
@@ -99,9 +101,9 @@ export default function StoryModal({ children, onClose, onBack }) {
 
       <motion.div
         className={styles.modal}
-        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        initial={{ opacity: 0, y: 18 }}
         animate={animState}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: "spring", stiffness: 340, damping: 38 }}
       >
         {onBack && (
           <button

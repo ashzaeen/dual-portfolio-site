@@ -200,10 +200,26 @@ export default function TravelSection({
 
   function handlePinTap(id) {
     const rail = railRef.current;
+    if (!id) { setActiveId(null); return; }
+
+    // If the postcard rail isn't fully in view, glide the page down to
+    // it first, then run the postcard animation once it lands — matching
+    // the Screening Room ticket-select feel.
+    const rect = rail?.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const railInView = rect && rect.top >= 0 && rect.bottom <= vh;
+
+    if (!railInView && rail) {
+      rail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      setTimeout(() => activatePin(id), 420);
+    } else {
+      activatePin(id);
+    }
+  }
+
+  function activatePin(id) {
+    const rail = railRef.current;
     if (rail) {
-      // scroll-snap-type: x mandatory will fight the leftward snap once
-      // Framer Motion transforms reorder cards — disable snap until the
-      // animation settles, and pin scrollLeft to 0 across that window.
       rail.style.scrollSnapType = "none";
       rail.scrollLeft = 0;
     }
