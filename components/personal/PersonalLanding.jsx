@@ -8,6 +8,7 @@ import PinboardSection from "@/components/personal/pinboard/PinboardSection";
 import PersonalFooter from "@/components/personal/PersonalFooter";
 import TrackSide from "@/components/shared/TrackSide";
 import EngagementTracker from "@/components/shared/EngagementTracker";
+import { unstable_cache } from "next/cache";
 import {
   fetchRoles,
   fetchTravelData,
@@ -23,18 +24,36 @@ import {
   fetchPersonalHero,
 } from "@/lib/notion";
 
+// fetchTravelData and fetchWriting are the two heavy fetchers — they
+// recursively pull Notion page-body blocks for every story (~29) and writing
+// piece (~6), each requiring 35+ sequential API calls. React.cache dedupes
+// within one render, but Next.js builds with multiple workers: each worker
+// independently pays the full cost and easily hits the 120s timeout across
+// the 60+ slug pages (gallery/travel/writing) that all render PersonalLanding.
+// unstable_cache writes the result to disk after the FIRST worker computes it;
+// every other worker hits the cache instantly (revalidate matches ISR: 3600s).
+const getTravelData = unstable_cache(
+  () => fetchTravelData(),
+  ["personal-landing-travel"],
+  { revalidate: 3600 }
+);
+const getWriting = unstable_cache(
+  () => fetchWriting(),
+  ["personal-landing-writing"],
+  { revalidate: 3600 }
+);
+
 // Shared personal landing — rendered by `app/personal/page.jsx` and by each
 // canonical slug route under personal/.../[slug]/page.jsx so direct URL
-// visits show the landing underneath the modal. fetchTravelData and
-// fetchWriting are React.cache-wrapped so slug routes don't double-fetch.
+// visits show the landing underneath the modal.
 export default async function PersonalLanding() {
   const [roles, travel, songs, shows, writing, desk, pinboardPhotos, curatedOverrides, footer, heroStatus, sections, heroCopy] =
     await Promise.all([
       fetchRoles(),
-      fetchTravelData(),
+      getTravelData(),
       fetchSongs(),
       fetchShows(),
-      fetchWriting(),
+      getWriting(),
       fetchDesk(),
       fetchPinboardPhotos(),
       fetchCuratedOverrides(),
