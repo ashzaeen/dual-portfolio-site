@@ -1,6 +1,7 @@
 import "../styles/globals.css";
 import { fontVariables } from "./fonts";
 import { PostHogProvider } from "./providers";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata = {
   title: "Ashzaeen Fatmi Khan",
@@ -43,6 +44,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <PostHogProvider>{children}</PostHogProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
