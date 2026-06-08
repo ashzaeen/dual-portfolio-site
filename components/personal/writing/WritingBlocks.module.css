@@ -350,6 +350,31 @@
 .figure {
   margin: 1.4rem 0;
 }
+/* ── Mobile block text sizing ─────────────────────────────── */
+@media (max-width: 768px) {
+  .paragraph {
+    font-size: clamp(0.82rem, 4vw, 0.92rem);
+    line-height: 1.66;
+    margin-bottom: 0.9rem;
+  }
+  .li {
+    font-size: clamp(0.82rem, 4vw, 0.92rem);
+    line-height: 1.62;
+  }
+  .h2 {
+    font-size: clamp(1.15rem, 5vw, 1.38rem);
+    margin-top: 1.4rem;
+    margin-bottom: 0.45rem;
+  }
+  .quote {
+    font-size: clamp(0.92rem, 4.4vw, 1.02rem);
+    padding-left: 1rem;
+  }
+  .dropCap {
+    font-size: clamp(2.8rem, 9vw, 3.4rem);
+  }
+}
+
 /* Sized figures: desktop uses --img-w, mobile uses --img-w-mobile (which
    defaults to 100% so desktop-shrunk images aren't rendered tiny on phones). */
 .figureSized {

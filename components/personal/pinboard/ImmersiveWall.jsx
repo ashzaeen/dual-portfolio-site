@@ -90,13 +90,21 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
   // In edit mode the wall items are click-disabled (so dragging photos
   // doesn't open modals). Mirror that for compass + clock — they'd open
   // their modals and steal focus from the coordinate-discovery flow.
-  const decoClick = (cb) => (editMode ? undefined : cb);
+  // Wrap deco clicks so they're suppressed after a drag/pinch gesture.
+  // pan.current.moved is set true the moment the pointer travels > 8px,
+  // and reset only when a brand-new gesture starts (first pointer down).
+  const decoClick = (cb) => (editMode ? undefined : () => {
+    if (!pan.current.moved) cb();
+  });
   const wrapRef = useRef(null);
   const vsRef = useRef({ w: 1200, h: 800 });
   // pan state holds the wall offset (top/left of wall in viewport coords)
   const pan = useRef({
     on: false, sx: 0, sy: 0, ox: -200, oy: -150,
     vx: 0, vy: 0, lx: 0, ly: 0, raf: null, panRaf: null,
+    // Tap vs drag: moved=true once the pointer travels >8px in this gesture.
+    // Reset only when a fresh gesture starts (size===0 before pointerdown).
+    moved: false, startX: 0, startY: 0,
   });
   const [pos, setPos] = useState({ x: -200, y: -150 });
   // Zoom: `scale` drives the wall transform; scaleRef mirrors it for the
@@ -125,13 +133,24 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
+    let firstRun = true;
     const upd = () => {
       vsRef.current = { w: el.clientWidth, h: el.clientHeight };
-      // Never let the wall zoom out past covering the viewport (no empty
-      // gutters), then re-clamp the offset to the (possibly new) bounds.
       const ms = Math.max(vsRef.current.w / WALL_W, vsRef.current.h / WALL_H);
       let s = scaleRef.current;
-      if (s < ms) { s = ms; scaleRef.current = s; setScale(s); }
+
+      if (firstRun) {
+        firstRun = false;
+        // Mobile: open at 0.5 — 2× more zoomed-out than the desktop default
+        // of 1.0, so the first impression shows a meaningful overview of the
+        // wall rather than a heavily cropped corner.
+        if (el.clientWidth <= 768) s = Math.max(ms, 0.5);
+      }
+
+      if (s < ms) s = ms;
+      scaleRef.current = s;
+      setScale(s);
+
       const p = pan.current;
       const nx = Math.min(0, Math.max(-(WALL_W * s - vsRef.current.w), p.ox));
       const ny = Math.min(0, Math.max(-(WALL_H * s - vsRef.current.h), p.oy));
@@ -258,25 +277,56 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
   };
 
   // ─── Pointer drag + pinch (mouse + touch + trackpad) ───
+  //
+  // Key design: ALL pointers are registered in pointers.current regardless
+  // of what's under the finger. This makes pinch work even when both fingers
+  // land on photos or decorations — previously the early-return meant those
+  // pointer IDs were never tracked, so pinch never initiated.
+  //
+  // Tap vs drag is separated via pan.current.moved: it's set true once the
+  // pointer travels >8px, and reset only at the start of a fresh gesture
+  // (first pointer down from 0 pointers). WallItem and deco click handlers
+  // check this flag so a drag that ends over an item doesn't open it.
   const onPD = useCallback((e) => {
-    if (e.target.closest(`.${styles.wallItem}`) || e.target.closest(`.${styles.wallDeco}`)) return;
-    // Click on empty board — in edit mode, deselect whatever was selected.
-    // This matches the Figma-style flow: click photo to select, click
-    // background to drop the selection.
-    if (editMode && editor?.setSelectedId) editor.setSelectedId(null);
-    e.currentTarget.setPointerCapture(e.pointerId);
+    const onItem = !!(
+      e.target.closest(`.${styles.wallItem}`) ||
+      e.target.closest(`.${styles.wallDeco}`)
+    );
+
+    // Fresh gesture (no fingers previously down) — reset tap/drag state.
+    if (pointers.current.size === 0) {
+      pan.current.moved = false;
+      pan.current.startX = e.clientX;
+      pan.current.startY = e.clientY;
+    }
+
+    // Register this pointer so pinch math and move-tracking always work.
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (editMode && editor?.setSelectedId && !onItem) editor.setSelectedId(null);
+
     const p = pan.current;
-    // Second finger down (touch) → begin a pinch and suspend the pan.
+
+    // Two-finger pinch — always proceed regardless of what's under the fingers.
     if (pointers.current.size >= 2 && !editMode) {
       p.on = false;
+      p.moved = true; // any 2-finger gesture counts as "moved" (no item tap fires)
       const pts = [...pointers.current.values()];
       pinch.current = {
         dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1,
         scale: scaleRef.current,
       };
+      // Capture this pointer so move events reach the canvas even off-element.
+      e.currentTarget.setPointerCapture(e.pointerId);
       return;
     }
+
+    // Single pointer on item/deco — register (above) but don't start pan.
+    // The item handles its own click; onPM will bubble up via the DOM.
+    if (onItem) return;
+
+    // Single pointer on empty canvas — start pan.
+    e.currentTarget.setPointerCapture(e.pointerId);
     p.on = true;
     p.sx = e.clientX - p.ox; p.sy = e.clientY - p.oy;
     p.lx = e.clientX; p.ly = e.clientY;
@@ -284,10 +334,19 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     cancelAnimationFrame(p.raf);
     setGrabbing(true);
   }, [editMode, editor]);
+
   const onPM = useCallback((e) => {
     if (!pointers.current.has(e.pointerId)) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const p = pan.current;
+
+    // Track cumulative movement so tap vs drag can be distinguished later.
+    if (!p.moved) {
+      const dx = Math.abs(e.clientX - p.startX);
+      const dy = Math.abs(e.clientY - p.startY);
+      if (dx > 8 || dy > 8) p.moved = true;
+    }
+
     // Two fingers → pinch-zoom around their midpoint.
     if (pointers.current.size >= 2 && pinch.current) {
       const pts = [...pointers.current.values()];

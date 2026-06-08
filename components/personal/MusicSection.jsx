@@ -263,17 +263,6 @@ function LastPlayedCard() {
               {ago ? ` · ${ago} ago` : ""}
             </span>
           </div>
-          {track?.album && (
-            <div className={styles.lpGenrePill}
-              style={{
-                background: `${accent}1e`,
-                color: accent,
-                borderColor: `${accent}55`,
-              }}
-            >
-              {track.album.length > 22 ? `${track.album.slice(0, 22)}…` : track.album}
-            </div>
-          )}
         </div>
         <div className={styles.lpTitle}>{track?.name || "Nothing on right now"}</div>
         <div className={styles.lpMeta}>
@@ -906,9 +895,23 @@ function MusicDesktop({ songs, activeIndex, setActiveIndex, loadSong, song, play
 
 /* ─── MOBILE ─────────────────────────────────────────────── */
 function MusicMobile({ songs, activeIndex, setActiveIndex, loadSong, song, playing, speed, setSpeed, toggle, copy }) {
+  const linerRef = useRef(null);
+
   const loadById = (id) => {
     const idx = songs.findIndex((s) => s.id === id);
     if (idx >= 0) loadSong(idx, "drag");
+  };
+
+  // When a different song is tapped, glide the page down so the liner notes
+  // slide gently into the bottom of the viewport — mirroring how the travel
+  // section scrolls up to the postcard rail on pin tap.
+  const handlePick = (i) => {
+    loadSong(i, "click");
+    if (i !== activeIndex) {
+      setTimeout(() => {
+        linerRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 100);
+    }
   };
 
   return (
@@ -936,7 +939,7 @@ function MusicMobile({ songs, activeIndex, setActiveIndex, loadSong, song, playi
             <Shelf
               songs={songs}
               activeIndex={activeIndex}
-              setActiveIndex={(i) => loadSong(i, "click")}
+              setActiveIndex={handlePick}
               playing={playing}
             />
           </div>
@@ -952,7 +955,7 @@ function MusicMobile({ songs, activeIndex, setActiveIndex, loadSong, song, playi
               platterSize={190}
             />
           </div>
-          <div className={styles.mobileTrioLiner}>
+          <div ref={linerRef} className={styles.mobileTrioLiner}>
             <LinerNotes song={song} />
           </div>
         </div>

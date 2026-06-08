@@ -220,7 +220,7 @@ export function Compass({ onClick }) {
       className={styles.wallDeco}
       style={{ left: 970, top: 180, cursor: "pointer" }}
       onClick={onClick}
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={undefined}
     >
       <Tape />
       <svg
@@ -308,7 +308,7 @@ export function DualClock({ onClick }) {
       className={styles.wallDeco}
       style={{ left: 180, top: 460, cursor: onClick ? "pointer" : "default" }}
       onClick={onClick}
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={undefined}
     >
       <Pin color="#c4a050" />
       <svg width="100" height="112" style={{ display: "block" }}>
@@ -341,7 +341,7 @@ export function EasterEgg({ onFind }) {
       className={`${styles.wallDeco} ${styles.eggHotspot}`}
       style={{ left: 3434, top: 2342, cursor: "pointer" }}
       onClick={onFind}
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={undefined}
       title="?"
       role="button"
       aria-label="A hidden easter egg"

@@ -1807,10 +1807,22 @@
     border-right: none;
     min-height: auto;
   }
+  /* Disable the grain overlay's mix-blend-mode on mobile — it forces the
+     entire board to be GPU-composited on every scroll frame, causing jank. */
+  .boardFrame::before { display: none; }
   .boardAbs { display: none; }
   .boardFlex { display: flex; }
   .sTitle { font-size: 2rem; }
   .sSub { font-size: 0.94rem; }
+
+  /* Immersive wall: full-screen on mobile (remove the 10px desktop inset) */
+  .immOverlay { inset: 0; border-radius: 0; }
+
+  /* Clock modal: stack clocks vertically on narrow screens */
+  .clockCard { padding: 22px 16px 18px; }
+  .clockTitle { font-size: 20px; margin-bottom: 14px; }
+  .clockGrid { grid-template-columns: 1fr; gap: 12px; }
+  .clockFoot { font-size: 7.5px; }
 }
 @media (min-width: 1101px) {
   .boardFlex { display: none !important; }

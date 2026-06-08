@@ -257,14 +257,13 @@
   animation: projectorBreath 5s ease-in-out infinite;
 }
 
-/* Cursor-following spotlight */
+/* Cursor-following spotlight — no transition, instant response */
 .spotlight {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
   background: radial-gradient(ellipse 42% 34% at 50% 42%, rgba(255, 242, 200, 0.04) 0%, transparent 100%);
-  transition: background 0.08s linear;
 }
 
 /* ── Screen inner — keyed, fades in on show change ───────── */
@@ -1195,8 +1194,11 @@
   touch-action: none;
   pointer-events: all;
   opacity: 0.85;
-  /* Smooth crosshair repositioning */
-  transition: left 0.06s ease, top 0.06s ease;
+  /* 18px padding = 66px total hit area around the 30px visual SVG.
+     translate(-50%,-50%) still centers on left/top because -50% is half
+     of the padded element size, which matches the SVG's visual center. */
+  padding: 18px;
+  /* No transition — direct DOM mutations at 60fps need zero CSS lag */
 }
 /* Pulsing ring invites the user to drag */
 .crosshair::before {

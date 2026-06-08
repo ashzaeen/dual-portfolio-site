@@ -146,10 +146,12 @@ export function WallItem({
       // visual feedback in the panel that this item is the focus. The
       // tap-vs-drag distinction is framer-motion's: small movements call
       // onClick, larger ones fire drag instead.
+      // In normal mode: check wallPanRef.moved so a canvas drag that ends
+      // over this item doesn't accidentally open it (tap vs drag guard).
       onClick={
         editMode
           ? (e) => { e.stopPropagation(); editor?.setSelectedId(item.id); }
-          : () => onAnyClick(item)
+          : () => { if (!wallPanRef?.current?.moved) onAnyClick(item); }
       }
     >
       {item.mount === "pin" && <Pin color={pc} />}

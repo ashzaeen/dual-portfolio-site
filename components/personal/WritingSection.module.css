@@ -487,6 +487,46 @@
   }
 }
 
+/* ── Mobile text reader ──────────────────────────────────────
+   Full-bleed card, tighter gutters, slightly smaller type, and
+   a translate-only entry animation (no scale) so there's no
+   font-reflow jitter as the card opens. Gracefully responsive
+   — all sizes use clamp() to scale with the viewport width.    */
+@keyframes overlayRiseMobile {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .overlayBg {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .overlayCard {
+    width: 100%;
+    height: 98dvh;
+    max-height: none;
+    border-radius: 6px 6px 0 0;
+    /* No scale — scale(0.97→1) causes subpixel font reflow on mobile */
+    animation: overlayRiseMobile 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .overlayBody {
+    /* Was 1.75rem 2rem 1.75rem 2.25rem — too wide on narrow screens */
+    padding: clamp(0.85rem, 4vw, 1.25rem) clamp(0.75rem, 4vw, 1.1rem) 1.5rem;
+  }
+  .overlayTitle {
+    font-size: clamp(1.2rem, 5.5vw, 1.6rem);
+  }
+  .overlayExcerpt {
+    font-size: clamp(0.8rem, 3.8vw, 0.88rem);
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.9rem;
+  }
+  .overlayHeader {
+    padding: 0.75rem 1rem 0.6rem 1rem;
+  }
+}
+
 .overlayTitle {
   font-family: var(--font-serif);
   font-weight: 700;

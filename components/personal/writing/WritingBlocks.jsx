@@ -298,7 +298,7 @@ function ImageLightbox({ src, onClose, themed = true }) {
             <PinchZoomImage
               src={src}
               alt=""
-              maxW="min(1100px, 94vw)"
+              maxW={themed ? "calc(min(1100px, 96vw) - 32px)" : "min(1100px, 96vw)"}
               maxH={themed ? "calc(92vh - 36px)" : "92vh"}
               imgClassName={styles.lightboxImg}
             />

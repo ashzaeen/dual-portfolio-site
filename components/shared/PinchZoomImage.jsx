@@ -2,20 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// A lightbox image that always fits inside the viewport (object-contain, so a
-// tall portrait is never cropped at the top) AND supports touch pinch-to-zoom
-// + drag-to-pan on phones and double-tap / double-click to toggle zoom.
+// A lightbox image that fits inside the viewport and supports:
+//   • Touch pinch-to-zoom (stays zoomed — doesn't auto-reset on release)
+//   • Single-finger pan while zoomed
+//   • Double-tap to toggle zoom (single-touch only, never on pinch release)
+//   • Double-click to toggle zoom (desktop)
 //
-// Sizing trick: the <img> carries its own absolute max-width/max-height (vw/vh,
-// never percentages — percentages would resolve against the shrink-wrapped
-// wrapper and fight themselves). The wrapper shrink-wraps to the contained
-// image and clips overflow, so a zoomed/panned image stays within its frame.
-//
-// Props:
-//   maxW / maxH      — CSS length caps for the image (e.g. "92vw", "86vh").
-//   wrapperClassName — class on the clipping wrapper (positioning/borders).
-//   imgClassName     — class on the <img> (visual frame: border, shadow…).
-//   maxScale         — ceiling for pinch/double-tap zoom (default 4).
+// Sizing: the <img> carries its own absolute max-width/max-height so its
+// aspect ratio is preserved exactly. The wrapper shrink-wraps and clips
+// overflow, keeping a zoomed/panned image within its frame.
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 export default function PinchZoomImage({
@@ -33,12 +28,15 @@ export default function PinchZoomImage({
   tRef.current = t;
   const [gesturing, setGesturing] = useState(false);
 
-  // Active touch/mouse pointers, the live pinch state, and last-tap timestamp.
   const pointers = useRef(new Map());
   const pinch = useRef({ dist: 0, midX: 0, midY: 0 });
   const lastTap = useRef(0);
+  // Track whether the current gesture involved 2+ fingers. If it did, we
+  // must not fire the double-tap handler on the final pointer-up — otherwise
+  // the two rapid lift events from a pinch look like a double-tap and snap
+  // zoom back to 1 immediately after the user zoomed in.
+  const wasPinch = useRef(false);
 
-  // New image → reset any prior zoom/pan.
   useEffect(() => {
     setT({ scale: 1, x: 0, y: 0 });
   }, [src]);
@@ -48,8 +46,6 @@ export default function PinchZoomImage({
     return { x: clientX - r.left, y: clientY - r.top };
   };
 
-  // Scale toward a focal point (fx, fy in wrapper-local px) so the pixel under
-  // the fingers/cursor stays put; panDx/panDy adds two-finger drag.
   const zoomTo = (nextScale, fx, fy, panDx = 0, panDy = 0) => {
     setT((prev) => {
       const s1 = clamp(nextScale, 1, maxScale);
@@ -68,6 +64,7 @@ export default function PinchZoomImage({
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     setGesturing(true);
     if (pointers.current.size === 2) {
+      wasPinch.current = true; // mark so pointer-up skips double-tap check
       const [a, b] = [...pointers.current.values()];
       pinch.current.dist = Math.hypot(a.x - b.x, a.y - b.y);
       const m = local((a.x + b.x) / 2, (a.y + b.y) / 2);
@@ -88,8 +85,7 @@ export default function PinchZoomImage({
       const prevDist = pinch.current.dist || dist;
       zoomTo(
         tRef.current.scale * (dist / prevDist),
-        m.x,
-        m.y,
+        m.x, m.y,
         m.x - pinch.current.midX,
         m.y - pinch.current.midY
       );
@@ -102,17 +98,24 @@ export default function PinchZoomImage({
   const onPointerUp = (e) => {
     pointers.current.delete(e.pointerId);
     if (pointers.current.size < 2) pinch.current.dist = 0;
-    if (pointers.current.size === 0) setGesturing(false);
 
-    // Double-tap toggles zoom on touch (double-click handled separately below).
-    if (e.pointerType === "touch") {
-      const now = Date.now();
-      if (now - lastTap.current < 300) {
-        const m = local(e.clientX, e.clientY);
-        zoomTo(tRef.current.scale > 1 ? 1 : 2.5, m.x, m.y);
-        lastTap.current = 0;
-      } else {
-        lastTap.current = now;
+    const allGone = pointers.current.size === 0;
+    if (allGone) {
+      setGesturing(false);
+      const pinchGesture = wasPinch.current;
+      wasPinch.current = false; // reset for next gesture
+
+      // Double-tap to toggle zoom — only on deliberate single-touch taps,
+      // never when the last lift is part of a pinch release.
+      if (e.pointerType === "touch" && !pinchGesture) {
+        const now = Date.now();
+        if (now - lastTap.current < 300) {
+          const m = local(e.clientX, e.clientY);
+          zoomTo(tRef.current.scale > 1 ? 1 : 2.5, m.x, m.y);
+          lastTap.current = 0;
+        } else {
+          lastTap.current = now;
+        }
       }
     }
   };
@@ -127,10 +130,6 @@ export default function PinchZoomImage({
       ref={wrapRef}
       className={wrapperClassName}
       style={{
-        // inline-block (NOT flex): the wrapper shrink-wraps to the block image
-        // below, which sizes itself via max-width + max-height + auto so its
-        // aspect ratio is preserved exactly — no flex main/cross-axis clamp can
-        // distort or mis-fit it. overflow:hidden clips the zoomed/panned image.
         display: "inline-block",
         verticalAlign: "top",
         overflow: "hidden",

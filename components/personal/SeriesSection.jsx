@@ -462,10 +462,12 @@ function SeriesMobile({ shows, copy }) {
   const [curtainsClosed, setCurtainsClosed] = useState(true);
   const [spoilers, setSpoilers] = useState(false);
   const [revealed, setRevealed] = useState(new Set());
-  const [crosshairPos, setCrosshairPos] = useState({ x: 50, y: 40 });
-
   const screenRef = useRef(null);
   const spotlightRef = useRef(null);
+  const crosshairRef = useRef(null);
+  // Position in a ref: direct DOM mutations, zero React re-renders on move.
+  const posRef = useRef({ x: 50, y: 40 });
+  const draggingRef = useRef(false);
   const hasRevealedRef = useRef(false);
 
   useEffect(() => {
@@ -529,19 +531,47 @@ function SeriesMobile({ shows, copy }) {
     }, 320);
   }
 
-  /* Crosshair drag — updates spotlight position */
-  const handleCrosshairTouch = (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = screenRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = Math.max(5, Math.min(95, ((touch.clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(5, Math.min(95, ((touch.clientY - rect.top) / rect.height) * 100));
-    setCrosshairPos({ x, y });
+  /* ── Spotlight / crosshair drag ─────────────────────────────────────
+     Direct DOM mutations keep both the crosshair and the gradient at 60fps
+     with zero React re-renders. Pointer capture locks the drag to the
+     crosshair element even when the finger moves faster than a paint frame,
+     eliminating the "loses tracking on fast swipe" bug. */
+  function applyPos(rawX, rawY) {
+    const x = Math.max(5, Math.min(95, rawX));
+    const y = Math.max(5, Math.min(95, rawY));
+    posRef.current = { x, y };
     if (spotlightRef.current) {
-      spotlightRef.current.style.background = `radial-gradient(ellipse 55% 45% at ${x}% ${y}%, rgba(255,242,200,0.12) 0%, transparent 100%)`;
+      spotlightRef.current.style.background =
+        `radial-gradient(ellipse 55% 45% at ${x}% ${y}%, rgba(255,242,200,0.12) 0%, transparent 100%)`;
     }
-  };
+    if (crosshairRef.current) {
+      crosshairRef.current.style.left = `${x}%`;
+      crosshairRef.current.style.top  = `${y}%`;
+    }
+  }
+
+  function screenXY(clientX, clientY) {
+    const rect = screenRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    return [((clientX - rect.left) / rect.width) * 100, ((clientY - rect.top) / rect.height) * 100];
+  }
+
+  function onCrosshairPointerDown(e) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    draggingRef.current = true;
+    const p = screenXY(e.clientX, e.clientY);
+    if (p) applyPos(p[0], p[1]);
+  }
+
+  function onCrosshairPointerMove(e) {
+    if (!draggingRef.current) return;
+    const p = screenXY(e.clientX, e.clientY);
+    if (p) applyPos(p[0], p[1]);
+  }
+
+  function onCrosshairPointerUp() {
+    draggingRef.current = false;
+  }
 
   const activeShow = shows.find((s) => s.id === activeId) ?? shows[0];
   const isBlurred = spoilers && !revealed.has(activeShow.id);
@@ -578,16 +608,19 @@ function SeriesMobile({ shows, copy }) {
           ref={spotlightRef}
           className={styles.spotlight}
           style={{
-            background: `radial-gradient(ellipse 55% 45% at ${crosshairPos.x}% ${crosshairPos.y}%, rgba(255,242,200,0.12) 0%, transparent 100%)`,
+            background: `radial-gradient(ellipse 55% 45% at ${posRef.current.x}% ${posRef.current.y}%, rgba(255,242,200,0.12) 0%, transparent 100%)`,
           }}
         />
 
-        {/* Draggable crosshair for spotlight control */}
+        {/* Crosshair — pointer-captured drag, direct DOM mutations at 60fps */}
         <div
+          ref={crosshairRef}
           className={styles.crosshair}
-          style={{ left: `${crosshairPos.x}%`, top: `${crosshairPos.y}%` }}
-          onTouchStart={handleCrosshairTouch}
-          onTouchMove={handleCrosshairTouch}
+          style={{ left: `${posRef.current.x}%`, top: `${posRef.current.y}%` }}
+          onPointerDown={onCrosshairPointerDown}
+          onPointerMove={onCrosshairPointerMove}
+          onPointerUp={onCrosshairPointerUp}
+          onPointerCancel={onCrosshairPointerUp}
         >
           <CrosshairSvg />
         </div>
