@@ -35,9 +35,19 @@ export default function WritingReader({ piece, onClose }) {
   }, []);
 
   useEffect(() => {
-    const prev = document.body.style.overflow;
+    // Lock the html element directly — globals.css sets overflow-x:hidden on
+    // <html>, which breaks the body→viewport overflow propagation the spec
+    // describes. Setting overflowY on documentElement is the only reliable way
+    // to prevent page scroll while this modal is open.
+    const html = document.documentElement;
+    const prevY = html.style.overflowY;
+    const prevBody = document.body.style.overflow;
+    html.style.overflowY = "hidden";
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      html.style.overflowY = prevY;
+      document.body.style.overflow = prevBody;
+    };
   }, []);
 
   const onScroll = (e) => {
