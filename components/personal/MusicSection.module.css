@@ -1302,7 +1302,10 @@
   .mobileTrioLiner .linerNote .dropCap::first-letter {
     font-size: 1.7em;
     float: none;
-    line-height: inherit;
+    /* Tight line-height (NOT inherit) so the enlarged initial doesn't grow the
+       first line's box and push line 2 down — the inherited 1.45 was adding a
+       marginal extra gap after the first line. Matches the desktop cap. */
+    line-height: 0.85;
     margin: 0;
     color: #855314;
   }
