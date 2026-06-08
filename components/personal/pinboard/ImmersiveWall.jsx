@@ -145,7 +145,7 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     pan.current.oy = y;
     posRef.current = { x, y };
     if (wallRef.current) {
-      wallRef.current.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+      wallRef.current.style.transform = `translate3d(${x}px,${y}px,0) scale(${s})`;
     }
   }, []);
 
@@ -356,8 +356,13 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     // Reset rolling velocity buffer
     p.velBuf = [];
     p.velIdx = 0;
-    // Freeze DustParticles so the compositor layer texture stays clean.
+    // Freeze DustParticles AND all descendant CSS animations (string-light
+    // drop-shadow glow, item breathe, egg) so the wall's compositor texture
+    // stays static while it's being translated — the GPU just moves a cached
+    // layer instead of re-rasterizing repaints every frame. This is the
+    // primary jitter fix.
     dustPausedRef.current = true;
+    wallRef.current?.classList.add(styles.panning);
 
     if (!onItem) {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -414,8 +419,8 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     const p = pan.current;
     if (pointers.current.size < 2) {
       pinch.current = null;
-      // If pinch just ended with no remaining finger panning, resume particles.
-      if (!p.on) dustPausedRef.current = false;
+      // If pinch just ended with no remaining finger panning, resume animations.
+      if (!p.on) { dustPausedRef.current = false; wallRef.current?.classList.remove(styles.panning); }
     }
     if (pointers.current.size === 1) {
       const [pt] = [...pointers.current.values()];
@@ -446,13 +451,17 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
         p.raf = requestAnimationFrame(() => fling(vx, vy));
       } else {
-        dustPausedRef.current = false; // fling done — resume particles
+        // fling done — resume particles + descendant animations
+        dustPausedRef.current = false;
+        wallRef.current?.classList.remove(styles.panning);
       }
     };
     if (Math.abs(avgVx) > 0.5 || Math.abs(avgVy) > 0.5) {
       p.raf = requestAnimationFrame(() => fling(avgVx, avgVy));
     } else {
-      dustPausedRef.current = false; // no fling — resume immediately
+      // no fling — resume immediately
+      dustPausedRef.current = false;
+      wallRef.current?.classList.remove(styles.panning);
     }
   }, [clamp, applyTransform, dustPausedRef]);
 

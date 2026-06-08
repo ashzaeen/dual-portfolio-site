@@ -87,12 +87,20 @@ export default function AllWritingsArchive({ pieces: PIECES = [], open, onClose,
     return () => document.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  /* Body scroll lock */
+  /* Scroll lock — must lock <html> too. globals.css sets overflow-x:hidden on
+     <html>, which breaks the spec's body→viewport overflow propagation, so
+     locking only body has no effect on mobile page scroll behind the modal. */
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
+    const html = document.documentElement;
+    const prevHtml = html.style.overflowY;
+    const prevBody = document.body.style.overflow;
+    html.style.overflowY = "hidden";
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      html.style.overflowY = prevHtml;
+      document.body.style.overflow = prevBody;
+    };
   }, [open]);
 
   /* Reset filters on close */
@@ -218,7 +226,7 @@ export default function AllWritingsArchive({ pieces: PIECES = [], open, onClose,
                       /* motion.div wrapper carries the CSS order for layout animation */
                       <motion.div
                         key={piece.id}
-                        layout
+                        layout="position"
                         style={{ order: cardOrder }}
                         transition={{ layout: { type: "spring", stiffness: 340, damping: 28 } }}
                       >
@@ -241,7 +249,7 @@ export default function AllWritingsArchive({ pieces: PIECES = [], open, onClose,
                   {/* Gold separator line between matched (top) and dimmed remainder */}
                   {isFilterActive && matchedPieces.length > 0 && matchedPieces.length < PIECES.length && (
                     <motion.div
-                      layout
+                      layout="position"
                       style={{ order: matchedPieces.length, gridColumn: "1 / -1" }}
                       transition={{ layout: { type: "spring", stiffness: 340, damping: 28 } }}
                       className={styles.filterSeparator}

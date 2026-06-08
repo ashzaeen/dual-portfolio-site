@@ -535,13 +535,14 @@ function SeriesMobile({ shows, copy }) {
   }
 
   /* ── Spotlight / crosshair drag ─────────────────────────────────────
-     Handlers live on the full screen element (not the 30px crosshair),
-     so any touch anywhere on the screen drives the spotlight. The rect is
-     cached once at pointerdown and reused for every move — no repeated
-     getBoundingClientRect() calls that would force a layout reflow per frame.
-     We don't use setPointerCapture so child elements (buttons, spoiler reveal)
-     keep their native click behaviour; if the finger leaves the screen the
-     spotlight simply stays at the last position. */
+     A drag only starts when the touch lands ON the crosshair (within GRAB_R
+     of its current centre) — tapping elsewhere does nothing and leaves the
+     tap free for the CTA button / spoiler reveal. The rect is cached once at
+     pointerdown and reused for every move (no per-frame reflow). Pointer is
+     captured for the gesture so the drag keeps tracking even if the finger
+     slides off the small crosshair target. */
+  const GRAB_R = 44; // px radius around the crosshair centre that counts as a grab
+
   function applyPos(rawX, rawY) {
     const x = Math.max(5, Math.min(95, rawX));
     const y = Math.max(5, Math.min(95, rawY));
@@ -557,14 +558,15 @@ function SeriesMobile({ shows, copy }) {
   }
 
   function onScreenPointerDown(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    // Crosshair centre in px from its current % position.
+    const cx = rect.left + (posRef.current.x / 100) * rect.width;
+    const cy = rect.top  + (posRef.current.y / 100) * rect.height;
+    if (Math.hypot(e.clientX - cx, e.clientY - cy) > GRAB_R) return; // not on the crosshair → ignore
     draggingRef.current = true;
-    // Cache rect once for the whole gesture — reused in onScreenPointerMove.
-    gestureRectRef.current = e.currentTarget.getBoundingClientRect();
-    const rect = gestureRectRef.current;
-    applyPos(
-      ((e.clientX - rect.left) / rect.width) * 100,
-      ((e.clientY - rect.top)  / rect.height) * 100,
-    );
+    gestureRectRef.current = rect; // cache once for the whole gesture
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    // No teleport — the crosshair stays put until the finger actually moves it.
   }
 
   function onScreenPointerMove(e) {
@@ -576,9 +578,10 @@ function SeriesMobile({ shows, copy }) {
     );
   }
 
-  function onScreenPointerUp() {
+  function onScreenPointerUp(e) {
     draggingRef.current = false;
     gestureRectRef.current = null;
+    e?.currentTarget?.releasePointerCapture?.(e.pointerId);
   }
 
   const activeShow = shows.find((s) => s.id === activeId) ?? shows[0];

@@ -8,17 +8,28 @@
   inset: 0;
   z-index: 500;
   background: rgba(22, 14, 4, 0.70);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
 }
 
+/* Full-screen blur, isolated from the book so it never sits in the scroll
+   container's ancestor chain (see AllStopsBook.jsx). pointer-events:none lets
+   click-to-close pass through to the overlay. */
+.blurLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
 /* ── Book container ── */
 .book {
   position: relative;
+  z-index: 1; /* above the blur layer */
   display: flex;
   width: 88vw;
   max-width: 1200px;
@@ -121,6 +132,9 @@
   padding: 2.5rem 2.8rem 3.5rem 3rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 115, 44, 0.28) transparent;
+  /* Force a dedicated compositor layer so scrolling is GPU-driven. */
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
 }
 
 .page::-webkit-scrollbar {

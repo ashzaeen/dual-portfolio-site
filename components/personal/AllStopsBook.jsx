@@ -80,6 +80,11 @@ function BookSheet({ onClose, ignoreEsc, locations, locationStories, onViewStory
       aria-modal="true"
       aria-label="Field Journal — All Stops"
     >
+      {/* Backdrop blur lives on its own layer — NOT an ancestor of the
+          scrolling page. A backdrop-filter on the scroll container's ancestor
+          forces main-thread (non-composited) scrolling in Chrome/Safari, which
+          repaints every postcard each frame and makes the scroll shaky. */}
+      <div className={styles.blurLayer} aria-hidden="true" />
       <motion.div
         className={styles.book}
         initial={{ opacity: 0, scale: 0.93, y: 28 }}

@@ -8,7 +8,6 @@ import {
   CYCLE_SEQ,
   CYCLE_HOLD,
   CYCLE_BACK_TO_WORLD,
-  TRANS_MS,
   REGION_IDS,
   BD_DIVISION_TONES,
   BD_DIVISION_DISPLAY,
@@ -84,10 +83,16 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
     const svg = d3.select(svgEl).attr("width", W).attr("height", H);
 
     let baseScaleRatio = W / 1060;
+    // Mobile-local view scaling. Boosting the world view makes it tighter so the
+    // cycle doesn't have to zoom out so far between regions (gentler, smoother).
+    // Mobile-only — desktop (TravelMap.jsx) is untouched.
+    const MOBILE_SCALE_MULT = { world: 1.55, us: 1.0, bd: 1.0 };
+    const mobileScale = (key) =>
+      VIEWS[key].scale * (MOBILE_SCALE_MULT[key] ?? 1) * baseScaleRatio;
     const proj = d3
       .geoNaturalEarth1()
       .center(VIEWS.world.center)
-      .scale(VIEWS.world.scale * baseScaleRatio)
+      .scale(mobileScale("world"))
       .translate([W / 2, H / 2]);
     const pathFn = d3.geoPath().projection(proj);
 
@@ -316,13 +321,16 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       const c0 = proj.center().slice();
       const s0 = proj.scale();
       const c1 = view.center;
-      const s1 = view.scale * baseScaleRatio;
+      const s1 = mobileScale(regionKey);
       const ratio = Math.max(s0, s1) / Math.min(s0, s1);
-      const ms = view?.zoomMs ?? (ratio > 15 ? 2200 : TRANS_MS);
+      // Mobile-local durations — slower + gentler than desktop for a buttery
+      // feel (independent of the shared view.zoomMs).
+      const ms = ratio > 6 ? 2600 : 1800;
       if (animTimer) animTimer.stop();
       animTimer = d3.timer((elapsed) => {
         const t = Math.min(elapsed / ms, 1);
-        const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        // Quintic in-out — longer slow-in/slow-out tails than cubic.
+        const e = t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
         proj
           .scale(s0 + (s1 - s0) * e)
           .center([c0[0] + (c1[0] - c0[0]) * e, c0[1] + (c1[1] - c0[1]) * e]);
@@ -445,9 +453,10 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       H = nh;
       svg.attr("width", W).attr("height", H);
       baseScaleRatio = W / 1060;
-      const view = VIEWS[stateRef.current.region || "world"];
+      const regionKey = stateRef.current.region || "world";
+      const view = VIEWS[regionKey];
       proj
-        .scale(view.scale * baseScaleRatio)
+        .scale(mobileScale(regionKey))
         .center(view.center)
         .translate([W / 2, H / 2]);
       redrawPaths();

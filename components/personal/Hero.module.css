@@ -552,6 +552,14 @@
      Chrome apply the from-keyframe (brightness:2.8) briefly before the
      override settles. filter:none !important is the hard guarantee. */
   .photo { animation: none; filter: none !important; }
+  /* The polaroid's own grain overlay uses mix-blend-mode:multiply, which
+     flickers as the layer is composited in/out on scroll — reads as a "flash"
+     over the photo when landing or scrolling back to the hero. Drop it on
+     mobile (the section-wide .grain is already hidden above). */
+  .grainOverlay { display: none; }
+  /* No card-level filter on touch — overrides framer-motion's inline
+     saturate() so carousel cards read uniformly (no brighter centre). */
+  .polaroidCard { filter: none !important; }
   /* Typewriter caption removed on mobile — too small to read gracefully. */
   .caption { display: none; }
   /* Stamp + postmark scale down so they don't dominate the small photo. */
@@ -697,7 +705,11 @@
 }
 .polaroidCard:where(:not(:focus-visible)) { outline: none; }
 .polaroidCard[role="button"] { cursor: pointer; }
-.polaroidCard[role="button"]:hover { filter: brightness(1.08); }
+/* Gate to pointer devices — on touch, :hover sticks on the last-tapped card
+   and leaves it permanently brightened (looked like a stray filter on mobile). */
+@media (hover: hover) {
+  .polaroidCard[role="button"]:hover { filter: brightness(1.08); }
+}
 .polaroidCard::before {
   /* Paper grain on each polaroid */
   content: "";
