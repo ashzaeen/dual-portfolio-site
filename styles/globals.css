@@ -17,12 +17,18 @@
 
 html {
   scroll-behavior: smooth;
-  /* Offsets anchor-link scrolling by the fixed navbar height so the target
-     section's header doesn't hide behind the nav. */
-  scroll-padding-top: 20px;
+  /* Offset = navbar height + small breathing room.
+     Desktop navbar: 64px → 72px.  Mobile navbar: 56px → 64px.
+     Without this the target section header lands behind the fixed nav,
+     which reads as a visual "jump" even with smooth-scroll on. */
+  scroll-padding-top: 72px;
   -webkit-text-size-adjust: 100%;
   /* Must be on html (not just body) to prevent Android Chrome horizontal bounce. */
   overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  html { scroll-padding-top: 64px; }
 }
 
 body {

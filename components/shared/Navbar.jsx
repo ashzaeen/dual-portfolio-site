@@ -238,7 +238,24 @@ function MobileMenu({ side, links, activeSection, onClose }) {
               key={l.label}
               href={l.href}
               role="menuitem"
-              onClick={() => { analytics.navLinkClicked(l.href.slice(1), side); onClose(); }}
+              onClick={(e) => {
+                e.preventDefault();
+                analytics.navLinkClicked(l.href.slice(1), side);
+                // Close menu first, then scroll — avoids two competing full-page
+                // animations (menu exit + page scroll) happening simultaneously,
+                // which is the main cause of mobile scroll jank from the nav menu.
+                onClose();
+                const id = l.href.slice(1);
+                const exitMs = isPersonal ? 260 : 220;
+                setTimeout(() => {
+                  const el = document.getElementById(id);
+                  if (!el) return;
+                  window.history.pushState(null, "", l.href);
+                  const navH = 56; // mobile navbar height
+                  const y = el.getBoundingClientRect().top + window.scrollY - navH;
+                  window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+                }, exitMs);
+              }}
               className={`${styles.menuLink} ${isActive ? styles.menuLinkActive : ""}`}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
