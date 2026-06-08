@@ -536,6 +536,9 @@
     padding: 90px 1.25rem 3.5rem;
     min-height: auto;
   }
+  /* mix-blend-mode: multiply + mask-image forces the hero into a compositor
+     stacking context; removing it eliminates the scroll-jitter on mobile. */
+  .corkFade { display: none; }
   .name {
     font-size: clamp(2.6rem, 13vw, 3.4rem);
   }

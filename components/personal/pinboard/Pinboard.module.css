@@ -230,6 +230,13 @@
   position: relative;
   cursor: pointer;
   display: inline-block;
+  transform: rotate(var(--rot, 0deg));
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+@media (hover: hover) {
+  .item:hover {
+    transform: rotate(0deg) scale(1.05);
+  }
 }
 
 /* ── FRAMES ───────────────────────────────────────── */
@@ -270,10 +277,12 @@
   transition: border-width 0.28s ease, box-shadow 0.28s ease;
   pointer-events: none;
 }
-.item:hover .photoF.aged::after {
-  border-width: 0 0 28px 28px;
-  border-color: transparent transparent #c0b49a transparent;
-  box-shadow: -5px -5px 9px rgba(0, 0, 0, 0.28);
+@media (hover: hover) {
+  .item:hover .photoF.aged::after {
+    border-width: 0 0 28px 28px;
+    border-color: transparent transparent #c0b49a transparent;
+    box-shadow: -5px -5px 9px rgba(0, 0, 0, 0.28);
+  }
 }
 .posterF {
   box-shadow: 0 10px 34px rgba(0, 0, 0, 0.78), 0 3px 8px rgba(0, 0, 0, 0.5);

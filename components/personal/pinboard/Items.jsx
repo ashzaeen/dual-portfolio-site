@@ -185,12 +185,10 @@ export function WallItem({
 }
 
 // ─── StaticItem (preview / section board) ────────────────────
-// No drag, just hover-scale + click. `rotation` is driven through
-// framer-motion's `rotate` motion prop (NOT via a CSS transform) so
-// that whileHover can animate both rotate→0 and scale→1.05 together,
-// and animate them back on un-hover. If we left rotate in style.transform
-// it would get clobbered the moment framer takes over the transform
-// property for the scale animation.
+// No drag, just hover-scale + click. Rotation is a CSS custom property
+// so the browser can handle it without a framer-motion compositor layer.
+// 30-40 motion.div elements on the static board were creating too many
+// GPU compositor layers on mobile, causing scroll jitter.
 export function StaticItem({ item, onAnyClick, rotation = 0, style = {} }) {
   const dH = item.dH;
   const dW = item.w && item.h ? Math.round(dH * (item.w / item.h)) : null;
@@ -198,14 +196,10 @@ export function StaticItem({ item, onAnyClick, rotation = 0, style = {} }) {
   const pc = item.pinColor || "#c4a050";
 
   return (
-    <motion.div
+    <div
       className={styles.item}
-      style={style}
+      style={{ ...style, "--rot": `${rotation}deg` }}
       onClick={() => onAnyClick(item)}
-      initial={{ rotate: rotation, scale: 1 }}
-      animate={{ rotate: rotation, scale: 1 }}
-      whileHover={{ rotate: 0, scale: 1.05 }}
-      transition={{ type: "spring", stiffness: 380, damping: 22 }}
     >
       {item.mount === "pin" && <Pin color={pc} />}
       {item.mount === "tape" && <Tape />}
@@ -230,6 +224,6 @@ export function StaticItem({ item, onAnyClick, rotation = 0, style = {} }) {
       )}
       {item.type === "boarding-pass" && <BoardingPass />}
       {item.type === "receipt" && <SubwayReceipt />}
-    </motion.div>
+    </div>
   );
 }

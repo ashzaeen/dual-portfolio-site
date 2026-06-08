@@ -468,6 +468,9 @@ function SeriesMobile({ shows, copy }) {
   // Position in a ref: direct DOM mutations, zero React re-renders on move.
   const posRef = useRef({ x: 50, y: 40 });
   const draggingRef = useRef(false);
+  // Rect cached once at pointerdown — avoids getBoundingClientRect() on every
+  // move frame (which forces a layout reflow and is the source of jitter).
+  const gestureRectRef = useRef(null);
   const hasRevealedRef = useRef(false);
 
   useEffect(() => {
@@ -532,10 +535,13 @@ function SeriesMobile({ shows, copy }) {
   }
 
   /* ── Spotlight / crosshair drag ─────────────────────────────────────
-     Direct DOM mutations keep both the crosshair and the gradient at 60fps
-     with zero React re-renders. Pointer capture locks the drag to the
-     crosshair element even when the finger moves faster than a paint frame,
-     eliminating the "loses tracking on fast swipe" bug. */
+     Handlers live on the full screen element (not the 30px crosshair),
+     so any touch anywhere on the screen drives the spotlight. The rect is
+     cached once at pointerdown and reused for every move — no repeated
+     getBoundingClientRect() calls that would force a layout reflow per frame.
+     We don't use setPointerCapture so child elements (buttons, spoiler reveal)
+     keep their native click behaviour; if the finger leaves the screen the
+     spotlight simply stays at the last position. */
   function applyPos(rawX, rawY) {
     const x = Math.max(5, Math.min(95, rawX));
     const y = Math.max(5, Math.min(95, rawY));
@@ -550,27 +556,29 @@ function SeriesMobile({ shows, copy }) {
     }
   }
 
-  function screenXY(clientX, clientY) {
-    const rect = screenRef.current?.getBoundingClientRect();
-    if (!rect) return null;
-    return [((clientX - rect.left) / rect.width) * 100, ((clientY - rect.top) / rect.height) * 100];
-  }
-
-  function onCrosshairPointerDown(e) {
-    e.currentTarget.setPointerCapture(e.pointerId);
+  function onScreenPointerDown(e) {
     draggingRef.current = true;
-    const p = screenXY(e.clientX, e.clientY);
-    if (p) applyPos(p[0], p[1]);
+    // Cache rect once for the whole gesture — reused in onScreenPointerMove.
+    gestureRectRef.current = e.currentTarget.getBoundingClientRect();
+    const rect = gestureRectRef.current;
+    applyPos(
+      ((e.clientX - rect.left) / rect.width) * 100,
+      ((e.clientY - rect.top)  / rect.height) * 100,
+    );
   }
 
-  function onCrosshairPointerMove(e) {
-    if (!draggingRef.current) return;
-    const p = screenXY(e.clientX, e.clientY);
-    if (p) applyPos(p[0], p[1]);
+  function onScreenPointerMove(e) {
+    if (!draggingRef.current || !gestureRectRef.current) return;
+    const rect = gestureRectRef.current;
+    applyPos(
+      ((e.clientX - rect.left) / rect.width) * 100,
+      ((e.clientY - rect.top)  / rect.height) * 100,
+    );
   }
 
-  function onCrosshairPointerUp() {
+  function onScreenPointerUp() {
     draggingRef.current = false;
+    gestureRectRef.current = null;
   }
 
   const activeShow = shows.find((s) => s.id === activeId) ?? shows[0];
@@ -598,6 +606,10 @@ function SeriesMobile({ shows, copy }) {
         ref={screenRef}
         className={styles.mobileScreen}
         style={{ background: activeShow.bg }}
+        onPointerDown={onScreenPointerDown}
+        onPointerMove={onScreenPointerMove}
+        onPointerUp={onScreenPointerUp}
+        onPointerCancel={onScreenPointerUp}
       >
         <div className={styles.filmGrain} />
         <div className={styles.screenTint} />
@@ -612,15 +624,11 @@ function SeriesMobile({ shows, copy }) {
           }}
         />
 
-        {/* Crosshair — pointer-captured drag, direct DOM mutations at 60fps */}
+        {/* Crosshair — visual only, handlers are on the screen element */}
         <div
           ref={crosshairRef}
           className={styles.crosshair}
           style={{ left: `${posRef.current.x}%`, top: `${posRef.current.y}%` }}
-          onPointerDown={onCrosshairPointerDown}
-          onPointerMove={onCrosshairPointerMove}
-          onPointerUp={onCrosshairPointerUp}
-          onPointerCancel={onCrosshairPointerUp}
         >
           <CrosshairSvg />
         </div>

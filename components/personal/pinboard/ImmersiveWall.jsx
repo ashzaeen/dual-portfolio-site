@@ -16,18 +16,12 @@ import { useSoundFX } from "./useSoundFX";
 import { PinboardEditorProvider, useEditor, EditorGrid, EditorPanel } from "./PinboardEditor";
 import { analytics } from "@/lib/analytics";
 
-// Minimap — small radar at the bottom-right of the immersive view.
-// Photo items render as muted gold dots; interactive elements
-// (compass, clock, pinball, tic-tac-toe) render larger and brighter
-// with a soft pulse so visitors notice "there are things to play with
-// over there." The easter egg appears too, but as the dimmest, smallest
-// dot — visible if you look carefully, but it doesn't shout.
 const MAX_SCALE = 2.4;
 
-// Fires `wall_toy_used` the first time a visitor touches a self-contained toy
-// (pinball, tic-tac-toe) that exposes no callback of its own. `display:contents`
-// means this wrapper generates no box, so the toys' absolute positioning on the
-// wall is untouched; the capture-phase listener still sees descendant pointers.
+// YJHD poster center in wall coords (wx=300, wy=175, dW≈344, dH≈515 at 1.12× scale)
+const YJHD_CX = 300 + 172; // 472
+const YJHD_CY = 175 + 257; // 432
+
 function ToyTracker({ kind, children }) {
   const fired = useRef(false);
   return (
@@ -44,21 +38,38 @@ function ToyTracker({ kind, children }) {
   );
 }
 
-function Minimap({ px, py, vw, vh, scale, items }) {
+// Minimap reads from refs via a rAF loop so the wall doesn't re-render
+// at 60fps during panning. Only this small component re-renders for the
+// viewport-indicator update.
+function Minimap({ posRef, scaleRef, vwRef, vhRef, items }) {
   const MW = 156, MH = 106;
+  const [vp, setVp] = useState({ x: 0, y: 0, w: MW, h: MH });
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const tick = () => {
+      const px = posRef.current.x;
+      const py = posRef.current.y;
+      const s  = scaleRef.current;
+      const vw = vwRef.current;
+      const vh = vhRef.current;
+      const sx = MW / WALL_W, sy = MH / WALL_H;
+      const vpW = Math.min(MW, (vw / s) * sx);
+      const vpH = Math.min(MH, (vh / s) * sy);
+      const vpX = Math.max(0, Math.min(MW - vpW, (-px / s) * sx));
+      const vpY = Math.max(0, Math.min(MH - vpH, (-py / s) * sy));
+      setVp({ x: vpX, y: vpY, w: vpW, h: vpH });
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [posRef, scaleRef, vwRef, vhRef]);
+
   const sx = MW / WALL_W, sy = MH / WALL_H;
-  // As you zoom in (scale > 1) the visible slice of wall shrinks.
-  const vpW = (vw / scale) * sx, vpH = (vh / scale) * sy;
-  const vpX = Math.max(0, Math.min(MW - vpW, (-px / scale) * sx));
-  const vpY = Math.max(0, Math.min(MH - vpH, (-py / scale) * sy));
   return (
     <div className={styles.minimap}>
       {items.filter((i) => i.wx != null).map((i) => (
-        <div
-          key={i.id}
-          className={styles.mmDot}
-          style={{ left: i.wx * sx, top: i.wy * sy }}
-        />
+        <div key={i.id} className={styles.mmDot} style={{ left: i.wx * sx, top: i.wy * sy }} />
       ))}
       {INTERACTIVE_BOXES.map((b) => (
         <div
@@ -68,14 +79,11 @@ function Minimap({ px, py, vw, vh, scale, items }) {
           title={b.id}
         />
       ))}
-      <div className={styles.mmVp} style={{ left: vpX, top: vpY, width: vpW, height: vpH }} />
+      <div className={styles.mmVp} style={{ left: vp.x, top: vp.y, width: vp.w, height: vp.h }} />
     </div>
   );
 }
 
-// Public entry — wraps the actual wall in the editor provider so the
-// hidden `?edit=1` mode has somewhere to live. Inner component reads
-// from the editor context for click suppression + grid rendering.
 export function ImmersiveWall(props) {
   return (
     <PinboardEditorProvider>
@@ -87,48 +95,65 @@ export function ImmersiveWall(props) {
 function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, photosExpired }) {
   const editor = useEditor();
   const editMode = !!editor?.enabled;
-  // In edit mode the wall items are click-disabled (so dragging photos
-  // doesn't open modals). Mirror that for compass + clock — they'd open
-  // their modals and steal focus from the coordinate-discovery flow.
-  // Wrap deco clicks so they're suppressed after a drag/pinch gesture.
-  // pan.current.moved is set true the moment the pointer travels > 8px,
-  // and reset only when a brand-new gesture starts (first pointer down).
   const decoClick = (cb) => (editMode ? undefined : () => {
     if (!pan.current.moved) cb();
   });
+
   const wrapRef = useRef(null);
-  const vsRef = useRef({ w: 1200, h: 800 });
-  // pan state holds the wall offset (top/left of wall in viewport coords)
+  const wallRef = useRef(null); // direct DOM ref for hot-path transform
+  const vsRef   = useRef({ w: 1200, h: 800 });
+  const vwRef   = useRef(1200); // mirrors vsRef.w — passed to Minimap as a stable ref
+  const vhRef   = useRef(800);
+
+  // pan holds ALL gesture state. posRef mirrors it for the Minimap rAF loop
+  // and for any code that needs sync reads (no React state on the hot path).
+  const posRef = useRef({ x: 0, y: 0 });
   const pan = useRef({
-    on: false, sx: 0, sy: 0, ox: -200, oy: -150,
-    vx: 0, vy: 0, lx: 0, ly: 0, raf: null, panRaf: null,
-    // Tap vs drag: moved=true once the pointer travels >8px in this gesture.
-    // Reset only when a fresh gesture starts (size===0 before pointerdown).
+    on: false, sx: 0, sy: 0, ox: 0, oy: 0,
+    // Rolling velocity: keep last N samples so fling direction is smooth
+    velBuf: [], velIdx: 0, VEL_N: 4,
+    lx: 0, ly: 0, raf: null, panRaf: null,
     moved: false, startX: 0, startY: 0,
   });
-  const [pos, setPos] = useState({ x: -200, y: -150 });
-  // Zoom: `scale` drives the wall transform; scaleRef mirrors it for the
-  // event handlers (which read synchronously). Multi-pointer state lives in
-  // refs so pinch math doesn't churn React state.
+
+  // React state is only used for things that MUST drive a React render:
+  // scale (wall children depend on knowing the current zoom), grabbing cursor,
+  // and modal/overlay flags. Position is managed via direct DOM writes.
   const [scale, setScale] = useState(1);
   const scaleRef = useRef(1);
   const pointers = useRef(new Map());
   const pinch = useRef(null);
   const [grabbing, setGrabbing] = useState(false);
   const [dragging, setDragging] = useState(null);
-  // Wall-local pointer for the currently-dragging item (or null).
-  // Drives DustParticles' scatter.
   const [dragPointer, setDragPointer] = useState(null);
   const [eggFound, setEggFound] = useState(false);
   const [showEggModal, setShowEggModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCompass, setShowCompass] = useState(false);
   const [showClock, setShowClock] = useState(false);
-  // Small "how to explore" card that fades in just after the wall opens.
-  // Dismissible via its crosshair, but the wall stays fully interactive
-  // underneath it so visitors don't have to close it to start exploring.
   const [showHint, setShowHint] = useState(true);
   const sfx = useSoundFX();
+
+  // Write transform directly to the DOM — called on every pointer move and
+  // fling frame. Never triggers a React re-render, which eliminates scroll jitter.
+  const applyTransform = useCallback((x, y, s) => {
+    pan.current.ox = x;
+    pan.current.oy = y;
+    posRef.current = { x, y };
+    if (wallRef.current) {
+      wallRef.current.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+    }
+  }, []);
+
+  const minScale = useCallback(() => {
+    const base = Math.max(vsRef.current.w / WALL_W, vsRef.current.h / WALL_H);
+    return vsRef.current.w <= 768 ? Math.max(base, 0.38) : base;
+  }, []);
+
+  const clamp = useCallback((x, y, s = scaleRef.current) => ({
+    x: Math.min(0, Math.max(-(WALL_W * s - vsRef.current.w), x)),
+    y: Math.min(0, Math.max(-(WALL_H * s - vsRef.current.h), y)),
+  }), []);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -136,34 +161,42 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     let firstRun = true;
     const upd = () => {
       vsRef.current = { w: el.clientWidth, h: el.clientHeight };
+      vwRef.current = el.clientWidth;
+      vhRef.current = el.clientHeight;
       const ms = Math.max(vsRef.current.w / WALL_W, vsRef.current.h / WALL_H);
       let s = scaleRef.current;
 
       if (firstRun) {
         firstRun = false;
-        // Mobile: open at 0.5 — 2× more zoomed-out than the desktop default
-        // of 1.0, so the first impression shows a meaningful overview of the
-        // wall rather than a heavily cropped corner.
-        if (el.clientWidth <= 768) s = Math.max(ms, 0.5);
+        if (el.clientWidth <= 768) {
+          // Mobile: open at 0.75 scale with YJHD poster visible in upper-left.
+          // 0.45×vw places the poster's horizontal center in the left quadrant,
+          // matching the reference screenshot where YJHD is fully visible and
+          // ZNMD peeks in from the right edge.
+          s = Math.max(ms, 0.75);
+          scaleRef.current = s;
+          setScale(s);
+          const targetOx = vsRef.current.w * 0.45 - YJHD_CX * s;
+          const targetOy = 0;
+          const nx = Math.min(0, Math.max(-(WALL_W * s - vsRef.current.w), targetOx));
+          const ny = Math.min(0, Math.max(-(WALL_H * s - vsRef.current.h), targetOy));
+          applyTransform(nx, ny, s);
+          return;
+        }
       }
 
       if (s < ms) s = ms;
       scaleRef.current = s;
       setScale(s);
-
-      const p = pan.current;
-      const nx = Math.min(0, Math.max(-(WALL_W * s - vsRef.current.w), p.ox));
-      const ny = Math.min(0, Math.max(-(WALL_H * s - vsRef.current.h), p.oy));
-      p.ox = nx; p.oy = ny;
-      setPos({ x: nx, y: ny });
+      const nx = Math.min(0, Math.max(-(WALL_W * s - vsRef.current.w), pan.current.ox));
+      const ny = Math.min(0, Math.max(-(WALL_H * s - vsRef.current.h), pan.current.oy));
+      applyTransform(nx, ny, s);
     };
     upd();
     window.addEventListener("resize", upd);
     return () => window.removeEventListener("resize", upd);
-  }, []);
+  }, [applyTransform]);
 
-  // Lock the page behind the modal so wheel/touch scroll never bleeds
-  // through to the main document.
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -176,28 +209,6 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
 
-  // Smallest allowed scale. The geometric floor (viewport ÷ wall dimension)
-  // prevents empty gutters, but on mobile that resolves to ~0.29 — at which
-  // point many small items render simultaneously and frames start dropping.
-  // We lift the mobile floor to 0.38 so the user can zoom out somewhat past
-  // the initial 0.5 but can't reach the rendering cliff.
-  const minScale = useCallback(
-    () => {
-      const base = Math.max(vsRef.current.w / WALL_W, vsRef.current.h / WALL_H);
-      return vsRef.current.w <= 768 ? Math.max(base, 0.38) : base;
-    },
-    []
-  );
-
-  // Clamp wall pan so we don't show empty space past the edges. Bounds
-  // depend on the current zoom (the scaled wall is WALL_* × s).
-  const clamp = useCallback((x, y, s = scaleRef.current) => ({
-    x: Math.min(0, Math.max(-(WALL_W * s - vsRef.current.w), x)),
-    y: Math.min(0, Math.max(-(WALL_H * s - vsRef.current.h), y)),
-  }), []);
-
-  // Zoom toward a viewport point (clientX/Y), keeping the wall point under
-  // it pinned. Used by wheel, ctrl-wheel and touch pinch.
   const zoomToScale = useCallback((targetS, clientX, clientY) => {
     const el = wrapRef.current;
     if (!el) return;
@@ -211,15 +222,11 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     const wx = (cx - p.ox) / oldS;
     const wy = (cy - p.oy) / oldS;
     const c = clamp(cx - wx * newS, cy - wy * newS, newS);
-    p.ox = c.x; p.oy = c.y;
     scaleRef.current = newS;
     setScale(newS);
-    setPos({ x: c.x, y: c.y });
-  }, [clamp, minScale]);
+    applyTransform(c.x, c.y, newS);
+  }, [clamp, minScale, applyTransform]);
 
-  // Wheel: mouse wheel → zoom; trackpad two-finger scroll → pan; trackpad
-  // pinch / ctrl+wheel → zoom. Attached non-passively so we can preventDefault
-  // (which also stops the browser's own page zoom / scroll).
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -227,28 +234,23 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       e.preventDefault();
       if (editMode) return;
       if (e.ctrlKey) {
-        // Trackpad pinch gesture (and ctrl+wheel) arrive as ctrlKey wheels.
         zoomToScale(scaleRef.current * Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
         return;
       }
-      // Heuristic: trackpad two-finger scrolls carry horizontal motion
-      // and/or small, fractional vertical deltas; a mouse wheel emits
-      // larger, integer vertical steps. Former → pan, latter → zoom.
       const horizontal = Math.abs(e.deltaX) > 0;
       const fractional = !Number.isInteger(e.deltaY);
       const small = Math.abs(e.deltaY) < 50;
       if (horizontal || fractional || small) {
         const p = pan.current;
         const { x, y } = clamp(p.ox - e.deltaX, p.oy - e.deltaY);
-        p.ox = x; p.oy = y;
-        setPos({ x, y });
+        applyTransform(x, y, scaleRef.current);
       } else {
         zoomToScale(scaleRef.current * (e.deltaY < 0 ? 1.12 : 0.89), e.clientX, e.clientY);
       }
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [editMode, clamp, zoomToScale]);
+  }, [editMode, clamp, zoomToScale, applyTransform]);
 
   const animatePanTo = useCallback((tx, ty) => {
     const { x: cx, y: cy } = clamp(tx, ty);
@@ -257,13 +259,13 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     const go = (now) => {
       const t = Math.min((now - start) / 1200, 1);
       const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-      pan.current.ox = sx + (cx - sx) * e;
-      pan.current.oy = sy + (cy - sy) * e;
-      setPos({ x: pan.current.ox, y: pan.current.oy });
+      const nx = sx + (cx - sx) * e;
+      const ny = sy + (cy - sy) * e;
+      applyTransform(nx, ny, scaleRef.current);
       if (t < 1) pan.current.panRaf = requestAnimationFrame(go);
     };
     pan.current.panRaf = requestAnimationFrame(go);
-  }, [clamp]);
+  }, [clamp, applyTransform]);
 
   const handleCompassSpin = useCallback((item) => {
     const dW = item.dH && item.w && item.h ? Math.round(item.dH * 1.12 * (item.w / item.h)) : 200;
@@ -283,63 +285,78 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     analytics.easterEggFound();
   };
 
-  // ─── Pointer drag + pinch (mouse + touch + trackpad) ───
+  // ─── Pointer / touch pan + pinch ────────────────────────────────────────
   //
-  // Key design: ALL pointers are registered in pointers.current regardless
-  // of what's under the finger. This makes pinch work even when both fingers
-  // land on photos or decorations — previously the early-return meant those
-  // pointer IDs were never tracked, so pinch never initiated.
+  // Key design decisions for mobile feel:
   //
-  // Tap vs drag is separated via pan.current.moved: it's set true once the
-  // pointer travels >8px, and reset only at the start of a fresh gesture
-  // (first pointer down from 0 pointers). WallItem and deco click handlers
-  // check this flag so a drag that ends over an item doesn't open it.
+  // 1. Pan starts from ANY touch — including on photos/decorations. The early
+  //    `if (onItem) return` that blocked this is gone. Pointer capture is only
+  //    used for empty-canvas touches; for item touches we rely on bubbling
+  //    (item → immWall → immCanvas) which works because framer-motion drag is
+  //    disabled in normal view mode.
+  //
+  // 2. Tap vs drag is separated by pan.current.moved (set true at >8px of
+  //    cumulative movement). WallItem's onClick already guards:
+  //      if (!wallPanRef?.current?.moved) onAnyClick(item)
+  //    so a drag that ends over a photo never opens it; only a clean tap does.
+  //
+  // 3. Position is written directly to the DOM via applyTransform — no setPos
+  //    on the move path. This eliminates 60fps React re-renders during pan,
+  //    which was the primary source of jitter on mobile.
+  //
+  // 4. Fling velocity is the rolling average of the last VEL_N samples, not
+  //    just the final frame delta. This prevents a single noisy sample at
+  //    finger-lift from snapping the fling in the wrong direction.
+
   const onPD = useCallback((e) => {
     const onItem = !!(
       e.target.closest(`.${styles.wallItem}`) ||
       e.target.closest(`.${styles.wallDeco}`)
     );
 
-    // Fresh gesture (no fingers previously down) — reset tap/drag state.
     if (pointers.current.size === 0) {
       pan.current.moved = false;
       pan.current.startX = e.clientX;
       pan.current.startY = e.clientY;
     }
 
-    // Register this pointer so pinch math and move-tracking always work.
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
     if (editMode && editor?.setSelectedId && !onItem) editor.setSelectedId(null);
 
     const p = pan.current;
+    cancelAnimationFrame(p.raf);
+    cancelAnimationFrame(p.panRaf);
 
-    // Two-finger pinch — always proceed regardless of what's under the fingers.
     if (pointers.current.size >= 2 && !editMode) {
       p.on = false;
-      p.moved = true; // any 2-finger gesture counts as "moved" (no item tap fires)
+      p.moved = true;
       const pts = [...pointers.current.values()];
       pinch.current = {
         dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1,
         scale: scaleRef.current,
       };
-      // Capture this pointer so move events reach the canvas even off-element.
       e.currentTarget.setPointerCapture(e.pointerId);
       return;
     }
 
-    // Single pointer on item/deco — register (above) but don't start pan.
-    // The item handles its own click; onPM will bubble up via the DOM.
-    if (onItem) return;
-
-    // Single pointer on empty canvas — start pan.
-    e.currentTarget.setPointerCapture(e.pointerId);
+    // Set up pan state for ALL single-finger touches, including on items.
+    // For item touches we skip pointer capture so the item's native click
+    // event still fires (browser click synthesis uses the original target,
+    // not the capturing element). Move events reach us via DOM bubbling.
     p.on = true;
-    p.sx = e.clientX - p.ox; p.sy = e.clientY - p.oy;
-    p.lx = e.clientX; p.ly = e.clientY;
-    p.vx = 0; p.vy = 0;
-    cancelAnimationFrame(p.raf);
-    setGrabbing(true);
+    p.sx = e.clientX - p.ox;
+    p.sy = e.clientY - p.oy;
+    p.lx = e.clientX;
+    p.ly = e.clientY;
+    // Reset rolling velocity buffer
+    p.velBuf = [];
+    p.velIdx = 0;
+
+    if (!onItem) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setGrabbing(true);
+    }
   }, [editMode, editor]);
 
   const onPM = useCallback((e) => {
@@ -347,14 +364,12 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const p = pan.current;
 
-    // Track cumulative movement so tap vs drag can be distinguished later.
     if (!p.moved) {
       const dx = Math.abs(e.clientX - p.startX);
       const dy = Math.abs(e.clientY - p.startY);
       if (dx > 8 || dy > 8) p.moved = true;
     }
 
-    // Two fingers → pinch-zoom around their midpoint.
     if (pointers.current.size >= 2 && pinch.current) {
       const pts = [...pointers.current.values()];
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
@@ -363,40 +378,63 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       zoomToScale(pinch.current.scale * (dist / pinch.current.dist), midX, midY);
       return;
     }
+
     if (!p.on) return;
-    p.vx = e.clientX - p.lx; p.vy = e.clientY - p.ly;
-    p.lx = e.clientX; p.ly = e.clientY;
+
+    // Rolling velocity buffer: store last VEL_N per-frame deltas.
+    const vx = e.clientX - p.lx;
+    const vy = e.clientY - p.ly;
+    if (p.velBuf.length < p.VEL_N) {
+      p.velBuf.push({ vx, vy });
+    } else {
+      p.velBuf[p.velIdx % p.VEL_N] = { vx, vy };
+      p.velIdx++;
+    }
+    p.lx = e.clientX;
+    p.ly = e.clientY;
+
     const { x, y } = clamp(e.clientX - p.sx, e.clientY - p.sy);
-    p.ox = x; p.oy = y;
-    setPos({ x, y });
-  }, [clamp, zoomToScale]);
+    applyTransform(x, y, scaleRef.current);
+  }, [clamp, zoomToScale, applyTransform]);
+
   const onPU = useCallback((e) => {
     if (e && e.pointerId != null) pointers.current.delete(e.pointerId);
     const p = pan.current;
     if (pointers.current.size < 2) pinch.current = null;
-    // One finger remains after a pinch → resume panning from it (no fling).
     if (pointers.current.size === 1) {
       const [pt] = [...pointers.current.values()];
       p.on = true;
       p.sx = pt.x - p.ox; p.sy = pt.y - p.oy;
       p.lx = pt.x; p.ly = pt.y;
-      p.vx = 0; p.vy = 0;
+      p.velBuf = [];
       return;
     }
     if (pointers.current.size > 0) return;
     if (!p.on) { setGrabbing(false); return; }
     p.on = false;
     setGrabbing(false);
-    const decay = 0.91;
-    const go = () => {
-      p.vx *= decay; p.vy *= decay;
-      const { x, y } = clamp(p.ox + p.vx, p.oy + p.vy);
-      p.ox = x; p.oy = y;
-      setPos({ x, y });
-      if (Math.abs(p.vx) > 0.35 || Math.abs(p.vy) > 0.35) p.raf = requestAnimationFrame(go);
+
+    // Fling: average the rolling velocity buffer for a smooth exit velocity.
+    let avgVx = 0, avgVy = 0;
+    if (p.velBuf.length > 0) {
+      for (const v of p.velBuf) { avgVx += v.vx; avgVy += v.vy; }
+      avgVx /= p.velBuf.length;
+      avgVy /= p.velBuf.length;
+    }
+
+    const decay = 0.93;
+    const fling = (vx, vy) => {
+      vx *= decay; vy *= decay;
+      const { x, y } = clamp(p.ox + vx, p.oy + vy);
+      applyTransform(x, y, scaleRef.current);
+      if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
+        p.raf = requestAnimationFrame(() => fling(vx, vy));
+      }
     };
-    p.raf = requestAnimationFrame(go);
-  }, [clamp]);
+    if (Math.abs(avgVx) > 0.5 || Math.abs(avgVy) > 0.5) {
+      p.raf = requestAnimationFrame(() => fling(avgVx, avgVy));
+    }
+  }, [clamp, applyTransform]);
 
   return (
     <motion.div
@@ -433,15 +471,21 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
             </button>
             <div className={styles.hintTitle}>How to explore</div>
             <ul className={styles.hintList}>
-              <li><span className={styles.hintLabel}>Move</span>Drag to explore, scroll or pinch to zoom</li>
-              <li><span className={styles.hintLabel}>Read</span>Click any photo for the story</li>
+              <li><span className={styles.hintLabel}>Move</span>Drag to explore, pinch to zoom</li>
+              <li><span className={styles.hintLabel}>Read</span>Tap any photo for the story</li>
               <li><span className={styles.hintLabel}>Play</span>Interact with the clock, compass, pinball, and tic-tac-toe</li>
               <li><span className={styles.hintLabel}>Hunt</span>Find the easter egg</li>
             </ul>
           </motion.div>
         )}
       </AnimatePresence>
-      <Minimap px={pos.x} py={pos.y} vw={vsRef.current.w} vh={vsRef.current.h} scale={scale} items={items} />
+      <Minimap
+        posRef={posRef}
+        scaleRef={scaleRef}
+        vwRef={vwRef}
+        vhRef={vhRef}
+        items={items}
+      />
 
       <div
         ref={wrapRef}
@@ -452,7 +496,9 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
         onPointerLeave={onPU}
         onPointerCancel={onPU}
       >
-        <div className={styles.immWall} style={{ transform: `translate(${pos.x}px,${pos.y}px) scale(${scale})` }}>
+        {/* transform is driven by applyTransform (direct DOM write), not React state.
+            The initial value is applied on first mount via the useEffect upd() call. */}
+        <div ref={wallRef} className={styles.immWall}>
           <StringLights width={WALL_W} />
           <DustParticles dragPos={dragPointer} />
           <EditorGrid />
@@ -499,17 +545,9 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       </AnimatePresence>
 
       {showConfetti && (
-        <ConfettiOverlay
-          onDone={() => {
-            setShowConfetti(false);
-          }}
-        />
+        <ConfettiOverlay onDone={() => setShowConfetti(false)} />
       )}
 
-      {/* Photos-expired overlay — appears when any Notion-hosted image's
-          1-hour signed URL has expired. Themed as a handwritten note on
-          a cream paper card so it fits the wall vibe instead of feeling
-          like a system error. */}
       <AnimatePresence>
         {photosExpired && (
           <motion.div

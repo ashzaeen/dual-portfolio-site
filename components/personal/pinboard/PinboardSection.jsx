@@ -237,10 +237,11 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
 
   return (
     <section id="gallery" className={styles.wallSection} ref={sectionRef}>
-      {/* Fade-up on first scroll into view, matching Travel/Writing/Music/
-          Series. Wraps only the static board — the fixed-position modals stay
-          outside, since a `transform` on an ancestor (even translateY(0)) would
-          become their containing block and break `position: fixed`. */}
+      {/* Header + CTA fade-up on first scroll into view. Board is outside the
+          ScrollReveal so it paints at full opacity — avoids the mobile flash
+          where the browser defers painting the heavy board background until the
+          opacity transition fires. Fixed-position modals must stay outside any
+          `transform`-bearing ancestor, so they remain siblings of this block. */}
       <ScrollReveal>
       <div className={styles.wallHdr}>
         <div className={styles.wallHdrText}>
@@ -265,6 +266,7 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
           <span className={styles.ctaArrow} aria-hidden="true">→</span>
         </button>
       </div>
+      </ScrollReveal>
 
       {/* When capped, this wrapper flex-centers the (zoomed) board so the
           leftover width becomes symmetric parchment gutters on BOTH sides.
@@ -338,7 +340,6 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
         <div className={`${styles.nail} ${styles.nailBottom}`} />
       </div>
       </div>
-      </ScrollReveal>
 
       <AnimatePresence>
         {wallOpen && (
