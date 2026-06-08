@@ -186,36 +186,18 @@ export default function TravelSection({
     return () => window.removeEventListener("popstate", onPopState);
   }, [locations, locationStories]);
 
-  // Derive ordered carousel: activeId floats to front, others keep their slot order
-  const carouselLocations = (() => {
-    const locs = carouselIds
-      .map((id) => locations.find((l) => l.id === id))
-      .filter(Boolean);
-    if (!activeId || !carouselIds.includes(activeId)) return locs;
-    return [
-      locs.find((l) => l.id === activeId),
-      ...locs.filter((l) => l.id !== activeId),
-    ].filter(Boolean);
-  })();
+  // carouselIds is the source of truth for order. activatePin always moves
+  // the tapped id to position 0 in state, so the order persists after
+  // deselect — no dynamic float on activeId needed here.
+  const carouselLocations = carouselIds
+    .map((id) => locations.find((l) => l.id === id))
+    .filter(Boolean);
 
   function handlePinTap(id) {
     const rail = railRef.current;
     if (!id) {
-      // Pin scrollLeft=0 while the layout animation reorders cards back to
-      // their original positions — mirrors what activatePin does on selection.
-      // Without this, the framer-motion FLIP reflow makes the rail jump right.
-      if (rail) {
-        rail.style.scrollSnapType = "none";
-        rail.scrollLeft = 0;
-        let frames = 0;
-        const pin = () => {
-          if (!rail.isConnected) return;
-          rail.scrollLeft = 0;
-          if (frames++ < 30) requestAnimationFrame(pin);
-          else rail.style.scrollSnapType = "";
-        };
-        requestAnimationFrame(pin);
-      }
+      // Cards don't reorder on deselect (order is baked into carouselIds),
+      // so no scroll-position pinning needed — just clear the active state.
       setActiveId(null);
       return;
     }
@@ -243,8 +225,13 @@ export default function TravelSection({
     }
     setActiveId(id);
     setCarouselIds((prev) => {
-      if (prev.includes(id)) return prev;
-      return [id, ...prev.slice(0, CAROUSEL_SIZE - 1)];
+      // Always move the tapped id to position 0, whether it's new or existing.
+      // This bakes the order into state so it survives deselect — previously
+      // the order was computed dynamically from activeId, which meant clearing
+      // activeId sent the card back to its old slot.
+      const without = prev.filter((x) => x !== id);
+      if (prev.includes(id)) return [id, ...without];
+      return [id, ...without.slice(0, CAROUSEL_SIZE - 1)];
     });
     if (rail) {
       let frames = 0;
