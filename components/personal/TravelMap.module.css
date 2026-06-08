@@ -393,6 +393,24 @@
   .compassStar {
     font-size: 0.44rem;
   }
+
+  /* Remove backdrop-filter from all map overlay elements on mobile.
+     Each blurred element inside a scrolling container forces a per-frame
+     compositing snapshot of the content behind it during scroll. Replace
+     with near-opaque solid backgrounds — imperceptible at mobile scale. */
+  .compass,
+  .cycleBtn,
+  .tip {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .compass  { background: rgba(244, 238, 224, 0.97); }
+  .cycleBtn { background: rgba(244, 238, 224, 0.97); }
+  .tip      { background: rgba(244, 238, 224, 0.97); }
+
+  /* Also remove the map grain mix-blend-mode — not visible at 260px height
+     and the compositor overhead isn't worth it. */
+  .shell::before { display: none; }
 }
 
 /* ── FEATURED POSTCARD RAIL ──

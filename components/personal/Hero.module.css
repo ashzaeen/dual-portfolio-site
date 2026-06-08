@@ -570,11 +570,13 @@
     top: -10px;
     left: -16px;
   }
-  /* Fewer / smaller dust motes look right at this scale — and the
-     drift distance shortens so they don't fly into the type column. */
-  .dustMote {
-    transform: scale(0.8);
-  }
+  /* Hide all dust motes on mobile — 14 continuously animating elements
+     (opacity + transform at 60fps) compete directly with scroll rendering. */
+  .dustField { display: none; }
+
+  /* Hide the SVG grain overlay — mix-blend-mode: multiply on a large element
+     forces a compositor layer that increases scroll paint cost. */
+  .grain { display: none; }
   .status {
     padding-left: 0.85rem;
   }

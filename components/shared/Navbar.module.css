@@ -455,6 +455,20 @@
     font-size: 0.5rem;
     letter-spacing: 0.1em;
   }
+
+  /* Remove backdrop-filter from the fixed navbar on mobile.
+     A fixed element with backdrop-filter forces the browser to composite
+     everything behind it on every scroll frame — the #1 scroll jank source.
+     Replace with a near-opaque solid background; visually indistinguishable
+     on a small screen but eliminates the per-frame blur cost entirely. */
+  .nav.scrolled {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(232, 223, 200, 0.97); /* personal: parchment solid */
+  }
+  .nav.pro.scrolled {
+    background: rgba(15, 14, 12, 0.97); /* pro: obsidian solid */
+  }
 }
 
 /* Respect reduced-motion preferences */
