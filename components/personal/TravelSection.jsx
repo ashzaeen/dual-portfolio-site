@@ -200,7 +200,25 @@ export default function TravelSection({
 
   function handlePinTap(id) {
     const rail = railRef.current;
-    if (!id) { setActiveId(null); return; }
+    if (!id) {
+      // Pin scrollLeft=0 while the layout animation reorders cards back to
+      // their original positions — mirrors what activatePin does on selection.
+      // Without this, the framer-motion FLIP reflow makes the rail jump right.
+      if (rail) {
+        rail.style.scrollSnapType = "none";
+        rail.scrollLeft = 0;
+        let frames = 0;
+        const pin = () => {
+          if (!rail.isConnected) return;
+          rail.scrollLeft = 0;
+          if (frames++ < 30) requestAnimationFrame(pin);
+          else rail.style.scrollSnapType = "";
+        };
+        requestAnimationFrame(pin);
+      }
+      setActiveId(null);
+      return;
+    }
 
     // If the postcard rail isn't fully in view, glide the page down to
     // it first, then run the postcard animation once it lands — matching

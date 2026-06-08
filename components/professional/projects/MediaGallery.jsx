@@ -4,6 +4,17 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./MediaGallery.module.css";
 
+const MAX_DOTS = 9;
+
+function getDotWindow(total, active) {
+  if (total <= MAX_DOTS) return { start: 0, end: total - 1 };
+  let start = active - Math.floor(MAX_DOTS / 2);
+  let end = start + MAX_DOTS - 1;
+  if (start < 0) { start = 0; end = MAX_DOTS - 1; }
+  if (end >= total) { end = total - 1; start = end - MAX_DOTS + 1; }
+  return { start, end };
+}
+
 export default function MediaGallery({ media = [] }) {
   const [index, setIndex] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -64,19 +75,25 @@ export default function MediaGallery({ media = [] }) {
         )}
       </div>
 
-      {/* Dot pagination */}
-      {media.length > 1 && (
-        <div className={styles.dots}>
-          {media.map((_, i) => (
-            <button
-              key={i}
-              className={`${styles.dot} ${i === index ? styles.dotActive : ""}`}
-              onClick={() => setIndex(i)}
-              aria-label={`Go to media ${i + 1}`}
-            />
-          ))}
-        </div>
-      )}
+      {/* Dot pagination — windowed so dots never overflow the container */}
+      {media.length > 1 && (() => {
+        const { start, end } = getDotWindow(media.length, index);
+        return (
+          <div className={styles.dots}>
+            {media.slice(start, end + 1).map((_, i) => {
+              const realIdx = start + i;
+              return (
+                <button
+                  key={realIdx}
+                  className={`${styles.dot} ${realIdx === index ? styles.dotActive : ""}`}
+                  onClick={() => setIndex(realIdx)}
+                  aria-label={`Go to media ${realIdx + 1}`}
+                />
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Lightbox */}
       <AnimatePresence>

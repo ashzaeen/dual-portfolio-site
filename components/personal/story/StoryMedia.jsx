@@ -151,6 +151,8 @@ export default function StoryMedia({
   }
 
   function startPinch(e) {
+    // Second finger landed — kill the hold timer so a pinch never triggers grey.
+    clearTimeout(holdTimerRef.current);
     const frame = mediaFrameRef.current;
     if (!frame) return;
     const p = pinchRef.current;

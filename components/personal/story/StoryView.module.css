@@ -63,29 +63,29 @@
 .mobileRoot {
   display: flex;
   flex-direction: column;
+  align-items: center; /* centers the story column; dark bg fills pillarbox sides */
   width: 100%;
-  height: 100%;
+  height: var(--vvh, 100dvh); /* precise visual-viewport height set by JS */
   overflow: hidden;
   background: #1c1410;
 }
 
 .mobileBg {
-  /* 9:16 at 100% width = the exact frame a story was composed for.
-     flex-shrink:0 so it never gets squeezed by the tab.
-     max-height ensures the tab always gets at least 36px. */
+  /* Explicit px dimensions from JS — never relies on aspect-ratio CSS so
+     the story is never cropped when browser chrome is visible. */
   flex-shrink: 0;
-  width: 100%;
-  aspect-ratio: 9 / 16;
-  max-height: calc(100% - 36px);
+  width: var(--story-w, 100%);
+  height: var(--story-h, calc(100vw * 16 / 9)); /* fallback pre-hydration */
   position: relative;
   overflow: hidden;
 }
 
 .drawerArea {
-  /* Absorbs all remaining vertical space — this is the "leftover" the
-     user described. The tab inside stretches to fill it. */
+  /* Absorbs remaining vertical space below the story frame.
+     Width matches the story column so the tab sits directly below the story. */
   flex: 1;
-  min-height: 36px;
+  min-height: 52px;
+  width: var(--story-w, 100%);
   position: relative;
   z-index: 20;
   display: flex;

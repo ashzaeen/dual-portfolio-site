@@ -15,14 +15,6 @@
   z-index: 0;
 }
 
-/* Swipe-to-dismiss wrapper — receives direct CSS transforms from the gesture
-   handler; the inner .modal is left untouched so Framer Motion still owns
-   the open/close animation. Sizing comes from the child .modal. */
-.dismissWrap {
-  position: relative;
-  z-index: 1;
-}
-
 .modal {
   position: relative;
   z-index: 1;
@@ -116,7 +108,8 @@
 @media (max-width: 1100px) {
   .modal {
     width: 100vw;
-    height: 100svh;
+    height: 100svh; /* fallback */
+    height: 100dvh; /* updates as browser chrome shows/hides */
     max-width: none;
     max-height: none;
     border-radius: 0;
@@ -124,9 +117,14 @@
   }
 }
 
+/* Mobile: anchor the modal to the true visual viewport so browser chrome
+   (address bar, bottom toolbar) never obscures the bottom of the story.
+   --vvh and --vv-top are set by the visualViewport JS effect in StoryModal. */
 @media (max-width: 768px) {
-  .overlay { align-items: flex-end; }
+  .overlay { align-items: flex-start; }
   .modal {
+    height: var(--vvh, 100dvh);
+    margin-top: var(--vv-top, 0px);
     box-shadow: none;
   }
   .closeBtn { top: 14px; right: 14px; }

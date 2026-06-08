@@ -44,6 +44,51 @@ export default function StoryView({ story, location, autoplay = true }) {
   const [currentSlide, setCurrentSlide] = useState(null);
   const isMobile = useIsMobile();
   const fieldNotesRef = useRef(null);
+  const mobileRootRef = useRef(null);
+
+  // Compute exact 9:16 story dimensions from the true visual viewport so:
+  //  - browser chrome never cuts off the bottom
+  //  - story always fills the maximum possible height without cropping
+  //  - if screen is wider than 9:16 allows, pillarbox (dark bg shows left/right)
+  //  Sets --story-w, --story-h, --vvh on the mobileRoot element.
+  useEffect(() => {
+    if (!isMobile) return;
+    const MIN_TAB_H = 52; // minimum "Read Field Notes" tab height in px
+
+    function updateLayout() {
+      const root = mobileRootRef.current;
+      if (!root) return;
+      const vv = window.visualViewport;
+      const vvH = vv?.height ?? window.innerHeight;
+      const vvW = vv?.width ?? window.innerWidth;
+
+      const maxStoryH = vvH - MIN_TAB_H;
+      const storyHAtFullW = vvW * (16 / 9);
+
+      let storyW, storyH;
+      if (storyHAtFullW <= maxStoryH) {
+        // Width-constrained: story fills full width, tab gets the rest
+        storyW = vvW;
+        storyH = storyHAtFullW;
+      } else {
+        // Height-constrained: scale down to fit, pillarbox the sides
+        storyH = maxStoryH;
+        storyW = Math.round(maxStoryH * (9 / 16));
+      }
+
+      root.style.setProperty("--story-w", `${storyW}px`);
+      root.style.setProperty("--story-h", `${storyH}px`);
+      root.style.setProperty("--vvh", `${vvH}px`);
+    }
+
+    updateLayout();
+    window.visualViewport?.addEventListener("resize", updateLayout);
+    window.addEventListener("resize", updateLayout);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateLayout);
+      window.removeEventListener("resize", updateLayout);
+    };
+  }, [isMobile]);
 
   // Up/Down arrows scroll the FieldNotes pane (when it has scrollable overflow)
   useEffect(() => {
@@ -74,7 +119,7 @@ export default function StoryView({ story, location, autoplay = true }) {
   // ── Mobile: fullscreen background + bottom drawer ──────────────────────────
   if (isMobile) {
     return (
-      <div className={styles.mobileRoot}>
+      <div className={styles.mobileRoot} ref={mobileRootRef}>
         {/* Fullscreen media background */}
         <div className={styles.mobileBg}>
           <StoryMedia
