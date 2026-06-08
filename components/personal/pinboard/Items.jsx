@@ -141,6 +141,11 @@ export function WallItem({
         // Cursor: in edit mode, signal "click me" on unselected items and
         // "grab me" on the selected one. Outside edit mode: clickable.
         cursor: editMode ? (isSelected ? "grab" : "pointer") : "pointer",
+        // Suppress framer-motion's automatic will-change:transform in normal
+        // view mode. ~30 promoted child layers inside .immWall's compositor
+        // layer causes GPU VRAM exhaustion → layer squashing → CPU fallback.
+        // Edit mode keeps promotion so drag stays responsive.
+        willChange: editMode ? "transform" : "auto",
       }}
       // In edit mode: a tap (no drag) selects the item — gives instant
       // visual feedback in the panel that this item is the focus. The

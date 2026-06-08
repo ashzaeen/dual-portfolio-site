@@ -464,14 +464,9 @@
      seal. Hiding it leaves the wax face (the element itself) fully intact. */
   .seal::before { display: none; }
 
-  /* hsStamp uses a 5-layer mask-composite to punch perforated holes on all
-     four edges. When mask-composite is unsupported the stamp renders as a
-     plain warm-cream rectangle on the dark background — the "colours out of
-     nowhere". Strip the mask on mobile; a simple rounded card looks clean. */
+  /* Keep the stamp mask on mobile — modern iOS Safari supports
+     -webkit-mask-composite: destination-out, so perforations render correctly. */
   .hsStamp {
-    -webkit-mask: none;
-    mask: none;
-    border-radius: 3px;
     transform: rotate(3deg);
   }
 

@@ -1192,7 +1192,7 @@
   z-index: 7;
   transform: translate(-50%, -50%);
   touch-action: none;
-  pointer-events: all;
+  pointer-events: none;
   opacity: 0.85;
   /* 18px padding = 66px total hit area around the 30px visual SVG.
      translate(-50%,-50%) still centers on left/top because -50% is half

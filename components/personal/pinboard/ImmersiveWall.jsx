@@ -116,14 +116,18 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     moved: false, startX: 0, startY: 0,
   });
 
+  // Signals DustParticles to skip canvas redraws while the wall is in motion.
+  // Using a ref keeps this off the React render cycle entirely.
+  const dustPausedRef = useRef(false);
+
   // React state is only used for things that MUST drive a React render:
-  // scale (wall children depend on knowing the current zoom), grabbing cursor,
+  // scale (wall children depend on knowing the current zoom),
   // and modal/overlay flags. Position is managed via direct DOM writes.
   const [scale, setScale] = useState(1);
   const scaleRef = useRef(1);
   const pointers = useRef(new Map());
   const pinch = useRef(null);
-  const [grabbing, setGrabbing] = useState(false);
+  // grabbing cursor is toggled via direct classList — no React state needed.
   const [dragging, setDragging] = useState(null);
   const [dragPointer, setDragPointer] = useState(null);
   const [eggFound, setEggFound] = useState(false);
@@ -352,12 +356,14 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     // Reset rolling velocity buffer
     p.velBuf = [];
     p.velIdx = 0;
+    // Freeze DustParticles so the compositor layer texture stays clean.
+    dustPausedRef.current = true;
 
     if (!onItem) {
       e.currentTarget.setPointerCapture(e.pointerId);
-      setGrabbing(true);
+      wrapRef.current?.classList.add(styles.grabbing);
     }
-  }, [editMode, editor]);
+  }, [editMode, editor, dustPausedRef]);
 
   const onPM = useCallback((e) => {
     if (!pointers.current.has(e.pointerId)) return;
@@ -381,17 +387,23 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
 
     if (!p.on) return;
 
-    // Rolling velocity buffer: store last VEL_N per-frame deltas.
-    const vx = e.clientX - p.lx;
-    const vy = e.clientY - p.ly;
-    if (p.velBuf.length < p.VEL_N) {
-      p.velBuf.push({ vx, vy });
-    } else {
-      p.velBuf[p.velIdx % p.VEL_N] = { vx, vy };
-      p.velIdx++;
+    // Coalesced events give all intermediate positions between paint frames
+    // (matters on 120Hz devices). Feed each into the velocity buffer for
+    // accurate fling direction, but apply the transform only once using the
+    // final dispatched position.
+    const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    for (const ce of events) {
+      const vx = ce.clientX - p.lx;
+      const vy = ce.clientY - p.ly;
+      if (p.velBuf.length < p.VEL_N) {
+        p.velBuf.push({ vx, vy });
+      } else {
+        p.velBuf[p.velIdx % p.VEL_N] = { vx, vy };
+        p.velIdx++;
+      }
+      p.lx = ce.clientX;
+      p.ly = ce.clientY;
     }
-    p.lx = e.clientX;
-    p.ly = e.clientY;
 
     const { x, y } = clamp(e.clientX - p.sx, e.clientY - p.sy);
     applyTransform(x, y, scaleRef.current);
@@ -400,7 +412,11 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
   const onPU = useCallback((e) => {
     if (e && e.pointerId != null) pointers.current.delete(e.pointerId);
     const p = pan.current;
-    if (pointers.current.size < 2) pinch.current = null;
+    if (pointers.current.size < 2) {
+      pinch.current = null;
+      // If pinch just ended with no remaining finger panning, resume particles.
+      if (!p.on) dustPausedRef.current = false;
+    }
     if (pointers.current.size === 1) {
       const [pt] = [...pointers.current.values()];
       p.on = true;
@@ -410,9 +426,9 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       return;
     }
     if (pointers.current.size > 0) return;
-    if (!p.on) { setGrabbing(false); return; }
+    if (!p.on) { wrapRef.current?.classList.remove(styles.grabbing); return; }
     p.on = false;
-    setGrabbing(false);
+    wrapRef.current?.classList.remove(styles.grabbing);
 
     // Fling: average the rolling velocity buffer for a smooth exit velocity.
     let avgVx = 0, avgVy = 0;
@@ -429,12 +445,16 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       applyTransform(x, y, scaleRef.current);
       if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
         p.raf = requestAnimationFrame(() => fling(vx, vy));
+      } else {
+        dustPausedRef.current = false; // fling done — resume particles
       }
     };
     if (Math.abs(avgVx) > 0.5 || Math.abs(avgVy) > 0.5) {
       p.raf = requestAnimationFrame(() => fling(avgVx, avgVy));
+    } else {
+      dustPausedRef.current = false; // no fling — resume immediately
     }
-  }, [clamp, applyTransform]);
+  }, [clamp, applyTransform, dustPausedRef]);
 
   return (
     <motion.div
@@ -489,7 +509,7 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
 
       <div
         ref={wrapRef}
-        className={`${styles.immCanvas}${grabbing ? " " + styles.grabbing : ""}`}
+        className={styles.immCanvas}
         onPointerDown={onPD}
         onPointerMove={onPM}
         onPointerUp={onPU}
@@ -500,7 +520,7 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
             The initial value is applied on first mount via the useEffect upd() call. */}
         <div ref={wallRef} className={styles.immWall}>
           <StringLights width={WALL_W} />
-          <DustParticles dragPos={dragPointer} />
+          <DustParticles dragPos={dragPointer} pausedRef={dustPausedRef} />
           <EditorGrid />
           {items.map((item, i) => (
             <WallItem

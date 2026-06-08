@@ -317,9 +317,11 @@ export default function MobileTravelMap({ locations = [], activeId = null, onPin
       const s0 = proj.scale();
       const c1 = view.center;
       const s1 = view.scale * baseScaleRatio;
+      const ratio = Math.max(s0, s1) / Math.min(s0, s1);
+      const ms = view?.zoomMs ?? (ratio > 15 ? 2200 : TRANS_MS);
       if (animTimer) animTimer.stop();
       animTimer = d3.timer((elapsed) => {
-        const t = Math.min(elapsed / TRANS_MS, 1);
+        const t = Math.min(elapsed / ms, 1);
         const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         proj
           .scale(s0 + (s1 - s0) * e)

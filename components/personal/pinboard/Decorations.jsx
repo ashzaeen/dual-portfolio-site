@@ -121,7 +121,7 @@ export function StringConnection() {
 // Performance: 55 particles, 1 canvas the full size of the wall (drawn
 // only when in viewport via the overlay transform — browser handles
 // composite). No React state churn in the loop.
-export function DustParticles({ dragPos = null }) {
+export function DustParticles({ dragPos = null, pausedRef = null }) {
   const canvasRef = useRef(null);
   const dragRef = useRef(null);
 
@@ -149,6 +149,9 @@ export function DustParticles({ dragPos = null }) {
     pts.forEach((p) => { p.bx = p.vx; p.by = p.vy; });
     let raf;
     const draw = () => {
+      // During pan/fling the wall's compositor layer is being transformed;
+      // skip the canvas redraw so the GPU texture stays clean each frame.
+      if (pausedRef?.current) { raf = requestAnimationFrame(draw); return; }
       ctx.clearRect(0, 0, W, H);
       const dp = dragRef.current;
       pts.forEach((p) => {

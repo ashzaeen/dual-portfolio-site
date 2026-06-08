@@ -42,6 +42,7 @@
 .body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 2rem;
   scrollbar-width: thin;
   scrollbar-color: #1a1814 transparent;
