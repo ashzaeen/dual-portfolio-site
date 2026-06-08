@@ -176,9 +176,16 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
 
-  // Smallest scale that still covers the viewport (no empty gutters).
+  // Smallest allowed scale. The geometric floor (viewport ÷ wall dimension)
+  // prevents empty gutters, but on mobile that resolves to ~0.29 — at which
+  // point many small items render simultaneously and frames start dropping.
+  // We lift the mobile floor to 0.38 so the user can zoom out somewhat past
+  // the initial 0.5 but can't reach the rendering cliff.
   const minScale = useCallback(
-    () => Math.max(vsRef.current.w / WALL_W, vsRef.current.h / WALL_H),
+    () => {
+      const base = Math.max(vsRef.current.w / WALL_W, vsRef.current.h / WALL_H);
+      return vsRef.current.w <= 768 ? Math.max(base, 0.38) : base;
+    },
     []
   );
 
