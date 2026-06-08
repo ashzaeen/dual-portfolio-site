@@ -4,6 +4,7 @@ import { PostHogProvider } from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata = {
+  metadataBase: new URL("https://www.ashzaeen.com"),
   title: "Ashzaeen Fatmi Khan",
   description:
     "CS + Math at UTA · AI research at the Robotic Vision Lab · builder, writer, traveler.",
