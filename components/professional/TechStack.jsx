@@ -6,6 +6,7 @@ import { FALLBACK_TECHSTACK } from "@/data/techstack";
 import { FALLBACK_SECTION_COPY } from "@/data/sections";
 import SectionFrame from "./SectionFrame";
 import { analytics } from "@/lib/analytics";
+import { useScrollChain } from "@/lib/useScrollChain";
 
 // Derives the five legacy lookup tables (rawData, catAngles, rightCats,
 // leftCats, mobileAnglesRight, mobileAnglesLeft) from a flat
@@ -80,6 +81,9 @@ export default function TechStack({ techStack = FALLBACK_TECHSTACK, copy = FALLB
   const [mobileArchSide, setMobileArchSide] = useState("right");
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [listHighlight, setListHighlight] = useState(null); // { id, parent } | null
+
+  const listViewRef = useRef(null);
+  useScrollChain(listViewRef);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -580,7 +584,7 @@ export default function TechStack({ techStack = FALLBACK_TECHSTACK, copy = FALLB
         <svg ref={svgRef} style={{ width: '100%', height: '100%', cursor: 'crosshair', position: 'relative', zIndex: 6, display: mode === 'list' ? 'none' : 'block' }} />
 
         {/* List view */}
-        <div id="ts-list-view" className={`ts-list-view${listHighlight ? ' has-highlight' : ''}`} style={{ display: mode === 'list' ? 'grid' : 'none' }}>
+        <div id="ts-list-view" ref={listViewRef} className={`ts-list-view${listHighlight ? ' has-highlight' : ''}`} style={{ display: mode === 'list' ? 'grid' : 'none' }}>
           {categories.map(category => (
             <div key={category} className="ts-list-category">
               <h4

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useScrollChain } from "@/lib/useScrollChain";
 import {
   FALLBACK_EDUCATION,
   FALLBACK_CERTIFICATIONS,
@@ -96,6 +97,11 @@ export default function Credentials({
       "color: #c4a050; background: #0f0e0c; font-size: 14px; font-family: monospace; padding: 20px; border: 1px solid #c4a050; border-radius: 4px;"
     );
   }, []);
+
+  const courseworkScrollRef = useRef(null);
+  const curiosityScrollRef  = useRef(null);
+  useScrollChain(courseworkScrollRef);
+  useScrollChain(curiosityScrollRef);
 
   const [hoveredCert, setHoveredCert] = useState(null);
   const [hoveredCoursework, setHoveredCoursework] = useState(null);
@@ -273,7 +279,8 @@ export default function Credentials({
           {coursework.length > 0 && (
             <div>
               <h4 className="font-mono text-xs text-text-dim uppercase tracking-widest mb-6">Coursework</h4>
-              <TelemetryGrid className="flex flex-col border-t border-gold-dim/30 max-h-[420px] overflow-y-auto overflow-x-hidden creds-scroll pr-1">
+              <div ref={courseworkScrollRef} className="flex flex-col border-t border-gold-dim/30 max-h-[420px] overflow-y-auto overflow-x-hidden creds-scroll pr-1">
+              <TelemetryGrid className="flex flex-col">
                 {coursework.map((course, idx) => {
                   const isHovered = hoveredCoursework === idx;
                   return (
@@ -326,6 +333,7 @@ export default function Credentials({
                   );
                 })}
               </TelemetryGrid>
+              </div>
             </div>
           )}
 
@@ -342,7 +350,8 @@ export default function Credentials({
                   <span className="cred-blink text-gold">_</span>
                 </div>
 
-                <TelemetryGrid className="flex flex-col max-h-[320px] overflow-y-auto overflow-x-hidden creds-scroll pr-1">
+                <div ref={curiosityScrollRef} className="flex flex-col max-h-[320px] overflow-y-auto overflow-x-hidden creds-scroll pr-1">
+                <TelemetryGrid className="flex flex-col">
                   {curiosity.map((item, idx) => {
                     const isHovered = hoveredCuriosity === idx;
                     return (
@@ -393,6 +402,7 @@ export default function Credentials({
                     );
                   })}
                 </TelemetryGrid>
+                </div>
               </div>
             </div>
           )}
