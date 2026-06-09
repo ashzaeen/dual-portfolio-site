@@ -31,16 +31,6 @@
   border-bottom-color: transparent;
 }
 
-/* When any modal is open, navbar goes fully transparent.
-   JS suppresses the transition property before setting this attribute so the
-   change is instantaneous in both directions (open AND close). */
-.nav[data-modal-open] {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-bottom-color: transparent;
-}
-
 .inner {
   max-width: 1180px;
   margin: 0 auto;
