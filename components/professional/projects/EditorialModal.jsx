@@ -447,10 +447,10 @@ export default function EditorialModal({ project, onClose }) {
           className="flex-shrink-0 z-40 bg-surface/95 border-b border-gold-dim px-6 flex items-center justify-between"
           style={{ paddingTop: "8px", paddingBottom: "8px" }}
         >
-          <div className="font-mono text-[10px] text-text-dim uppercase tracking-widest flex items-center gap-2">
-            <span className="text-gold">◈</span> {project.title}.exe
+          <div className="font-mono text-[10px] text-text-dim uppercase tracking-widest flex items-center gap-2 min-w-0">
+            <span className="text-gold flex-shrink-0">◈</span> {project.title}.exe
           </div>
-          <button onClick={handleClose} className="p-2 -mr-2 font-mono text-[10px] text-text-dim uppercase tracking-widest hover:text-gold transition-colors flex items-center gap-2 outline-none group">
+          <button onClick={handleClose} className="p-2 -mr-2 font-mono text-[10px] text-text-dim uppercase tracking-widest hover:text-gold transition-colors flex items-center gap-2 outline-none group flex-shrink-0 whitespace-nowrap ml-4">
             <span className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">←</span> [ CLOSE ]
           </button>
         </div>
