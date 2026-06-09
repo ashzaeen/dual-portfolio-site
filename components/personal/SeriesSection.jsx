@@ -535,12 +535,14 @@ function SeriesMobile({ shows, copy }) {
   }
 
   /* ── Spotlight / crosshair drag ─────────────────────────────────────
-     A drag only starts when the touch lands ON the crosshair (within GRAB_R
-     of its current centre) — tapping elsewhere does nothing and leaves the
-     tap free for the CTA button / spoiler reveal. The rect is cached once at
-     pointerdown and reused for every move (no per-frame reflow). Pointer is
-     captured for the gesture so the drag keeps tracking even if the finger
-     slides off the small crosshair target. */
+     Non-passive touch listeners are used instead of React pointer events.
+     React's onPointerDown/Move are passive on mobile — the browser defers
+     them while deciding scroll intent, causing the ~300ms lag. With native
+     { passive: false } touchstart/touchmove we can call preventDefault()
+     the instant the finger lands on the crosshair, which kills the scroll
+     delay and gives immediate 60fps tracking.
+     Touches outside the crosshair GRAB_R radius fall through so the user
+     can still scroll the page by swiping anywhere else on the screen. */
   const GRAB_R = 44; // px radius around the crosshair centre that counts as a grab
 
   function applyPos(rawX, rawY) {
@@ -557,32 +559,47 @@ function SeriesMobile({ shows, copy }) {
     }
   }
 
-  function onScreenPointerDown(e) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    // Crosshair centre in px from its current % position.
-    const cx = rect.left + (posRef.current.x / 100) * rect.width;
-    const cy = rect.top  + (posRef.current.y / 100) * rect.height;
-    if (Math.hypot(e.clientX - cx, e.clientY - cy) > GRAB_R) return; // not on the crosshair → ignore
-    draggingRef.current = true;
-    gestureRectRef.current = rect; // cache once for the whole gesture
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-    // No teleport — the crosshair stays put until the finger actually moves it.
-  }
+  useEffect(() => {
+    const el = screenRef.current;
+    if (!el) return;
 
-  function onScreenPointerMove(e) {
-    if (!draggingRef.current || !gestureRectRef.current) return;
-    const rect = gestureRectRef.current;
-    applyPos(
-      ((e.clientX - rect.left) / rect.width) * 100,
-      ((e.clientY - rect.top)  / rect.height) * 100,
-    );
-  }
+    function onTouchStart(e) {
+      const touch = e.touches[0];
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + (posRef.current.x / 100) * rect.width;
+      const cy = rect.top  + (posRef.current.y / 100) * rect.height;
+      if (Math.hypot(touch.clientX - cx, touch.clientY - cy) > GRAB_R) return;
+      e.preventDefault(); // stop scroll-intent detection immediately
+      draggingRef.current = true;
+      gestureRectRef.current = rect;
+    }
 
-  function onScreenPointerUp(e) {
-    draggingRef.current = false;
-    gestureRectRef.current = null;
-    e?.currentTarget?.releasePointerCapture?.(e.pointerId);
-  }
+    function onTouchMove(e) {
+      if (!draggingRef.current || !gestureRectRef.current) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      applyPos(
+        ((touch.clientX - gestureRectRef.current.left) / gestureRectRef.current.width) * 100,
+        ((touch.clientY - gestureRectRef.current.top)  / gestureRectRef.current.height) * 100,
+      );
+    }
+
+    function onTouchEnd() {
+      draggingRef.current = false;
+      gestureRectRef.current = null;
+    }
+
+    el.addEventListener("touchstart",  onTouchStart, { passive: false });
+    el.addEventListener("touchmove",   onTouchMove,  { passive: false });
+    el.addEventListener("touchend",    onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
+    return () => {
+      el.removeEventListener("touchstart",  onTouchStart);
+      el.removeEventListener("touchmove",   onTouchMove);
+      el.removeEventListener("touchend",    onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, []); // refs are stable — no deps needed
 
   const activeShow = shows.find((s) => s.id === activeId) ?? shows[0];
   const isBlurred = spoilers && !revealed.has(activeShow.id);
@@ -609,10 +626,6 @@ function SeriesMobile({ shows, copy }) {
         ref={screenRef}
         className={styles.mobileScreen}
         style={{ background: activeShow.bg }}
-        onPointerDown={onScreenPointerDown}
-        onPointerMove={onScreenPointerMove}
-        onPointerUp={onScreenPointerUp}
-        onPointerCancel={onScreenPointerUp}
       >
         <div className={styles.filmGrain} />
         <div className={styles.screenTint} />

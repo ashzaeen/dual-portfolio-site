@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,6 +32,20 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
+  const navRef = useRef(null);
+
+  // Instantly suppress the nav's CSS transition for one frame so open/close
+  // of the menu doesn't produce a sluggish 0.4s background fade.
+  const setMenuOpenInstant = useCallback((next) => {
+    const nav = navRef.current;
+    if (nav) nav.style.transition = "none";
+    setMenuOpen(next);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (navRef.current) navRef.current.style.transition = "";
+      });
+    });
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -46,12 +60,12 @@ export default function Navbar() {
     const onOutsideClick = (e) => {
       if (e.target.closest(`.${styles.menuOverlay}`)) return;
       if (e.target.closest(`.${styles.hamburger}`)) return;
-      setMenuOpen(false);
+      setMenuOpenInstant(false);
     };
     const onKey = (e) => {
-      if (e.key === "Escape") setMenuOpen(false);
+      if (e.key === "Escape") setMenuOpenInstant(false);
     };
-    const onScroll = () => setMenuOpen(false);
+    const onScroll = () => setMenuOpenInstant(false);
     document.addEventListener("mousedown", onOutsideClick);
     document.addEventListener("touchstart", onOutsideClick);
     window.addEventListener("keydown", onKey);
@@ -66,8 +80,8 @@ export default function Navbar() {
 
   // Route change closes the menu.
   useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+    setMenuOpenInstant(false);
+  }, [pathname, setMenuOpenInstant]);
 
   // Idle-time prefetch of the OTHER side so the toggle feels near-instant.
   // Defers 1s after mount so critical post-hydration work finishes first,
@@ -142,13 +156,14 @@ export default function Navbar() {
   const handleToggle = (target) => {
     if (target === side) return;
     analytics.sideToggled(side, target, "navbar");
-    setMenuOpen(false);
+    setMenuOpenInstant(false);
     router.push(target === "personal" ? "/personal" : "/");
   };
 
   return (
     <nav
-      className={`${styles.nav} ${styles[side]} ${scrolled ? styles.scrolled : ""}`}
+      ref={navRef}
+      className={`${styles.nav} ${styles[side]} ${scrolled ? styles.scrolled : ""} ${menuOpen ? styles.navMenuOpen : ""}`}
     >
       <div className={styles.inner}>
         <Link href={homeHref} className={styles.logo} aria-label="Home">
@@ -178,7 +193,11 @@ export default function Navbar() {
           <button
             type="button"
             className={`${styles.hamburger} ${menuOpen ? styles.hamburgerOpen : ""} mobile-only`}
-            onClick={() => setMenuOpen((v) => { if (!v) analytics.mobileMenuOpened(side); return !v; })}
+            onClick={() => {
+              const willOpen = !menuOpen;
+              if (willOpen) analytics.mobileMenuOpened(side);
+              setMenuOpenInstant(willOpen);
+            }}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
@@ -197,7 +216,7 @@ export default function Navbar() {
             side={side}
             links={links}
             activeSection={activeSection}
-            onClose={() => setMenuOpen(false)}
+            onClose={() => setMenuOpenInstant(false)}
           />
         )}
       </AnimatePresence>

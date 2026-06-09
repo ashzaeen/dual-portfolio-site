@@ -71,6 +71,7 @@ function HeroInner({ roles, status = FALLBACK_HERO_STATUS, copy = FALLBACK_SECTI
   const [tick, setTick] = useState(0);
   const [typedLen, setTypedLen] = useState(0);
   const [carouselOpen, setCarouselOpen] = useState(false);
+  const [developed, setDeveloped] = useState(false);
 
   // Role rotator
   useEffect(() => {
@@ -227,6 +228,8 @@ function HeroInner({ roles, status = FALLBACK_HERO_STATUS, copy = FALLBACK_SECTI
                     src={PHOTOS[0].src}
                     alt={PHOTOS[0].alt}
                     draggable={false}
+                    onAnimationEnd={() => setDeveloped(true)}
+                    style={developed ? { filter: "none", animation: "none" } : undefined}
                   />
 
                   <svg className={styles.postmark} viewBox="0 0 100 100" aria-hidden="true">

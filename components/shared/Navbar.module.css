@@ -22,6 +22,15 @@
   border-bottom-color: var(--nav-border);
 }
 
+/* When the mobile menu is open, strip the scrolled background instantly.
+   The transition is also suppressed via inline style in JS (setMenuOpenInstant). */
+.navMenuOpen.scrolled {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+
 .inner {
   max-width: 1180px;
   margin: 0 auto;
@@ -468,6 +477,12 @@
   }
   .nav.pro.scrolled {
     background: rgba(15, 14, 12, 0.97); /* pro: obsidian solid */
+  }
+
+  /* Menu open: strip background on mobile too */
+  .navMenuOpen.scrolled,
+  .navMenuOpen.pro.scrolled {
+    background: transparent;
   }
 }
 

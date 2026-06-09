@@ -57,7 +57,7 @@ export function PosterModal({ item, onClose }) {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.06, type: "spring", stiffness: 280, damping: 24 }}
         onClick={(e) => e.stopPropagation()}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28, position: "relative", zIndex: 2 }}
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28, position: "relative", zIndex: 2, marginTop: "auto", marginBottom: "auto" }}
       >
         <img src={item.src} alt={item.label} className={styles.cinemaPoster} />
         <div className={styles.cinemaCard}>

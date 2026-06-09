@@ -394,8 +394,9 @@
   background: rgba(10, 6, 2, 0.9);
   display: flex;
   align-items: center;
-  justify-content: center;
   padding: 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .modalBox {
   position: relative;
@@ -404,6 +405,7 @@
   align-items: center;
   gap: 22px;
   max-width: min(92vw, 700px);
+  margin-block: auto;
 }
 .modalImg {
   max-width: 100%;
@@ -478,10 +480,11 @@
   background: #030200;
   display: flex;
   align-items: center;
-  justify-content: center;
   padding: 32px;
   flex-direction: column;
   gap: 28px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .cinemaGrain {
   position: absolute;
@@ -1841,6 +1844,15 @@
   /* Disable the grain overlay's mix-blend-mode on mobile — it forces the
      entire board to be GPU-composited on every scroll frame, causing jank. */
   .boardFrame::before { display: none; }
+
+  /* Kill CTA animations + blur on mobile. filter:blur(11px) on an infinitely
+     animating element forces the compositor to re-blur every frame while
+     scrolling. ctaSheen animates `left` (a layout property), triggering a
+     layout recalculation on every frame. Both compete directly with scroll
+     compositing and are the source of the shaky/laggy header scroll. */
+  .ctaAura { display: none; }
+  .ctaSheen { display: none; }
+  .ctaArrow { animation: none; }
   .boardAbs { display: none; }
   .boardFlex { display: flex; }
   .sTitle { font-size: 2rem; }

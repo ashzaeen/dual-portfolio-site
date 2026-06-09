@@ -38,27 +38,31 @@ function ToyTracker({ kind, children }) {
   );
 }
 
-// Minimap reads from refs via a rAF loop so the wall doesn't re-render
-// at 60fps during panning. Only this small component re-renders for the
-// viewport-indicator update.
+// Minimap: writes viewport indicator directly to DOM via ref — zero React
+// state updates during pan (the previous setVp approach triggered React
+// reconciliation 60×/sec and competed with applyTransform on the main thread).
 function Minimap({ posRef, scaleRef, vwRef, vhRef, items }) {
   const MW = 156, MH = 106;
-  const [vp, setVp] = useState({ x: 0, y: 0, w: MW, h: MH });
+  const vpRef  = useRef(null);
   const rafRef = useRef(null);
 
   useEffect(() => {
+    const sx = MW / WALL_W, sy = MH / WALL_H;
     const tick = () => {
       const px = posRef.current.x;
       const py = posRef.current.y;
       const s  = scaleRef.current;
-      const vw = vwRef.current;
-      const vh = vhRef.current;
-      const sx = MW / WALL_W, sy = MH / WALL_H;
-      const vpW = Math.min(MW, (vw / s) * sx);
-      const vpH = Math.min(MH, (vh / s) * sy);
+      const vpW = Math.min(MW, (vwRef.current / s) * sx);
+      const vpH = Math.min(MH, (vhRef.current / s) * sy);
       const vpX = Math.max(0, Math.min(MW - vpW, (-px / s) * sx));
       const vpY = Math.max(0, Math.min(MH - vpH, (-py / s) * sy));
-      setVp({ x: vpX, y: vpY, w: vpW, h: vpH });
+      if (vpRef.current) {
+        const st = vpRef.current.style;
+        st.left   = `${vpX}px`;
+        st.top    = `${vpY}px`;
+        st.width  = `${vpW}px`;
+        st.height = `${vpH}px`;
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -79,7 +83,7 @@ function Minimap({ posRef, scaleRef, vwRef, vhRef, items }) {
           title={b.id}
         />
       ))}
-      <div className={styles.mmVp} style={{ left: vp.x, top: vp.y, width: vp.w, height: vp.h }} />
+      <div ref={vpRef} className={styles.mmVp} />
     </div>
   );
 }
@@ -464,6 +468,154 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       wallRef.current?.classList.remove(styles.panning);
     }
   }, [clamp, applyTransform, dustPausedRef]);
+
+  // ─── Native touch listeners for mobile pan/pinch ───────────────────────────
+  //
+  // React's onPointerDown/Move/Up go through event delegation at the React root
+  // — one extra dispatch per move event. On mobile at 60–120Hz that latency
+  // accumulates into visible shakiness. Attaching directly to the element fires
+  // the handler synchronously in the browser's touch pipeline.
+  //
+  // Calling e.preventDefault() on touchstart tells the browser we own this
+  // touch sequence, which also cancels its pointer-event synthesis. The React
+  // pointer handlers above therefore only receive mouse events (desktop).
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    function onTS(e) {
+      e.preventDefault(); // own the touch + cancel pointer-event synthesis
+      cancelAnimationFrame(pan.current.raf);
+      cancelAnimationFrame(pan.current.panRaf);
+      const ts = e.touches;
+
+      if (ts.length === 2) {
+        pan.current.on   = false;
+        pan.current.moved = true;
+        pinch.current = {
+          dist: Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY) || 1,
+          scale: scaleRef.current,
+        };
+        return;
+      }
+
+      const t = ts[0];
+      const p = pan.current;
+      p.moved  = false;
+      p.startX = t.clientX;
+      p.startY = t.clientY;
+      p.on     = true;
+      p.sx     = t.clientX - p.ox;
+      p.sy     = t.clientY - p.oy;
+      p.lx     = t.clientX;
+      p.ly     = t.clientY;
+      p.velBuf = [];
+      p.velIdx = 0;
+      dustPausedRef.current = true;
+      wallRef.current?.classList.add(styles.panning);
+    }
+
+    function onTM(e) {
+      e.preventDefault();
+      const ts = e.touches;
+      const p  = pan.current;
+
+      if (ts.length >= 2 && pinch.current) {
+        const dist = Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY) || 1;
+        const midX = (ts[0].clientX + ts[1].clientX) / 2;
+        const midY = (ts[0].clientY + ts[1].clientY) / 2;
+        zoomToScale(pinch.current.scale * (dist / pinch.current.dist), midX, midY);
+        return;
+      }
+
+      if (!p.on || !ts.length) return;
+      const t = ts[0];
+
+      if (!p.moved) {
+        const dx = Math.abs(t.clientX - p.startX);
+        const dy = Math.abs(t.clientY - p.startY);
+        if (dx > 8 || dy > 8) p.moved = true;
+      }
+
+      const vx = t.clientX - p.lx;
+      const vy = t.clientY - p.ly;
+      if (p.velBuf.length < p.VEL_N) {
+        p.velBuf.push({ vx, vy });
+      } else {
+        p.velBuf[p.velIdx % p.VEL_N] = { vx, vy };
+        p.velIdx++;
+      }
+      p.lx = t.clientX;
+      p.ly = t.clientY;
+
+      const { x, y } = clamp(t.clientX - p.sx, t.clientY - p.sy);
+      applyTransform(x, y, scaleRef.current);
+    }
+
+    function onTE(e) {
+      const p = pan.current;
+      pinch.current = null;
+
+      if (e.touches.length === 1 && p.on) {
+        // one finger lifted, one remains — restart pan from new anchor
+        const t = e.touches[0];
+        p.sx     = t.clientX - p.ox;
+        p.sy     = t.clientY - p.oy;
+        p.lx     = t.clientX;
+        p.ly     = t.clientY;
+        p.velBuf = [];
+        p.velIdx = 0;
+        p.moved  = true;
+        return;
+      }
+
+      if (!p.on) {
+        dustPausedRef.current = false;
+        wallRef.current?.classList.remove(styles.panning);
+        return;
+      }
+      p.on = false;
+
+      let avgVx = 0, avgVy = 0;
+      if (p.velBuf.length > 0) {
+        for (const v of p.velBuf) { avgVx += v.vx; avgVy += v.vy; }
+        avgVx /= p.velBuf.length;
+        avgVy /= p.velBuf.length;
+      }
+
+      const decay = 0.93;
+      const fling = (vx, vy) => {
+        vx *= decay; vy *= decay;
+        const { x, y } = clamp(p.ox + vx, p.oy + vy);
+        applyTransform(x, y, scaleRef.current);
+        if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
+          p.raf = requestAnimationFrame(() => fling(vx, vy));
+        } else {
+          dustPausedRef.current = false;
+          wallRef.current?.classList.remove(styles.panning);
+        }
+      };
+
+      if (Math.abs(avgVx) > 0.5 || Math.abs(avgVy) > 0.5) {
+        p.raf = requestAnimationFrame(() => fling(avgVx, avgVy));
+      } else {
+        dustPausedRef.current = false;
+        wallRef.current?.classList.remove(styles.panning);
+      }
+    }
+
+    el.addEventListener("touchstart",  onTS, { passive: false });
+    el.addEventListener("touchmove",   onTM, { passive: false });
+    el.addEventListener("touchend",    onTE, { passive: true  });
+    el.addEventListener("touchcancel", onTE, { passive: true  });
+
+    return () => {
+      el.removeEventListener("touchstart",  onTS);
+      el.removeEventListener("touchmove",   onTM);
+      el.removeEventListener("touchend",    onTE);
+      el.removeEventListener("touchcancel", onTE);
+    };
+  }, [clamp, zoomToScale, applyTransform, dustPausedRef]);
 
   return (
     <motion.div
