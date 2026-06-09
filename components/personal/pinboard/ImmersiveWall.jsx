@@ -317,6 +317,7 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
   //    finger-lift from snapping the fling in the wrong direction.
 
   const onPD = useCallback((e) => {
+    if (e.pointerType === 'touch') return; // handled by native touch listeners
     const onItem = !!(
       e.target.closest(`.${styles.wallItem}`) ||
       e.target.closest(`.${styles.wallDeco}`)
@@ -375,6 +376,7 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
   }, [editMode, editor, dustPausedRef]);
 
   const onPM = useCallback((e) => {
+    if (e.pointerType === 'touch') return; // handled by native touch listeners
     if (!pointers.current.has(e.pointerId)) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const p = pan.current;
@@ -419,6 +421,7 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
   }, [clamp, zoomToScale, applyTransform]);
 
   const onPU = useCallback((e) => {
+    if (e && e.pointerType === 'touch') return; // handled by native touch listeners
     if (e && e.pointerId != null) pointers.current.delete(e.pointerId);
     const p = pan.current;
     if (pointers.current.size < 2) {
@@ -484,7 +487,9 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     if (!el) return;
 
     function onTS(e) {
-      e.preventDefault(); // own the touch + cancel pointer-event synthesis
+      // No preventDefault here — touch-action:none on .immCanvas handles scroll
+      // prevention via CSS, and skipping preventDefault lets the browser
+      // synthesize click events so taps on wall items still open modals.
       cancelAnimationFrame(pan.current.raf);
       cancelAnimationFrame(pan.current.panRaf);
       const ts = e.touches;
