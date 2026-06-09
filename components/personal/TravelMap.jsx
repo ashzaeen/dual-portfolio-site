@@ -402,6 +402,13 @@ export default function TravelMap({ locations = [], locationStories = {}, onView
       // Use ratio to catch large-scale jumps in either direction (e.g. BD↔world).
       const ratio = Math.max(s0, s1) / Math.min(s0, s1);
       const ms = view?.zoomMs ?? (ratio > 15 ? 2200 : TRANS_MS);
+      // Hide BD overlays immediately when leaving BD — labels drift across the
+      // map during the long zoom-out if we wait until applyLandStyle at t=1.
+      if (regionKey !== "bd") {
+        if (bdFillsSel)   bdFillsSel.style("display", "none");
+        if (bdBordersSel) bdBordersSel.style("display", "none");
+        if (bdLabelsSel)  bdLabelsSel.style("display", "none");
+      }
       if (animTimer) animTimer.stop();
       animTimer = d3.timer((elapsed) => {
         const t = Math.min(elapsed / ms, 1);
