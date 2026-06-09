@@ -48,7 +48,16 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
+    const onScroll = () => {
+      // While a modal has the page scroll-locked (useScrollLock sets
+      // body{position:fixed}), window.scrollY reads 0 and the reflow fires a
+      // bogus scroll event. That would flip the nav to its un-scrolled
+      // (transparent) state on open, then animate back to opaque on close —
+      // the exact "navbar transparency + delay" bug. Ignore scroll updates
+      // entirely while locked so the nav holds whatever state it had.
+      if (document.body.style.position === "fixed") return;
+      setScrolled(window.scrollY > 60);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);

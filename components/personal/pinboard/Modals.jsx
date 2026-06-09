@@ -41,7 +41,7 @@ export function PhotoModal({ item, onClose }) {
   const isAged = item.sub === "aged";
   const close = useEscape(onClose);
   return (
-    <motion.div className={styles.modalBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
+    <motion.div className={styles.modalBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
       <motion.div
         className={styles.modalBox}
         initial={{ scale: 0.88, y: 24, opacity: 0 }}
@@ -65,7 +65,7 @@ export function PhotoModal({ item, onClose }) {
 export function PosterModal({ item, onClose }) {
   const close = useEscape(onClose);
   return (
-    <motion.div className={styles.cinemaBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
+    <motion.div className={styles.cinemaBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
       <div className={styles.cinemaGrain} />
       <button className={styles.cinemaX} onClick={close} aria-label="Close">×</button>
       <motion.div
