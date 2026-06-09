@@ -17,6 +17,7 @@ export default function CaseStudyModal({ children, onClose }) {
 
   function closeAll() {
     if (isClosing) return;
+    navSignal.modalClosed(); // signal immediately, before the 270ms exit animation
     setIsClosing(true);
     setTimeout(() => handleClose(), 270);
   }

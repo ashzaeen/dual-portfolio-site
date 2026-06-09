@@ -27,6 +27,7 @@ export default function StoryModal({ children, onClose, onBack }) {
 
   function closeAll() {
     if (isClosing) return;
+    navSignal.modalClosed(); // signal immediately, before the 270ms exit animation
     setIsClosing(true);
     setTimeout(() => handleClose(), 270);
   }

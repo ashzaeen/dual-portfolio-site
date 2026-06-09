@@ -399,7 +399,7 @@ export default function EditorialModal({ project, onClose }) {
   // If a wrapper (e.g. SlugLandingChoreography) provides onClose, defer to it
   // so close = local unmount, not a route change. Otherwise fall back to
   // smart same-origin back / external replace.
-  const handleClose = onClose ?? (() => {
+  const _baseClose = onClose ?? (() => {
     const ref = typeof document !== "undefined" ? document.referrer : "";
     const sameOrigin = ref && ref.startsWith(window.location.origin);
     if (sameOrigin) {
@@ -408,6 +408,9 @@ export default function EditorialModal({ project, onClose }) {
       router.replace("/#projects", { scroll: false });
     }
   });
+  // Signal the navbar immediately so it restores instantly instead of waiting
+  // for the route change / exit animation to complete.
+  const handleClose = () => { navSignal.modalClosed(); _baseClose(); };
 
   const currentMedia = project.media[mediaIndex];
   const isVideo = currentMedia.type === "youtube";

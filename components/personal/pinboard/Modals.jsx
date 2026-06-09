@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import styles from "./Pinboard.module.css";
 import { PHOTOS_FOR_COMPASS } from "@/data/pinboard";
@@ -9,18 +9,29 @@ import { useScrollLock } from "@/lib/useScrollLock";
 import { navSignal } from "@/lib/navSignal";
 
 // Shared modal chrome: close on Escape + freeze background scroll while open.
+// Returns a `close` function — use it for backdrop clicks and X buttons so the
+// navbar turns transparent-off INSTANTLY on tap, not after the exit animation.
 function useEscape(onClose) {
   useEffect(() => {
     navSignal.modalOpened();
-    const h = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", h);
-    return () => {
-      window.removeEventListener("keydown", h);
-      navSignal.modalClosed();
-    };
+    return () => navSignal.modalClosed(); // fallback if component unmounts unexpectedly
+  }, []);
+
+  // Fires the navbar signal immediately, then delegates to onClose.
+  // Cleanup above may fire modalClosed() a second time on unmount — harmless.
+  const close = useCallback(() => {
+    navSignal.modalClosed();
+    onClose();
   }, [onClose]);
 
+  useEffect(() => {
+    const h = (e) => e.key === "Escape" && close();
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [close]);
+
   useScrollLock();
+  return close;
 }
 
 // ─── Photo modal ─────────────────────────────────────────────
@@ -28,9 +39,9 @@ function useEscape(onClose) {
 // majority of the vertical space (see .modalImg max-height in CSS).
 export function PhotoModal({ item, onClose }) {
   const isAged = item.sub === "aged";
-  useEscape(onClose);
+  const close = useEscape(onClose);
   return (
-    <motion.div className={styles.modalBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+    <motion.div className={styles.modalBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.modalBox}
         initial={{ scale: 0.88, y: 24, opacity: 0 }}
@@ -39,7 +50,7 @@ export function PhotoModal({ item, onClose }) {
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button className={styles.modalX} onClick={onClose} aria-label="Close">×</button>
+        <button className={styles.modalX} onClick={close} aria-label="Close">×</button>
         <img src={item.src} alt={item.label} className={`${styles.modalImg}${isAged ? " " + styles.agedModal : ""}`} />
         <div className={styles.modalTxt}>
           <div className={styles.modalLbl}>{item.label}</div>
@@ -52,11 +63,11 @@ export function PhotoModal({ item, onClose }) {
 
 // ─── Poster modal (cinema treatment) ─────────────────────────
 export function PosterModal({ item, onClose }) {
-  useEscape(onClose);
+  const close = useEscape(onClose);
   return (
-    <motion.div className={styles.cinemaBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+    <motion.div className={styles.cinemaBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <div className={styles.cinemaGrain} />
-      <button className={styles.cinemaX} onClick={onClose} aria-label="Close">×</button>
+      <button className={styles.cinemaX} onClick={close} aria-label="Close">×</button>
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -81,9 +92,9 @@ export function PosterModal({ item, onClose }) {
 // polaroid click-through to give the modal a visual anchor in addition
 // to the writing.
 export function TripModal({ onClose, image, imageAlt = "", body }) {
-  useEscape(onClose);
+  const close = useEscape(onClose);
   return (
-    <motion.div className={styles.tripBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+    <motion.div className={styles.tripBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.tripJournal}
         initial={{ scale: 0.9, y: 20, opacity: 0 }}
@@ -92,7 +103,7 @@ export function TripModal({ onClose, image, imageAlt = "", body }) {
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button className={styles.tripX} onClick={onClose} aria-label="Close">×</button>
+        <button className={styles.tripX} onClick={close} aria-label="Close">×</button>
         {image && (
           <img src={image} alt={imageAlt} draggable={false} className={styles.tripImage} />
         )}
@@ -129,9 +140,9 @@ export function TripModal({ onClose, image, imageAlt = "", body }) {
 // explaining how the user actually likes their sandwich. Edit the
 // PLACEHOLDER lines below with real bread / cheese / veggies / sauces.
 export function SubwayModal({ onClose, data }) {
-  useEscape(onClose);
+  const close = useEscape(onClose);
   return (
-    <motion.div className={styles.subwayBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+    <motion.div className={styles.subwayBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.subwayCard}
         initial={{ scale: 0.92, y: 20, opacity: 0 }}
@@ -140,7 +151,7 @@ export function SubwayModal({ onClose, data }) {
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button className={styles.subwayX} onClick={onClose} aria-label="Close">×</button>
+        <button className={styles.subwayX} onClick={close} aria-label="Close">×</button>
 
         <div className={styles.subwayBrand}>
           <div className={styles.subwayBrandName}>SUBWAY®</div>
@@ -201,7 +212,25 @@ export function SubwayModal({ onClose, data }) {
 export function CompassModal({ onClose, onSpin }) {
   const [angle, setAngle] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  useEscape(() => { if (!spinning) onClose(); });
+
+  // Manual lifecycle — spinning state blocks close, so we can't use useEscape directly.
+  useEffect(() => {
+    navSignal.modalOpened();
+    return () => navSignal.modalClosed();
+  }, []);
+  useScrollLock();
+
+  const close = useCallback(() => {
+    if (spinning) return;
+    navSignal.modalClosed();
+    onClose();
+  }, [spinning, onClose]);
+
+  useEffect(() => {
+    const h = (e) => e.key === "Escape" && close();
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [close]);
 
   const ticks = Array.from({ length: 12 }, (_, i) => {
     const a = ((i * 30 - 90) * Math.PI) / 180;
@@ -222,6 +251,7 @@ export function CompassModal({ onClose, onSpin }) {
     // animation finishes (no "lying" about where the needle landed).
     const chosen = PHOTOS_FOR_COMPASS[Math.floor(Math.random() * PHOTOS_FOR_COMPASS.length)];
     setTimeout(() => {
+      navSignal.modalClosed(); // signal immediately when spin completes
       onClose();
       onSpin(chosen);
     }, 2200);
@@ -231,7 +261,7 @@ export function CompassModal({ onClose, onSpin }) {
     <motion.div
       className={styles.compassBg}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      onClick={() => !spinning && onClose()}
+      onClick={close}
     >
       <motion.div
         className={styles.compassCard}
@@ -241,7 +271,7 @@ export function CompassModal({ onClose, onSpin }) {
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button className={styles.compassX} onClick={onClose} aria-label="Close" disabled={spinning}>×</button>
+        <button className={styles.compassX} onClick={close} aria-label="Close" disabled={spinning}>×</button>
         <div className={styles.compassEyebrow}>+ THE COMPASS</div>
         <div className={styles.compassTitle}>Spin to find a memory.</div>
         <p className={styles.compassInstruction}>
@@ -384,9 +414,9 @@ function LCDClock({ city, sub, tzOffset }) {
 }
 
 export function DualClockModal({ onClose }) {
-  useEscape(onClose);
+  const close = useEscape(onClose);
   return (
-    <motion.div className={styles.clockBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+    <motion.div className={styles.clockBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.clockCard}
         initial={{ scale: 0.92, y: 18, opacity: 0 }}
@@ -395,7 +425,7 @@ export function DualClockModal({ onClose }) {
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button className={styles.clockX} onClick={onClose} aria-label="Close">×</button>
+        <button className={styles.clockX} onClick={close} aria-label="Close">×</button>
         <div className={styles.clockEyebrow}>+ DUAL TIMEZONE</div>
         <div className={styles.clockTitle}>Two homes, one wall.</div>
         <div className={styles.clockGrid}>
@@ -410,8 +440,9 @@ export function DualClockModal({ onClose }) {
 
 // ─── Easter-egg found modal ──────────────────────────────────
 export function EggFoundModal({ onClose }) {
+  const close = useEscape(onClose);
   return (
-    <motion.div className={styles.eggModal} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+    <motion.div className={styles.eggModal} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.eggCard}
         initial={{ scale: 0.85, y: 20 }}
@@ -431,7 +462,7 @@ export function EggFoundModal({ onClose }) {
           Go poke around the lamp, the tea, the polaroids…
         </div>
         <div className={styles.eggSig}>— A</div>
-        <button onClick={onClose} className={styles.eggClose}>close</button>
+        <button onClick={close} className={styles.eggClose}>close</button>
       </motion.div>
     </motion.div>
   );
