@@ -6,7 +6,7 @@ import styles from "./Pinboard.module.css";
 import { WALL_W, WALL_H, INTERACTIVE_BOXES } from "@/data/pinboard";
 import { WallItem } from "./Items";
 import {
-  StringLights, DustParticles, Compass, DualClock,
+  StringLights, Compass, DualClock,
   EasterEgg, EasterEggFound, ConfettiOverlay,
 } from "./Decorations";
 import { PinballMachine } from "./PinballMachine";
@@ -120,10 +120,6 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     moved: false, startX: 0, startY: 0,
   });
 
-  // Signals DustParticles to skip canvas redraws while the wall is in motion.
-  // Using a ref keeps this off the React render cycle entirely.
-  const dustPausedRef = useRef(false);
-
   // React state is only used for things that MUST drive a React render:
   // scale (wall children depend on knowing the current zoom),
   // and modal/overlay flags. Position is managed via direct DOM writes.
@@ -133,7 +129,6 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
   const pinch = useRef(null);
   // grabbing cursor is toggled via direct classList — no React state needed.
   const [dragging, setDragging] = useState(null);
-  const [dragPointer, setDragPointer] = useState(null);
   const [eggFound, setEggFound] = useState(false);
   const [showEggModal, setShowEggModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -361,19 +356,15 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     // Reset rolling velocity buffer
     p.velBuf = [];
     p.velIdx = 0;
-    // Freeze DustParticles AND all descendant CSS animations (string-light
-    // drop-shadow glow, item breathe, egg) so the wall's compositor texture
-    // stays static while it's being translated — the GPU just moves a cached
-    // layer instead of re-rasterizing repaints every frame. This is the
-    // primary jitter fix.
-    dustPausedRef.current = true;
+    // Freeze descendant CSS animations (string-light glow, item breathe, egg)
+    // so the wall's compositor texture stays static while being translated.
     wallRef.current?.classList.add(styles.panning);
 
     if (!onItem) {
       e.currentTarget.setPointerCapture(e.pointerId);
       wrapRef.current?.classList.add(styles.grabbing);
     }
-  }, [editMode, editor, dustPausedRef]);
+  }, [editMode, editor]);
 
   const onPM = useCallback((e) => {
     if (e.pointerType === 'touch') return; // handled by native touch listeners
@@ -426,8 +417,7 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
     const p = pan.current;
     if (pointers.current.size < 2) {
       pinch.current = null;
-      // If pinch just ended with no remaining finger panning, resume animations.
-      if (!p.on) { dustPausedRef.current = false; wallRef.current?.classList.remove(styles.panning); }
+      if (!p.on) { wallRef.current?.classList.remove(styles.panning); }
     }
     if (pointers.current.size === 1) {
       const [pt] = [...pointers.current.values()];
@@ -458,19 +448,15 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
         p.raf = requestAnimationFrame(() => fling(vx, vy));
       } else {
-        // fling done — resume particles + descendant animations
-        dustPausedRef.current = false;
         wallRef.current?.classList.remove(styles.panning);
       }
     };
     if (Math.abs(avgVx) > 0.5 || Math.abs(avgVy) > 0.5) {
       p.raf = requestAnimationFrame(() => fling(avgVx, avgVy));
     } else {
-      // no fling — resume immediately
-      dustPausedRef.current = false;
       wallRef.current?.classList.remove(styles.panning);
     }
-  }, [clamp, applyTransform, dustPausedRef]);
+  }, [clamp, applyTransform]);
 
   // ─── Native touch listeners for mobile pan/pinch ───────────────────────────
   //
@@ -516,8 +502,10 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       p.ly     = t.clientY;
       p.velBuf = [];
       p.velIdx = 0;
-      dustPausedRef.current = true;
-      wallRef.current?.classList.add(styles.panning);
+      // Do NOT pause animations here — we don't know yet if this is a tap
+      // or a drag. Pausing on every touchstart (then resuming on touchend)
+      // causes a visible flash when the user taps to open a modal. We pause
+      // only after the drag threshold is crossed (see onTM below).
     }
 
     function onTM(e) {
@@ -539,7 +527,10 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       if (!p.moved) {
         const dx = Math.abs(t.clientX - p.startX);
         const dy = Math.abs(t.clientY - p.startY);
-        if (dx > 8 || dy > 8) p.moved = true;
+        if (dx > 8 || dy > 8) {
+          p.moved = true;
+          wallRef.current?.classList.add(styles.panning);
+        }
       }
 
       const vx = t.clientX - p.lx;
@@ -575,11 +566,12 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       }
 
       if (!p.on) {
-        dustPausedRef.current = false;
         wallRef.current?.classList.remove(styles.panning);
         return;
       }
       p.on = false;
+
+      if (!p.moved) return;
 
       let avgVx = 0, avgVy = 0;
       if (p.velBuf.length > 0) {
@@ -596,7 +588,6 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
         if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
           p.raf = requestAnimationFrame(() => fling(vx, vy));
         } else {
-          dustPausedRef.current = false;
           wallRef.current?.classList.remove(styles.panning);
         }
       };
@@ -604,7 +595,6 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       if (Math.abs(avgVx) > 0.5 || Math.abs(avgVy) > 0.5) {
         p.raf = requestAnimationFrame(() => fling(avgVx, avgVy));
       } else {
-        dustPausedRef.current = false;
         wallRef.current?.classList.remove(styles.panning);
       }
     }
@@ -620,7 +610,7 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
       el.removeEventListener("touchend",    onTE);
       el.removeEventListener("touchcancel", onTE);
     };
-  }, [clamp, zoomToScale, applyTransform, dustPausedRef]);
+  }, [clamp, zoomToScale, applyTransform]);
 
   return (
     <motion.div
@@ -686,7 +676,6 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
             The initial value is applied on first mount via the useEffect upd() call. */}
         <div ref={wallRef} className={styles.immWall}>
           <StringLights width={WALL_W} />
-          <DustParticles dragPos={dragPointer} pausedRef={dustPausedRef} />
           <EditorGrid />
           {items.map((item, i) => (
             <WallItem
@@ -695,7 +684,6 @@ function ImmersiveWallInner({ items, onClose, onAnyClick, onDynamicImageError, p
               dimmed={dragging !== null && dragging !== item.id}
               setDragging={setDragging}
               onAnyClick={onAnyClick}
-              onDragMove={setDragPointer}
               onImageError={onDynamicImageError}
               devDelay={i * 0.16}
               breatheDelay={(i * 0.7) % 8}

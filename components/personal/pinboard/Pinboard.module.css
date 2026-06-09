@@ -393,6 +393,7 @@
   z-index: 3000;
   background: rgba(10, 6, 2, 0.9);
   display: flex;
+  flex-direction: column;
   align-items: center;
   padding: 24px;
   overflow-y: auto;

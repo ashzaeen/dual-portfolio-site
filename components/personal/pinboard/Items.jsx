@@ -8,21 +8,17 @@ import { BoardingPass, SubwayReceipt } from "./PaperItems";
 import { useEditor, useEffectivePos } from "./PinboardEditor";
 
 // ─── WallItem (immersive) ────────────────────────────────────
-// Drag-to-rearrange, click-to-open. Reports the drag pointer
-// position in WALL-LOCAL coordinates via `onDragMove` so the
-// DustParticles canvas can scatter particles around it.
+// Drag-to-rearrange in edit mode, click-to-open in normal mode.
 export function WallItem({
   item,
   dimmed,
   setDragging,
   onAnyClick,
-  onDragMove, // (wallX, wallY) | null
   onImageError, // called when a dynamic (Notion-hosted) image fails to load
   devDelay,
   breatheDelay,
   sfx,
-  wallPanRef, // ref containing { x, y } of the wall pan (so we can convert
-              // viewport→wall coords without re-rendering)
+  wallPanRef,
 }) {
   // Notion image URLs expire after ~1 hour. For dynamic items we wire
   // onError + loading="lazy"; curated photos are local and need neither.
@@ -30,7 +26,7 @@ export function WallItem({
     ? { onError: onImageError, loading: "lazy" }
     : {};
   const [zEl, setZEl] = useState(10);
-  const dragRef = useRef({ active: false, lastReport: 0 });
+  const dragRef = useRef({ active: false });
   const dH = item.dH ? Math.round(item.dH * 1.12) : null;
   const dW =
     item.dH && item.w && item.h
@@ -68,27 +64,6 @@ export function WallItem({
     animation: `pinboardDevelop 1.5s ease ${devDelay}s both`,
   };
 
-  // Convert a pointer event to wall-local coordinates by reading the current
-  // pan offset off the shared ref. Cheap, no React state.
-  const reportPointer = (e) => {
-    if (!onDragMove) return;
-    const now = performance.now();
-    if (now - dragRef.current.lastReport < 16) return; // ~60fps cap
-    dragRef.current.lastReport = now;
-    const pan = wallPanRef?.current ?? { x: 0, y: 0 };
-    onDragMove({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-  };
-
-  // Capture native pointermove on the window while dragging so we can
-  // forward scatter positions even when the pointer leaves the item.
-  useEffect(() => {
-    if (!dragRef.current.active) return;
-    const onMove = (e) => reportPointer(e);
-    window.addEventListener("pointermove", onMove);
-    return () => window.removeEventListener("pointermove", onMove);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  });
-
   return (
     <motion.div
       className={styles.wallItem}
@@ -104,22 +79,17 @@ export function WallItem({
           : { type: "spring", stiffness: 280, damping: 20 }
       }
       whileDrag={{ scale: editMode ? 1.04 : 1.07, zIndex: 200 }}
-      onDragStart={(e) => {
+      onDragStart={() => {
         dragRef.current.active = true;
         setDragging(item.id);
         setZEl(100);
         sfx.playClick();
-        reportPointer(e);
       }}
-      onDrag={(e) => reportPointer(e)}
       onDragEnd={() => {
         dragRef.current.active = false;
         setDragging(null);
         setZEl(10);
         sfx.playThud();
-        if (onDragMove) onDragMove(null);
-        // In edit mode, commit the final position to the editor's
-        // overrides so the panel reads it and you can copy it.
         if (editMode && editor) {
           editor.reportDragEnd(item.id, motionX.get(), motionY.get());
         }
