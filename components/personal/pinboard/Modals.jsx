@@ -6,13 +6,18 @@ import styles from "./Pinboard.module.css";
 import { PHOTOS_FOR_COMPASS } from "@/data/pinboard";
 import WallRichText from "./WallRichText";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { navSignal } from "@/lib/navSignal";
 
 // Shared modal chrome: close on Escape + freeze background scroll while open.
 function useEscape(onClose) {
   useEffect(() => {
+    navSignal.modalOpened();
     const h = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
+    return () => {
+      window.removeEventListener("keydown", h);
+      navSignal.modalClosed();
+    };
   }, [onClose]);
 
   useScrollLock();

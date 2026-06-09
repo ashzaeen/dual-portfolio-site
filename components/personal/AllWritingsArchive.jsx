@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CAT_COLORS } from "@/data/pieces";
 import styles from "./AllWritingsArchive.module.css";
+import { navSignal } from "@/lib/navSignal";
 
 const CATEGORIES = ["Personal", "Technical", "Journalism"];
 const COLS = 3;
@@ -74,6 +75,10 @@ function ArchiveCard({ piece, dimmed, onClick, rotation }) {
 export default function AllWritingsArchive({ pieces: PIECES = [], open, onClose, openPiece }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeTags, setActiveTags] = useState(new Set());
+
+  useEffect(() => {
+    if (open) { navSignal.modalOpened(); return () => navSignal.modalClosed(); }
+  }, [open]);
 
   /* ESC closes archive — suspended once a reader is open */
   useEffect(() => {

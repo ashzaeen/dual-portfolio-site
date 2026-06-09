@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { analytics } from "@/lib/analytics";
 import PinchZoomImage from "@/components/shared/PinchZoomImage";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { navSignal } from "@/lib/navSignal";
 
 // EditorialModal extracted from Projects.jsx so it can be mounted directly
 // by the intercepting route at app/(pro)/@modal/(.)projects/[slug]. Card
@@ -383,6 +384,8 @@ export default function EditorialModal({ project, onClose }) {
   const [lightboxSrc, setLightboxSrc] = useState(null);
   const openLightbox = (src) => setLightboxSrc(src);
   const closeLightbox = () => setLightboxSrc(null);
+
+  useEffect(() => { navSignal.modalOpened(); return () => navSignal.modalClosed(); }, []);
 
   // project_media_viewed — fires on each media change (dots, prev/next),
   // skipping the initial auto-shown slide.

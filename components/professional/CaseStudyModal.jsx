@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import styles from "./CaseStudyModal.module.css";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { navSignal } from "@/lib/navSignal";
 
 export default function CaseStudyModal({ children, onClose }) {
   const router = useRouter();
@@ -27,6 +28,8 @@ export default function CaseStudyModal({ children, onClose }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [isClosing]);
+
+  useEffect(() => { navSignal.modalOpened(); return () => navSignal.modalClosed(); }, []);
 
   useScrollLock();
 

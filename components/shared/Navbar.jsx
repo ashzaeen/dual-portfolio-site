@@ -54,6 +54,32 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // When a modal opens or closes, instantly toggle the navbar's transparent
+  // state by writing directly to the DOM — no React re-render delay, no CSS
+  // transition animation. The double-rAF trick lets the transition property
+  // snap off for the change and then snap back on for future scroll events.
+  useEffect(() => {
+    const applyInstant = (fn) => {
+      const nav = navRef.current;
+      if (!nav) return;
+      nav.style.transition = "none";
+      fn(nav);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (navRef.current) navRef.current.style.transition = "";
+        })
+      );
+    };
+    const onModalOpened = () => applyInstant((nav) => nav.setAttribute("data-modal-open", ""));
+    const onModalClosed = () => applyInstant((nav) => nav.removeAttribute("data-modal-open"));
+    document.addEventListener("navbar:modal-opened", onModalOpened);
+    document.addEventListener("navbar:modal-closed", onModalClosed);
+    return () => {
+      document.removeEventListener("navbar:modal-opened", onModalOpened);
+      document.removeEventListener("navbar:modal-closed", onModalClosed);
+    };
+  }, []);
+
   // Dismiss on click-outside, scroll, or Esc.
   useEffect(() => {
     if (!menuOpen) return;

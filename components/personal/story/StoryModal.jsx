@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import styles from "./StoryModal.module.css";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { navSignal } from "@/lib/navSignal";
 
 export default function StoryModal({ children, onClose, onBack }) {
   const router = useRouter();
   const [isClosing, setIsClosing] = useState(false);
   const overlayRef = useRef(null);
   const triggerRef = useRef(null);
+
+  useEffect(() => { navSignal.modalOpened(); return () => navSignal.modalClosed(); }, []);
 
   const handleClose = onClose ?? (() => {
     const ref = typeof document !== "undefined" ? document.referrer : "";
