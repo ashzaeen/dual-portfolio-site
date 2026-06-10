@@ -1,26 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import styles from "./Pinboard.module.css";
 import { PHOTOS_FOR_COMPASS } from "@/data/pinboard";
 import WallRichText from "./WallRichText";
-import { useScrollLock } from "@/lib/useScrollLock";
-import { navSignal } from "@/lib/navSignal";
+import { applyLock, releaseLock } from "@/lib/useScrollLock";
 
 // Shared modal chrome: close on Escape + freeze background scroll while open.
-// Returns a `close` function — use it for backdrop clicks and X buttons so the
-// navbar turns transparent-off INSTANTLY on tap, not after the exit animation.
+// Returns a `close` function — call it from backdrop/X clicks.
+//
+// Scroll-lock timing is the important bit: the lock is released the instant
+// close() runs, NOT when the component unmounts. AnimatePresence delays unmount
+// until the exit fade finishes (~0.18s), so a lock tied to unmount would restore
+// the page's scroll position AFTER the backdrop is already gone — the page
+// visibly jumps. Releasing inside close() restores scroll while the backdrop is
+// still fully opaque, hiding the correction entirely.
 function useEscape(onClose) {
+  const released = useRef(false);
+
   useEffect(() => {
-    navSignal.modalOpened();
-    return () => navSignal.modalClosed(); // fallback if component unmounts unexpectedly
+    applyLock();
+    // Fallback: if the modal unmounts without close() ever running, release here.
+    return () => { if (!released.current) releaseLock(); };
   }, []);
 
-  // Fires the navbar signal immediately, then delegates to onClose.
-  // Cleanup above may fire modalClosed() a second time on unmount — harmless.
   const close = useCallback(() => {
-    navSignal.modalClosed();
+    if (!released.current) { released.current = true; releaseLock(); }
     onClose();
   }, [onClose]);
 
@@ -30,7 +36,6 @@ function useEscape(onClose) {
     return () => window.removeEventListener("keydown", h);
   }, [close]);
 
-  useScrollLock();
   return close;
 }
 
@@ -40,8 +45,11 @@ function useEscape(onClose) {
 export function PhotoModal({ item, onClose }) {
   const isAged = item.sub === "aged";
   const close = useEscape(onClose);
+  // Backdrop is opaque from frame 1 (initial:1) so the board behind is never
+  // visible through a fading-in overlay — kills the open flash. Only the box
+  // animates in; the backdrop fades out on close.
   return (
-    <motion.div className={styles.modalBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
+    <motion.div className={styles.modalBg} initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
       <motion.div
         className={styles.modalBox}
         initial={{ scale: 0.88, y: 24, opacity: 0 }}
@@ -65,7 +73,7 @@ export function PhotoModal({ item, onClose }) {
 export function PosterModal({ item, onClose }) {
   const close = useEscape(onClose);
   return (
-    <motion.div className={styles.cinemaBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
+    <motion.div className={styles.cinemaBg} initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
       <div className={styles.cinemaGrain} />
       <button className={styles.cinemaX} onClick={close} aria-label="Close">×</button>
       <motion.div
@@ -213,16 +221,17 @@ export function CompassModal({ onClose, onSpin }) {
   const [angle, setAngle] = useState(0);
   const [spinning, setSpinning] = useState(false);
 
-  // Manual lifecycle — spinning state blocks close, so we can't use useEscape directly.
+  // Manual lifecycle — spinning state blocks close, so we can't use useEscape
+  // directly. Same early-release scroll-lock pattern as useEscape.
+  const released = useRef(false);
   useEffect(() => {
-    navSignal.modalOpened();
-    return () => navSignal.modalClosed();
+    applyLock();
+    return () => { if (!released.current) releaseLock(); };
   }, []);
-  useScrollLock();
 
   const close = useCallback(() => {
     if (spinning) return;
-    navSignal.modalClosed();
+    if (!released.current) { released.current = true; releaseLock(); }
     onClose();
   }, [spinning, onClose]);
 
@@ -251,7 +260,7 @@ export function CompassModal({ onClose, onSpin }) {
     // animation finishes (no "lying" about where the needle landed).
     const chosen = PHOTOS_FOR_COMPASS[Math.floor(Math.random() * PHOTOS_FOR_COMPASS.length)];
     setTimeout(() => {
-      navSignal.modalClosed(); // signal immediately when spin completes
+      if (!released.current) { released.current = true; releaseLock(); }
       onClose();
       onSpin(chosen);
     }, 2200);

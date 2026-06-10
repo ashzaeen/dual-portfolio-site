@@ -397,6 +397,9 @@
   align-items: center;
   padding: 24px;
   overflow-y: auto;
+  /* overflow-y:auto makes overflow-x compute to auto too; pin it to hidden so a
+     sub-pixel-wide child can never spawn a horizontal scrollbar (caused a jump). */
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 .modalBox {
@@ -485,6 +488,7 @@
   flex-direction: column;
   gap: 28px;
   overflow-y: auto;
+  overflow-x: hidden; /* prevent a horizontal scrollbar (see .modalBg note) */
   -webkit-overflow-scrolling: touch;
 }
 .cinemaGrain {
