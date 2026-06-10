@@ -360,6 +360,19 @@ svg {
   transform: translateY(0);
 }
 
+/* Mobile: the personal landing renders static — no appearing/entry animations.
+   Travel + Gallery wrap their content in ScrollReveal; force the final state
+   from the first paint so there's no fade-up (and no JS, so no flash). This
+   matches Music/Writing/Series, whose mobile variants never use ScrollReveal.
+   Scoped to the personal theme so the professional side keeps its reveals. */
+@media (max-width: 768px) {
+  [data-theme="personal"] .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 /* ─────────────────────────────────────────
    RESPONSIVE HELPERS
 ───────────────────────────────────────── */

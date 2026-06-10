@@ -584,6 +584,17 @@
   /* Hide the SVG grain overlay — mix-blend-mode: multiply on a large element
      forces a compositor layer that increases scroll paint cost. */
   .grain { display: none; }
+
+  /* No entry/reveal animations on mobile. .inner and .polaroidStack each get a
+     Framer Motion fade-up (opacity 0→1, translateY) on mount; !important wins
+     over Framer's inline styles every frame, pinning them to their final state
+     so the hero — polaroids included — paints fully formed with zero motion.
+     (heroDevelop is already desktop-only; dust + grain are already hidden.) */
+  .inner,
+  .polaroidStack {
+    opacity: 1 !important;
+    transform: none !important;
+  }
   .status {
     padding-left: 0.85rem;
   }
