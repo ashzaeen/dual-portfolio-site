@@ -416,6 +416,9 @@
   max-height: 78svh;
   object-fit: contain;
   display: block;
+  /* Warm board-tone fill so any sub-frame decode gap reads as the frame, not
+     black (the box only reveals after decode, but this covers the edge case). */
+  background: #1e1308;
   box-shadow: 0 20px 70px rgba(0, 0, 0, 0.75);
 }
 .modalImg.agedModal {
@@ -503,6 +506,7 @@
   max-height: 64svh;
   max-width: min(90vw, 400px);
   object-fit: contain;
+  background: #1e1308;
   box-shadow: 0 40px 120px rgba(0, 0, 0, 0.95);
   display: block;
 }
@@ -1845,6 +1849,16 @@
     border-left: none;
     border-right: none;
     min-height: auto;
+    /* Drop the forced compositor layer on mobile. Its ONLY job was to isolate
+       the ::before grain's mix-blend (see desktop rule) — but ::before is
+       display:none here, so the promotion buys nothing and actively hurts:
+       the composited board snaps to integer device pixels during scroll while
+       the non-composited header/CTA above it scroll at sub-pixel offsets, so
+       the boundary visibly shakes. Painting the board in normal flow keeps it
+       in the same scroll pass as the header → no cross-layer jitter. */
+    transform: none;
+    isolation: auto;
+    backface-visibility: visible;
   }
   /* Disable the grain overlay's mix-blend-mode on mobile — it forces the
      entire board to be GPU-composited on every scroll frame, causing jank. */

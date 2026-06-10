@@ -39,27 +39,61 @@ function useEscape(onClose) {
   return close;
 }
 
+// Defers the modal's enter animation until the hero image has actually decoded.
+// On mobile the box's backdrop is opaque from frame 1 but the <img decoding=
+// "async"> paints several frames later (slower decode), so the dark backdrop
+// shows alone for a beat — reads as a "black flash, as if the image is loading."
+// We hold the box hidden until decode resolves, so it never reveals over a gap.
+// Returns { ref, ready }: attach ref to the <img>, gate `animate` on ready.
+function useImageReady(src) {
+  const ref = useRef(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(false);
+    const img = ref.current;
+    if (!img) return;
+    let cancelled = false;
+    const done = () => { if (!cancelled) setReady(true); };
+    // decode() resolves once the bitmap is ready to paint in the same frame.
+    // Fall back to load state for browsers/edge cases where decode() rejects.
+    if (img.decode) {
+      img.decode().then(done).catch(done);
+    } else if (img.complete) {
+      done();
+    } else {
+      img.addEventListener("load", done, { once: true });
+      img.addEventListener("error", done, { once: true });
+    }
+    return () => { cancelled = true; };
+  }, [src]);
+
+  return { ref, ready };
+}
+
 // ─── Photo modal ─────────────────────────────────────────────
 // Large photo + label + story. The image is the hero — gets the
 // majority of the vertical space (see .modalImg max-height in CSS).
 export function PhotoModal({ item, onClose }) {
   const isAged = item.sub === "aged";
   const close = useEscape(onClose);
+  const { ref: imgRef, ready } = useImageReady(item.src);
   // Backdrop is opaque from frame 1 (initial:1) so the board behind is never
-  // visible through a fading-in overlay — kills the open flash. Only the box
-  // animates in; the backdrop fades out on close.
+  // visible through a fading-in overlay — kills the open flash. The box waits
+  // for the image to decode (see useImageReady) so it never reveals over a
+  // dark gap on mobile. The backdrop fades out on close.
   return (
     <motion.div className={styles.modalBg} initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
       <motion.div
         className={styles.modalBox}
         initial={{ scale: 0.88, y: 24, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
+        animate={ready ? { scale: 1, y: 0, opacity: 1 } : { scale: 0.88, y: 24, opacity: 0 }}
         exit={{ scale: 0.92, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
         <button className={styles.modalX} onClick={close} aria-label="Close">×</button>
-        <img src={item.src} alt={item.label} decoding="async" className={`${styles.modalImg}${isAged ? " " + styles.agedModal : ""}`} />
+        <img ref={imgRef} src={item.src} alt={item.label} decoding="async" className={`${styles.modalImg}${isAged ? " " + styles.agedModal : ""}`} />
         <div className={styles.modalTxt}>
           <div className={styles.modalLbl}>{item.label}</div>
           <p className={styles.modalStory}>{item.story}</p>
@@ -72,18 +106,19 @@ export function PhotoModal({ item, onClose }) {
 // ─── Poster modal (cinema treatment) ─────────────────────────
 export function PosterModal({ item, onClose }) {
   const close = useEscape(onClose);
+  const { ref: imgRef, ready } = useImageReady(item.src);
   return (
     <motion.div className={styles.cinemaBg} initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
       <div className={styles.cinemaGrain} />
       <button className={styles.cinemaX} onClick={close} aria-label="Close">×</button>
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        animate={ready ? { scale: 1, opacity: 1 } : { scale: 0.9, opacity: 0 }}
         transition={{ delay: 0.06, type: "spring", stiffness: 280, damping: 24 }}
         onClick={(e) => e.stopPropagation()}
         style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28, position: "relative", zIndex: 2, marginTop: "auto", marginBottom: "auto" }}
       >
-        <img src={item.src} alt={item.label} decoding="async" className={styles.cinemaPoster} />
+        <img ref={imgRef} src={item.src} alt={item.label} decoding="async" className={styles.cinemaPoster} />
         <div className={styles.cinemaCard}>
           <div className={styles.cinemaLabel}>{item.label}</div>
           <div className={styles.cinemaPoem}>{item.poem}</div>
