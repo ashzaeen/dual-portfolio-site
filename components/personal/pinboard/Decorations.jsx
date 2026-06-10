@@ -73,12 +73,12 @@ export function StringLights({ width = 3700 }) {
             rx="4.5"
             ry="6.5"
             fill={b.col}
-            style={{
-              // Static bloom (computed once); only opacity pulses via the
-              // keyframe — animating the filter would repaint every frame.
-              filter: "drop-shadow(0 0 5px rgba(255,196,70,0.7))",
-              animation: `pinboardGlow ${b.dur}s ease-in-out ${b.delay}s infinite`,
-            }}
+            className={styles.bulb}
+            // Glow (filter) + twinkle (animation) live in the .bulb CSS class so
+            // a media query can disable them on mobile — an animated drop-shadow
+            // filter re-rasterizes its region every frame, and these sit right
+            // under the CTA, which was the root cause of the header scroll-shake.
+            style={{ "--glow-dur": `${b.dur}s`, "--glow-delay": `${b.delay}s` }}
           />
           <ellipse cx={b.x - 1.2} cy={b.y + 7.5} rx="1.4" ry="2" fill="rgba(255,255,255,.42)" />
         </g>

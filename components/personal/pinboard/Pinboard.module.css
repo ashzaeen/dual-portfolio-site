@@ -351,9 +351,18 @@
 .ctape.br { bottom: -3px; right: -5px; transform: rotate(-38deg); }
 
 /* ── ANIMATIONS ───────────────────────────────────── */
-/* Pulse opacity only — never animate `filter`. Animating drop-shadow forces a
-   per-frame CPU repaint of all 45 bulbs; the bloom is now a STATIC drop-shadow
-   set inline on each bulb (Decorations.jsx), computed once. */
+/* String-light bulb. Desktop: static drop-shadow bloom (rasterized once) + an
+   opacity-only twinkle. The catch is that animating ANY property on a
+   filtered element still re-rasterizes the whole filter region each frame —
+   fine on desktop GPUs, but on mobile 16 of these sit directly under the CTA
+   and the per-frame filter raster is what made scrolling through the gallery
+   header shake. So on mobile the bulbs go fully static (see media query below):
+   no animation = the board layer rasterizes once and scrolls as a pure
+   composite. The glow stays (static filter, cached in the layer). */
+.bulb {
+  filter: drop-shadow(0 0 5px rgba(255, 196, 70, 0.7));
+  animation: pinboardGlow var(--glow-dur, 2s) ease-in-out var(--glow-delay, 0s) infinite;
+}
 @keyframes pinboardGlow {
   0%, 100% { opacity: 0.72; }
   50%      { opacity: 1; }
@@ -1849,20 +1858,20 @@
     border-left: none;
     border-right: none;
     min-height: auto;
-    /* Drop the forced compositor layer on mobile. Its ONLY job was to isolate
-       the ::before grain's mix-blend (see desktop rule) — but ::before is
-       display:none here, so the promotion buys nothing and actively hurts:
-       the composited board snaps to integer device pixels during scroll while
-       the non-composited header/CTA above it scroll at sub-pixel offsets, so
-       the boundary visibly shakes. Painting the board in normal flow keeps it
-       in the same scroll pass as the header → no cross-layer jitter. */
-    transform: none;
-    isolation: auto;
-    backface-visibility: visible;
+    /* Keep the translateZ(0) composite layer from the base rule. With the
+       string-light twinkle frozen below, NOTHING inside the board animates on
+       mobile, so the heavy 8-gradient + 6-shadow paint rasterizes ONCE into the
+       layer and scrolling is a pure GPU translate — the actual fix for the
+       header scroll-shake. (min-height:auto keeps the layer within texture
+       limits since the mobile board is only as tall as its photo rows.) */
   }
   /* Disable the grain overlay's mix-blend-mode on mobile — it forces the
      entire board to be GPU-composited on every scroll frame, causing jank. */
   .boardFrame::before { display: none; }
+  /* Freeze the string-light twinkle: an animated drop-shadow filter re-rasters
+     every frame and dirties the board layer; static bulbs let it cache. The
+     glow (static filter) stays. This is the core of the scroll-shake fix. */
+  .bulb { animation: none; }
 
   .boardAbs { display: none; }
   .boardFlex { display: flex; }

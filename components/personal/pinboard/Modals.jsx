@@ -7,6 +7,26 @@ import { PHOTOS_FOR_COMPASS } from "@/data/pinboard";
 import WallRichText from "./WallRichText";
 import { applyLock, releaseLock } from "@/lib/useScrollLock";
 
+// Mobile open treatment. On mobile the scale-inflate spring reads as a slow
+// "grow", so every modal opens with a quick opacity fade over an instant-opaque
+// backdrop instead. Desktop keeps the spring/scale feel untouched.
+const MOB_FADE = { duration: 0.16, ease: "easeOut" };
+
+function useIsMobile(query = "(max-width: 1100px)") {
+  // Modals only mount on a client click, so window exists on first render —
+  // read matchMedia synchronously to pick the right open animation immediately.
+  const [m, setM] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setM(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, [query]);
+  return m;
+}
+
 // Shared modal chrome: close on Escape + freeze background scroll while open.
 // Returns a `close` function — call it from backdrop/X clicks.
 //
@@ -77,19 +97,22 @@ function useImageReady(src) {
 export function PhotoModal({ item, onClose }) {
   const isAged = item.sub === "aged";
   const close = useEscape(onClose);
+  const mob = useIsMobile();
   const { ref: imgRef, ready } = useImageReady(item.src);
   // Backdrop is opaque from frame 1 (initial:1) so the board behind is never
   // visible through a fading-in overlay — kills the open flash. The box waits
   // for the image to decode (see useImageReady) so it never reveals over a
-  // dark gap on mobile. The backdrop fades out on close.
+  // dark gap. Mobile fades in (no scale grow); desktop keeps the spring.
   return (
     <motion.div className={styles.modalBg} initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
       <motion.div
         className={styles.modalBox}
-        initial={{ scale: 0.88, y: 24, opacity: 0 }}
-        animate={ready ? { scale: 1, y: 0, opacity: 1 } : { scale: 0.88, y: 24, opacity: 0 }}
-        exit={{ scale: 0.92, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+        initial={mob ? { opacity: 0 } : { scale: 0.88, y: 24, opacity: 0 }}
+        animate={ready
+          ? (mob ? { opacity: 1 } : { scale: 1, y: 0, opacity: 1 })
+          : (mob ? { opacity: 0 } : { scale: 0.88, y: 24, opacity: 0 })}
+        exit={mob ? { opacity: 0 } : { scale: 0.92, opacity: 0 }}
+        transition={mob ? MOB_FADE : { type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
         <button className={styles.modalX} onClick={close} aria-label="Close">×</button>
@@ -106,15 +129,18 @@ export function PhotoModal({ item, onClose }) {
 // ─── Poster modal (cinema treatment) ─────────────────────────
 export function PosterModal({ item, onClose }) {
   const close = useEscape(onClose);
+  const mob = useIsMobile();
   const { ref: imgRef, ready } = useImageReady(item.src);
   return (
     <motion.div className={styles.cinemaBg} initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} onClick={close}>
       <div className={styles.cinemaGrain} />
       <button className={styles.cinemaX} onClick={close} aria-label="Close">×</button>
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={ready ? { scale: 1, opacity: 1 } : { scale: 0.9, opacity: 0 }}
-        transition={{ delay: 0.06, type: "spring", stiffness: 280, damping: 24 }}
+        initial={mob ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+        animate={ready
+          ? (mob ? { opacity: 1 } : { scale: 1, opacity: 1 })
+          : (mob ? { opacity: 0 } : { scale: 0.9, opacity: 0 })}
+        transition={mob ? MOB_FADE : { delay: 0.06, type: "spring", stiffness: 280, damping: 24 }}
         onClick={(e) => e.stopPropagation()}
         style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28, position: "relative", zIndex: 2, marginTop: "auto", marginBottom: "auto" }}
       >
@@ -136,14 +162,15 @@ export function PosterModal({ item, onClose }) {
 // to the writing.
 export function TripModal({ onClose, image, imageAlt = "", body }) {
   const close = useEscape(onClose);
+  const mob = useIsMobile();
   return (
-    <motion.div className={styles.tripBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
+    <motion.div className={styles.tripBg} initial={mob ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.tripJournal}
-        initial={{ scale: 0.9, y: 20, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.92, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+        initial={mob ? { opacity: 0 } : { scale: 0.9, y: 20, opacity: 0 }}
+        animate={mob ? { opacity: 1 } : { scale: 1, y: 0, opacity: 1 }}
+        exit={mob ? { opacity: 0 } : { scale: 0.92, opacity: 0 }}
+        transition={mob ? MOB_FADE : { type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
         <button className={styles.tripX} onClick={close} aria-label="Close">×</button>
@@ -184,14 +211,15 @@ export function TripModal({ onClose, image, imageAlt = "", body }) {
 // PLACEHOLDER lines below with real bread / cheese / veggies / sauces.
 export function SubwayModal({ onClose, data }) {
   const close = useEscape(onClose);
+  const mob = useIsMobile();
   return (
-    <motion.div className={styles.subwayBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
+    <motion.div className={styles.subwayBg} initial={mob ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.subwayCard}
-        initial={{ scale: 0.92, y: 20, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.94, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+        initial={mob ? { opacity: 0 } : { scale: 0.92, y: 20, opacity: 0 }}
+        animate={mob ? { opacity: 1 } : { scale: 1, y: 0, opacity: 1 }}
+        exit={mob ? { opacity: 0 } : { scale: 0.94, opacity: 0 }}
+        transition={mob ? MOB_FADE : { type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
         <button className={styles.subwayX} onClick={close} aria-label="Close">×</button>
@@ -255,6 +283,7 @@ export function SubwayModal({ onClose, data }) {
 export function CompassModal({ onClose, onSpin }) {
   const [angle, setAngle] = useState(0);
   const [spinning, setSpinning] = useState(false);
+  const mob = useIsMobile();
 
   // Manual lifecycle — spinning state blocks close, so we can't use useEscape
   // directly. Same early-release scroll-lock pattern as useEscape.
@@ -304,15 +333,15 @@ export function CompassModal({ onClose, onSpin }) {
   return (
     <motion.div
       className={styles.compassBg}
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      initial={mob ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={close}
     >
       <motion.div
         className={styles.compassCard}
-        initial={{ scale: 0.9, y: 20, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.94, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+        initial={mob ? { opacity: 0 } : { scale: 0.9, y: 20, opacity: 0 }}
+        animate={mob ? { opacity: 1 } : { scale: 1, y: 0, opacity: 1 }}
+        exit={mob ? { opacity: 0 } : { scale: 0.94, opacity: 0 }}
+        transition={mob ? MOB_FADE : { type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
         <button className={styles.compassX} onClick={close} aria-label="Close" disabled={spinning}>×</button>
@@ -459,14 +488,15 @@ function LCDClock({ city, sub, tzOffset }) {
 
 export function DualClockModal({ onClose }) {
   const close = useEscape(onClose);
+  const mob = useIsMobile();
   return (
-    <motion.div className={styles.clockBg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
+    <motion.div className={styles.clockBg} initial={mob ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.clockCard}
-        initial={{ scale: 0.92, y: 18, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.94, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+        initial={mob ? { opacity: 0 } : { scale: 0.92, y: 18, opacity: 0 }}
+        animate={mob ? { opacity: 1 } : { scale: 1, y: 0, opacity: 1 }}
+        exit={mob ? { opacity: 0 } : { scale: 0.94, opacity: 0 }}
+        transition={mob ? MOB_FADE : { type: "spring", stiffness: 300, damping: 26 }}
         onClick={(e) => e.stopPropagation()}
       >
         <button className={styles.clockX} onClick={close} aria-label="Close">×</button>
@@ -485,13 +515,15 @@ export function DualClockModal({ onClose }) {
 // ─── Easter-egg found modal ──────────────────────────────────
 export function EggFoundModal({ onClose }) {
   const close = useEscape(onClose);
+  const mob = useIsMobile();
   return (
-    <motion.div className={styles.eggModal} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
+    <motion.div className={styles.eggModal} initial={mob ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
       <motion.div
         className={styles.eggCard}
-        initial={{ scale: 0.85, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0 }}
+        initial={mob ? { opacity: 0 } : { scale: 0.85, y: 20 }}
+        animate={mob ? { opacity: 1 } : { scale: 1, y: 0 }}
+        exit={mob ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+        transition={mob ? MOB_FADE : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.eggIcon}>✦</div>
