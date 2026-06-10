@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import styles from "./Pinboard.module.css";
 import { ITEMS, SPOS, FLEX_ROWS, INTERACTIVE_BOXES, gallerySlug } from "@/data/pinboard";
@@ -8,6 +8,11 @@ import { placeItem, buildExistingBoxes, itemBoundingBox, seededRotationFromId } 
 import { StaticItem } from "./Items";
 import { StringLights, StringConnection } from "./Decorations";
 import { ImmersiveWall } from "./ImmersiveWall";
+// Memoized so opening a photo/poster modal (setPhoto/setPoster in this section)
+// doesn't re-render the wall's 40+ Framer items underneath the modal — that
+// re-render was the "laggy" hitch on open. Skips when all props are referentially
+// equal, which holds because every prop below is stabilized (useMemo/useCallback).
+const MemoImmersiveWall = memo(ImmersiveWall);
 import { PhotoModal, PosterModal, TripModal, SubwayModal } from "./Modals";
 import { useSoundFX } from "./useSoundFX";
 import SectionGuide from "@/components/shared/SectionGuide";
@@ -182,7 +187,8 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
     return [...curatedItems, ...placedManual, ...placedAuto];
   }, [dynamicPhotos, curatedItems]);
 
-  const onDynamicImageError = () => setPhotosExpired(true);
+  // Stable (no deps) so it doesn't break memoization of the board / wall.
+  const onDynamicImageError = useCallback(() => setPhotosExpired(true), []);
 
   // Slug → picture lookup over ALL shareable items (curated board + immersive-
   // only dynamic photos), so a popstate / shared URL resolves either source.
@@ -196,23 +202,31 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
     return map;
   }, [wallItems]);
 
+  // playRustle is useCallback-stable inside useSoundFX; pull it out so the
+  // handlers below can list a stable dependency (the sfx object itself is a
+  // fresh literal each render).
+  const { playRustle } = sfx;
+
   // Open a picture AND push a shareable slug URL (so it's linkable + appears
   // in history). Receipt / boarding-pass aren't pictures — no slug.
-  const openPicture = (item) => {
+  // All callbacks are useCallback-stable so the static board (useMemo) and the
+  // immersive wall (memo) don't re-render when modal state flips — that re-render
+  // was the lag on open.
+  const openPicture = useCallback((item) => {
     if (item.type === "photo") setPhoto(item);
     else setPoster(item);
     openItemRef.current = item;
     analytics.galleryItemOpened(item);
     hasInteracted.current = true;
     window.history.pushState({}, "", `/personal/gallery/${gallerySlug(item)}`);
-  };
+  }, []);
 
   // Close the picture modal and restore the clean landing URL.
-  const closePicture = () => {
+  const closePicture = useCallback(() => {
     setPhoto(null);
     setPoster(null);
     window.history.pushState({}, "", "/personal");
-  };
+  }, []);
 
   // Back/forward sync — gated so it never fires on direct-load (choreography
   // owns that modal). Opens whatever slug the URL now carries, or closes.
@@ -229,11 +243,89 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
     return () => window.removeEventListener("popstate", onPop);
   }, [slugToItem]);
 
-  const handleAny = (item) => {
+  const handleAny = useCallback((item) => {
     if (item.type === "photo" || item.type === "poster") openPicture(item);
-    else if (item.type === "receipt") { setShowSubway(true); sfx.playRustle(); analytics.wallPaperOpened("subway_receipt"); }
-    else if (item.type === "boarding-pass") { setShowTrip(true); sfx.playRustle(); analytics.wallPaperOpened("boarding_pass"); }
-  };
+    else if (item.type === "receipt") { setShowSubway(true); playRustle(); analytics.wallPaperOpened("subway_receipt"); }
+    else if (item.type === "boarding-pass") { setShowTrip(true); playRustle(); analytics.wallPaperOpened("boarding_pass"); }
+  }, [openPicture, playRustle]);
+
+  // Stable wall-close so MemoImmersiveWall stays memoized.
+  const closeWall = useCallback(() => setWallOpen(false), []);
+
+  // The static preview board (desktop absolute + mobile flex), memoized so a
+  // modal open (setPhoto/setPoster) doesn't re-create ~30 StaticItems on the
+  // same frame the modal mounts. Deps are all stable, so the board element is
+  // reused on modal-state changes and React skips re-rendering it entirely.
+  const board = useMemo(() => (
+    <div style={boardStyle ? { display: "flex", justifyContent: "center" } : undefined}>
+    <div className={styles.boardFrame} style={boardStyle || undefined}>
+      <div className={styles.nail} />
+      <StringLights width={BOARD_DESIGN_W} />
+
+      {/* Desktop: absolutely positioned static board */}
+      <div className={styles.boardAbs}>
+        {curatedItems.filter((i) => SPOS[i.id]).map((item) => {
+          const p = SPOS[item.id];
+          return (
+            <StaticItem
+              key={item.id}
+              item={item}
+              onAnyClick={handleAny}
+              rotation={p.rot}
+              style={{
+                position: "absolute",
+                left: p.x,
+                top: p.y,
+                transformOrigin: item.mount === "pin" ? "top center" : "center center",
+              }}
+            />
+          );
+        })}
+        <StringConnection />
+      </div>
+
+      {/* Mobile: flex rows */}
+      <div className={styles.boardFlex}>
+        {FLEX_ROWS.map((row, ri) => (
+          <div
+            key={ri}
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              alignItems: "flex-end",
+              gap: "26px 20px",
+              width: "100%",
+              marginBottom: 28,
+            }}
+          >
+            {row.map((id) => {
+              const item = curatedById[id];
+              if (!item) return null;
+              // Scale down 80% (or 65% on very narrow phones) so the row fits.
+              const sc = typeof window !== "undefined" && window.innerWidth < 500 ? 0.65 : 0.8;
+              return (
+                <StaticItem
+                  key={id}
+                  item={{ ...item, dH: Math.round((item.dH || 220) * sc) }}
+                  onAnyClick={handleAny}
+                  rotation={SPOS[id]?.rot || 0}
+                  style={{
+                    transformOrigin: item.mount === "pin" ? "top center" : "center center",
+                  }}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom-centre nail — mirrors the top nail so the board reads as
+          pinned to the wall at both ends instead of bleeding off-frame. */}
+      <div className={`${styles.nail} ${styles.nailBottom}`} />
+    </div>
+    </div>
+  ), [boardStyle, curatedItems, curatedById, handleAny]);
 
   return (
     <section id="gallery" className={styles.wallSection} ref={sectionRef}>
@@ -271,82 +363,15 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
       {/* When capped, this wrapper flex-centers the (zoomed) board so the
           leftover width becomes symmetric parchment gutters on BOTH sides.
           When fluid (boardStyle null), it's a plain full-width block and the
-          board keeps its CSS `margin: 0 64px` behavior. */}
-      <div style={boardStyle ? { display: "flex", justifyContent: "center" } : undefined}>
-      <div className={styles.boardFrame} style={boardStyle || undefined}>
-        <div className={styles.nail} />
-        <StringLights width={BOARD_DESIGN_W} />
-
-        {/* Desktop: absolutely positioned static board */}
-        <div className={styles.boardAbs}>
-          {curatedItems.filter((i) => SPOS[i.id]).map((item) => {
-            const p = SPOS[item.id];
-            return (
-              <StaticItem
-                key={item.id}
-                item={item}
-                onAnyClick={handleAny}
-                rotation={p.rot}
-                style={{
-                  position: "absolute",
-                  left: p.x,
-                  top: p.y,
-                  transformOrigin: item.mount === "pin" ? "top center" : "center center",
-                }}
-              />
-            );
-          })}
-          <StringConnection />
-        </div>
-
-        {/* Mobile: flex rows */}
-        <div className={styles.boardFlex}>
-          {FLEX_ROWS.map((row, ri) => (
-            <div
-              key={ri}
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                alignItems: "flex-end",
-                gap: "26px 20px",
-                width: "100%",
-                marginBottom: 28,
-              }}
-            >
-              {row.map((id) => {
-                const item = curatedById[id];
-                if (!item) return null;
-                // Scale down 80% (or 65% on very narrow phones) so the row fits.
-                const sc = typeof window !== "undefined" && window.innerWidth < 500 ? 0.65 : 0.8;
-                return (
-                  <StaticItem
-                    key={id}
-                    item={{ ...item, dH: Math.round((item.dH || 220) * sc) }}
-                    onAnyClick={handleAny}
-                    rotation={SPOS[id]?.rot || 0}
-                    style={{
-                      transformOrigin: item.mount === "pin" ? "top center" : "center center",
-                    }}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom-centre nail — mirrors the top nail so the board reads as
-            pinned to the wall at both ends instead of bleeding off-frame. */}
-        <div className={`${styles.nail} ${styles.nailBottom}`} />
-      </div>
-      </div>
+          board keeps its CSS `margin: 0 64px` behavior. Memoized above. */}
+      {board}
 
       <AnimatePresence>
         {wallOpen && (
-          <ImmersiveWall
+          <MemoImmersiveWall
             key="wall"
             items={wallItems}
-            onClose={() => setWallOpen(false)}
+            onClose={closeWall}
             onAnyClick={handleAny}
             onDynamicImageError={onDynamicImageError}
             photosExpired={photosExpired}

@@ -59,7 +59,7 @@ export function PhotoModal({ item, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <button className={styles.modalX} onClick={close} aria-label="Close">×</button>
-        <img src={item.src} alt={item.label} className={`${styles.modalImg}${isAged ? " " + styles.agedModal : ""}`} />
+        <img src={item.src} alt={item.label} decoding="async" className={`${styles.modalImg}${isAged ? " " + styles.agedModal : ""}`} />
         <div className={styles.modalTxt}>
           <div className={styles.modalLbl}>{item.label}</div>
           <p className={styles.modalStory}>{item.story}</p>
@@ -83,7 +83,7 @@ export function PosterModal({ item, onClose }) {
         onClick={(e) => e.stopPropagation()}
         style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 28, position: "relative", zIndex: 2, marginTop: "auto", marginBottom: "auto" }}
       >
-        <img src={item.src} alt={item.label} className={styles.cinemaPoster} />
+        <img src={item.src} alt={item.label} decoding="async" className={styles.cinemaPoster} />
         <div className={styles.cinemaCard}>
           <div className={styles.cinemaLabel}>{item.label}</div>
           <div className={styles.cinemaPoem}>{item.poem}</div>
