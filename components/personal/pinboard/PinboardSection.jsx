@@ -13,6 +13,13 @@ import { ImmersiveWall } from "./ImmersiveWall";
 // re-render was the "laggy" hitch on open. Skips when all props are referentially
 // equal, which holds because every prop below is stabilized (useMemo/useCallback).
 const MemoImmersiveWall = memo(ImmersiveWall);
+import { ImmersiveWallMobile } from "./ImmersiveWallMobile";
+// Mobile-first rebuild of the immersive wall. Same memo rationale as desktop:
+// keep modal-state flips from re-rendering the wall underneath the modal.
+const MemoImmersiveWallMobile = memo(ImmersiveWallMobile);
+import PinboardBoardMobile from "./PinboardBoardMobile";
+import { useIsMobile } from "./useIsMobile";
+import mobileStyles from "./PinboardMobile.module.css";
 import { PhotoModal, PosterModal, TripModal, SubwayModal } from "./Modals";
 import { useSoundFX } from "./useSoundFX";
 import SectionGuide from "@/components/shared/SectionGuide";
@@ -47,6 +54,12 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
   // handwritten "you've been idle, refresh" note over the immersive wall.
   // Once true we leave it true — refresh is the only path back.
   const [photosExpired, setPhotosExpired] = useState(false);
+  // Phone-only Gallery rebuild. SSR-safe: `mounted` stays false (→ desktop) on
+  // the server and first client render, so no hydration mismatch; the mobile
+  // board/wall swap in after mount. The Gallery sits far below the fold, so the
+  // swap is never visible during load.
+  const { isMobile, mounted } = useIsMobile();
+  const useMobileGallery = mounted && isMobile;
   // SFX hook lives at the section level so receipt/boarding-pass clicks on
   // the static board also trigger paper rustle (the immersive modal has its
   // own instance — that's fine, both are cheap).
@@ -327,6 +340,13 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
     </div>
   ), [boardStyle, curatedItems, curatedById, handleAny]);
 
+  // Redesigned phone teaser (separate component, desktop board untouched).
+  // Memoized on the same stable deps so a modal open never re-renders it.
+  const mobileBoard = useMemo(
+    () => <PinboardBoardMobile itemsById={curatedById} onAnyClick={handleAny} />,
+    [curatedById, handleAny]
+  );
+
   return (
     <section id="gallery" className={styles.wallSection} ref={sectionRef}>
       {/* Header + CTA fade-up on first scroll into view. Board is outside the
@@ -363,19 +383,34 @@ export default function PinboardSection({ dynamicPhotos = [], curatedOverrides =
       {/* When capped, this wrapper flex-centers the (zoomed) board so the
           leftover width becomes symmetric parchment gutters on BOTH sides.
           When fluid (boardStyle null), it's a plain full-width block and the
-          board keeps its CSS `margin: 0 64px` behavior. Memoized above. */}
-      {board}
+          board keeps its CSS `margin: 0 64px` behavior. Memoized above. The
+          shell reserves height so the post-mount desktop→mobile swap on phones
+          causes no layout shift. */}
+      <div className={mobileStyles.boardShell}>
+        {useMobileGallery ? mobileBoard : board}
+      </div>
 
       <AnimatePresence>
         {wallOpen && (
-          <MemoImmersiveWall
-            key="wall"
-            items={wallItems}
-            onClose={closeWall}
-            onAnyClick={handleAny}
-            onDynamicImageError={onDynamicImageError}
-            photosExpired={photosExpired}
-          />
+          useMobileGallery ? (
+            <MemoImmersiveWallMobile
+              key="wall"
+              items={wallItems}
+              onClose={closeWall}
+              onAnyClick={handleAny}
+              onDynamicImageError={onDynamicImageError}
+              photosExpired={photosExpired}
+            />
+          ) : (
+            <MemoImmersiveWall
+              key="wall"
+              items={wallItems}
+              onClose={closeWall}
+              onAnyClick={handleAny}
+              onDynamicImageError={onDynamicImageError}
+              photosExpired={photosExpired}
+            />
+          )
         )}
       </AnimatePresence>
       <AnimatePresence>

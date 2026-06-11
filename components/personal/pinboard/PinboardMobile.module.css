@@ -1,0 +1,35 @@
+/* ─────────────────────────────────────────────────────────
+   PinboardMobile — mobile-only Gallery classes.
+   Scoped to the phone rebuild (≤768px). Desktop styles stay
+   entirely in Pinboard.module.css; nothing here touches them.
+   The corkboard FRAME (.boardFrame, nails, string lights) is
+   reused from Pinboard.module.css — these classes only lay out
+   the redesigned cluster of hero items INSIDE that frame.
+   ───────────────────────────────────────────────────────── */
+
+/* Full curated set in FLEX_ROWS order, inside the reused corkboard frame.
+   Scrolls as a single composited layer (the parent .boardFrame is already
+   promoted + has its animated bits frozen on mobile), so it paints once and
+   scrolls smoothly. Spacing mirrors the prior .boardFlex layout. */
+.rows {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 80px 28px 60px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 26px 20px;
+  width: 100%;
+  margin-bottom: 28px;
+}
+
+/* Reserve vertical space for the board before the correct (desktop/mobile)
+   variant mounts, so the post-mount swap causes no layout shift. */
+.boardShell {
+  min-height: 520px;
+}
