@@ -390,12 +390,8 @@ export default function Experiences({
       if (activeSlug) {
         const element = itemRefs.current[activeSlug];
         if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top < 85) {
-            window.scrollTo({ top: rect.top + window.scrollY - 85, behavior: "smooth" });
-            setTimeout(() => { setActiveSlug(null); syncUrl(null); }, 320);
-            return;
-          }
+          scrollThenCollapse(element, () => { setActiveSlug(null); syncUrl(null); });
+          return;
         }
         setActiveSlug(null);
         syncUrl(null);
@@ -408,6 +404,44 @@ export default function Experiences({
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [activeSlug]);
+
+  // Scroll card top into view (respecting navbar via scroll-margin-top on
+  // .exp-card), then call onDone once the scroll has settled. Uses rAF polling
+  // on window.scrollY rather than scroll events — mobile browsers (iOS/Android)
+  // fire scroll events inconsistently during programmatic smooth scroll.
+  function scrollThenCollapse(element, onDone) {
+    const rect = element.getBoundingClientRect();
+    if (rect.top >= 85) { onDone(); return; }
+
+    let done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      onDone();
+    }
+
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    let lastY = window.scrollY;
+    let stableFrames = 0;
+
+    function poll() {
+      if (done) return;
+      const y = window.scrollY;
+      if (Math.abs(y - lastY) < 1) {
+        if (++stableFrames >= 5) { finish(); return; }
+      } else {
+        stableFrames = 0;
+      }
+      lastY = y;
+      requestAnimationFrame(poll);
+    }
+
+    // Give the scroll a brief head-start before polling so we don't
+    // immediately detect "stable" before movement has begun.
+    setTimeout(() => requestAnimationFrame(poll), 50);
+    setTimeout(finish, 900);
+  }
 
   function syncUrl(slug) {
     const url = new URL(window.location.href);
@@ -445,15 +479,8 @@ export default function Experiences({
     if (!isOpening) {
       const element = itemRefs.current[slug];
       if (element) {
-        const rect = element.getBoundingClientRect();
-        if (rect.top < 85) {
-          // Scroll to card top first, then collapse once the viewport is there.
-          // Doing both simultaneously causes layout thrash — the collapse shrinks
-          // the page while the smooth scroll is running and they fight each other.
-          window.scrollTo({ top: rect.top + window.scrollY - 85, behavior: "smooth" });
-          setTimeout(() => { setActiveSlug(null); syncUrl(null); }, 320);
-          return;
-        }
+        scrollThenCollapse(element, () => { setActiveSlug(null); syncUrl(null); });
+        return;
       }
     }
 
@@ -507,7 +534,7 @@ export default function Experiences({
       </div>
 
       <style jsx global>{`
-        .exp-card { transition: filter 0.5s ease, opacity 0.5s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease, border-color 0.4s ease; position: relative; }
+        .exp-card { transition: filter 0.5s ease, opacity 0.5s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease, border-color 0.4s ease; position: relative; scroll-margin-top: 85px; }
 
         @media (hover: hover) {
           .hover-lift:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 10px 30px -10px rgba(196,160,80,0.15); border-color: rgba(196,160,80,0.4); }

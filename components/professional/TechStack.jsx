@@ -71,6 +71,7 @@ export default function TechStack({ techStack = FALLBACK_TECHSTACK, copy = FALLB
     mobileArchSide: "right",
     isMobile: false,
     focusedNode: null,
+    drawerOpen: false,
     expandedCategories: new Set()
   });
   const apiRef = useRef(null);
@@ -434,7 +435,7 @@ export default function TechStack({ techStack = FALLBACK_TECHSTACK, copy = FALLB
     function dragended(event) { if (stateRef.current.focusedNode || getMode() === 'architecture') return; if (!event.active) simulation.alphaTarget(0); event.subject.fx = null; event.subject.fy = null; }
 
     simulation.on('tick', () => {
-      if (stateRef.current.focusedNode && !getIsMobile()) return;
+      if (stateRef.current.focusedNode && (!getIsMobile() || stateRef.current.drawerOpen)) return;
       linkLayer.selectAll('.link-stream').attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
       nodeLayer.selectAll('.node').attr('transform', d => {
         d.x = Math.max(d.radius, Math.min(width - d.radius, d.x));
@@ -524,9 +525,11 @@ export default function TechStack({ techStack = FALLBACK_TECHSTACK, copy = FALLB
   }
 
   function closeMobileDrawer() {
+    const focused = stateRef.current.focusedNode;
     setMobileDrawerOpen(false);
     setMobileFocused(null);
     stateRef.current.focusedNode = null;
+
     const svgEl = svgRef.current;
     if (svgEl) {
       const nodeLayer = d3.select(svgEl).select('.nodes');
@@ -534,25 +537,36 @@ export default function TechStack({ techStack = FALLBACK_TECHSTACK, copy = FALLB
       nodeLayer.selectAll('circle').attr('stroke-opacity', 0.8).attr('fill', d => d.group === 0 ? '#1a1814' : '#0f0e0c');
       nodeLayer.selectAll('text').style('opacity', 1);
       linkLayer.selectAll('.link-stream').attr('stroke-opacity', 1);
+
+      // Glide the node back to its simulation position, then unfreeze + restart.
+      if (focused) {
+        nodeLayer.selectAll('.node').filter(n => n.id === focused.id)
+          .transition().duration(500).ease(d3.easeCubicOut)
+          .attr('transform', `translate(${focused.x}, ${focused.y})`)
+          .on('end', () => {
+            stateRef.current.drawerOpen = false;
+            apiRef.current?.getUpdateGraph()?.();
+          });
+        return;
+      }
     }
+
+    stateRef.current.drawerOpen = false;
     apiRef.current?.getUpdateGraph()?.();
   }
 
   function handleMobileFabClick() {
     if (!mobileFocused) return;
     analytics.techstackMobileDrawerOpened(mobileFocused?.id);
-    setMobileFocused(prev => prev);
+    stateRef.current.drawerOpen = true;
     setMobileDrawerOpen(true);
     const svgEl = svgRef.current;
-    if (svgEl && mobileFocused) {
+    if (svgEl) {
       const nodeLayer = d3.select(svgEl).select('.nodes');
       nodeLayer.selectAll('.node').filter(n => n.id === mobileFocused.id).raise()
         .transition().duration(600).ease(d3.easeCubicOut)
         .attr('transform', `translate(${containerRef.current.clientWidth / 2}, 100)`);
     }
-    d3.select(svgRef.current)?.select('.links')?.selectAll('.link-stream')?.transition()?.duration(600);
-    const sim = d3.select(svgRef.current)?.__sim;
-    if (sim) sim.stop();
   }
 
   return (

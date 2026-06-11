@@ -3,15 +3,22 @@ import { fontVariables } from "./fonts";
 import { PostHogProvider } from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+const TITLE = "Ashzaeen Fatmi Khan - Personal Portfolio";
+const DESCRIPTION =
+  "A site with two souls. Check out my tech stack, projects, and experiences, or take a detour through my travel stories, photos, and blogs. Come say hi!";
+
 export const metadata = {
   metadataBase: new URL("https://www.ashzaeen.com"),
-  title: "Ashzaeen Fatmi Khan",
-  description:
-    "CS + Math at UTA · AI research at the Robotic Vision Lab · builder, writer, traveler.",
+  title: TITLE,
+  description: DESCRIPTION,
+  icons: {
+    icon: [{ url: "/favicon.png", type: "image/png", sizes: "810x810" }],
+    shortcut: "/favicon.png",
+    apple: [{ url: "/favicon.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
-    title: "Ashzaeen Fatmi Khan",
-    description:
-      "CS + Math at UTA · AI research at the Robotic Vision Lab · builder, writer, traveler.",
+    title: TITLE,
+    description: DESCRIPTION,
     url: "https://www.ashzaeen.com",
     siteName: "Ashzaeen Fatmi Khan",
     images: [{ url: "/opengraph-image.png" }],
@@ -19,9 +26,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ashzaeen Fatmi Khan",
-    description:
-      "CS + Math at UTA · AI research at the Robotic Vision Lab · builder, writer, traveler.",
+    title: TITLE,
+    description: DESCRIPTION,
     images: ["/opengraph-image.png"],
   },
 };
