@@ -192,6 +192,24 @@ Two palettes, one thread. Defined in `styles/tokens.css` and switched with `data
 
 ## Credits
 
-Designed, written, and built by **Ashzaeen Fatmi Khan**. Every section is hand-crafted — the turntable, the cinema, the corkboard, and the map are all bespoke, not templates.
+Designed, written, and built by **Ashzaeen Fatmi Khan**. Every section was built from scratch — the map, the desk, the turntable, the cinema, the corkboard are all bespoke, not templates.
 
-*Private project. All rights reserved.*
+## License
+
+This repository uses a split licensing strategy to keep the underlying architecture open source while protecting my personal brand, designs, and content.
+
+**1. The Codebase (MIT License)**
+The underlying source code, scripts, and structural components of this website are open-source and licensed under the **MIT License**. You are free to use, modify, and distribute the code for your own projects. Please see the `LICENSE` file in the root directory for the full text.
+
+**2. Personal Content and Assets (CC BY-NC-ND 4.0)**
+All personal content, including but not limited to text, photographs, videos, logos, illustrations, and specific UI/UX design elements, are copyrighted and licensed under the **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License**. 
+
+Under this license, you may not:
+* Use these assets for commercial purposes.
+* Remix, transform, or build upon this material.
+* Redistribute the personal content without explicit attribution.
+
+If you are using this repository as a template for your own portfolio, please remove all of my personal information, photographs, and unique design assets, and replace them with your own. 
+
+[![CC BY-NC-ND 4.0](https://licensebuttons.net/l/by-nc-nd/4.0/88x31.png)](http://creativecommons.org/licenses/by-nc-nd/4.0/)
+
