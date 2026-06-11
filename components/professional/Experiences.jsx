@@ -388,6 +388,15 @@ export default function Experiences({
     const handleClickOutside = (e) => {
       if (e.target.closest(".exp-card")) return;
       if (activeSlug) {
+        const element = itemRefs.current[activeSlug];
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top < 85) {
+            window.scrollTo({ top: rect.top + window.scrollY - 85, behavior: "smooth" });
+            setTimeout(() => { setActiveSlug(null); syncUrl(null); }, 320);
+            return;
+          }
+        }
         setActiveSlug(null);
         syncUrl(null);
       }
@@ -432,13 +441,29 @@ export default function Experiences({
     const isOpening = activeSlug !== slug;
     const next = isOpening ? slug : null;
     if (isOpening) analytics.experienceExpanded(experiences.find((e) => e.slug === slug));
+
+    if (!isOpening) {
+      const element = itemRefs.current[slug];
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        if (rect.top < 85) {
+          // Scroll to card top first, then collapse once the viewport is there.
+          // Doing both simultaneously causes layout thrash — the collapse shrinks
+          // the page while the smooth scroll is running and they fight each other.
+          window.scrollTo({ top: rect.top + window.scrollY - 85, behavior: "smooth" });
+          setTimeout(() => { setActiveSlug(null); syncUrl(null); }, 320);
+          return;
+        }
+      }
+    }
+
     setActiveSlug(next);
     syncUrl(next);
     if (isOpening) {
       setTimeout(() => {
         const element = itemRefs.current[slug];
         if (element) {
-          const y = element.getBoundingClientRect().top + window.scrollY - 80;
+          const y = element.getBoundingClientRect().top + window.scrollY - 85;
           window.scrollTo({ top: y, behavior: "smooth" });
         }
       }, 350);
