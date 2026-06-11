@@ -205,20 +205,29 @@ const NotionBlockRenderer = ({ block, isActive }) => {
       const data = block[block.type];
       const url = data?.file?.url ?? data?.external?.url;
       if (!url) return null;
-      const filename =
+      const rawName =
         data?.name ||
         getText(data?.caption ?? []) ||
         url.split("/").pop().split("?")[0] ||
-        "DOWNLOAD";
+        "DOCUMENT";
+      const isExternal = data?.type === "external";
+      const ext = isExternal
+        ? "LINK"
+        : rawName.includes(".")
+          ? rawName.split(".").pop().toUpperCase().slice(0, 4)
+          : block.type === "pdf" ? "PDF" : "FILE";
+      const displayName = rawName.replace(/\.[^/.]+$/, "") || rawName;
       return (
-        <div className="my-6">
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2 border border-gold-dim rounded-full text-gold font-mono text-[10px] uppercase tracking-widest hover:bg-[rgba(196,160,80,0.1)] hover:border-gold transition-all"
-          >
-            <span className="font-sans">↓</span> {filename} <span className="font-sans">↗</span>
+        <div className="my-8">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="exp-file-link block relative overflow-hidden max-w-sm">
+            <div className="absolute left-0 top-0 bottom-0 w-[2px] exp-file-bar" />
+            <div className="pl-5 pr-4 py-3.5 flex items-center gap-3">
+              <span className="exp-file-ext font-mono text-[9px] uppercase tracking-[0.2em] flex-shrink-0">{ext}</span>
+              <div className="exp-file-divider w-px h-3.5 flex-shrink-0" />
+              <span className="exp-file-name font-sans text-[13px] leading-snug truncate flex-grow">{displayName}</span>
+              <span className="exp-file-arrow font-mono text-[11px] flex-shrink-0">↗</span>
+            </div>
+            <div className="exp-file-shimmer absolute inset-0 pointer-events-none" />
           </a>
         </div>
       );
@@ -506,6 +515,31 @@ export default function Experiences({
         .hover-glow::before {
           content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 0;
           background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(196,160,80,0.1), transparent 40%);
+        }
+
+        .exp-file-link {
+          border: 1px solid rgba(196,160,80,0.15);
+          background: rgba(196,160,80,0.018);
+          clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+          transition: border-color 0.3s ease, background 0.3s ease;
+        }
+        .exp-file-link:hover { border-color: rgba(196,160,80,0.5); background: rgba(196,160,80,0.045); }
+        .exp-file-bar { background: rgba(196,160,80,0.28); transition: background 0.3s ease; }
+        .exp-file-link:hover .exp-file-bar { background: #c4a050; }
+        .exp-file-ext { color: rgba(196,160,80,0.6); transition: color 0.2s ease; }
+        .exp-file-link:hover .exp-file-ext { color: rgba(196,160,80,0.95); }
+        .exp-file-divider { background: rgba(196,160,80,0.2); }
+        .exp-file-name { color: rgba(255,255,255,0.88); transition: color 0.2s ease; }
+        .exp-file-link:hover .exp-file-name { color: #c4a050; }
+        .exp-file-arrow { color: rgba(196,160,80,0.45); transition: color 0.2s ease, transform 0.2s ease; }
+        .exp-file-link:hover .exp-file-arrow { color: #c4a050; transform: translate(2px, -2px); }
+        .exp-file-shimmer {
+          background: linear-gradient(110deg, transparent 30%, rgba(196,160,80,0.07) 50%, transparent 70%);
+          transform: translateX(-120%);
+        }
+        .exp-file-link:hover .exp-file-shimmer {
+          transform: translateX(220%);
+          transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
         }
       `}</style>
     </div>
