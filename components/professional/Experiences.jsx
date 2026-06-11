@@ -200,6 +200,29 @@ const NotionBlockRenderer = ({ block, isActive }) => {
         <div className="h-px bg-gradient-to-l from-transparent to-gold-dim w-full"></div>
       </div>
     );
+    case "file":
+    case "pdf": {
+      const data = block[block.type];
+      const url = data?.file?.url ?? data?.external?.url;
+      if (!url) return null;
+      const filename =
+        data?.name ||
+        getText(data?.caption ?? []) ||
+        url.split("/").pop().split("?")[0] ||
+        "DOWNLOAD";
+      return (
+        <div className="my-6">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2 border border-gold-dim rounded-full text-gold font-mono text-[10px] uppercase tracking-widest hover:bg-[rgba(196,160,80,0.1)] hover:border-gold transition-all"
+          >
+            <span className="font-sans">↓</span> {filename} <span className="font-sans">↗</span>
+          </a>
+        </div>
+      );
+    }
     default: return null;
   }
 };
