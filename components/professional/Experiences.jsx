@@ -124,12 +124,19 @@ const NotionBlockRenderer = ({ block, isActive }) => {
 
   switch (block.type) {
     case "heading_1":
-    case "heading_2":
+    case "heading_2": {
+      return (
+        <h2 className="text-2xl md:text-3xl font-serif italic text-gold mb-4 mt-12">
+          <RichLine richText={block[block.type].rich_text} />
+        </h2>
+      );
+    }
     case "heading_3": {
-      // Local renderer historically only styled h3 — preserve that look for
-      // any heading level the user types in Notion (so h1/h2 don't render
-      // unstyled).
-      return <h3 className="text-xl md:text-2xl font-serif text-gold mb-4 mt-10 italic"><RichLine richText={block[block.type].rich_text} /></h3>;
+      return (
+        <h3 className="text-lg md:text-xl font-serif italic text-gold mb-3 mt-8">
+          <RichLine richText={block[block.type].rich_text} />
+        </h3>
+      );
     }
     case "paragraph": {
       const text = getText(block.paragraph.rich_text);
@@ -253,7 +260,10 @@ const ExperienceCard = ({ exp, isActive, onToggle, itemRefs }) => {
       layout
       ref={(el) => (itemRefs.current[exp.slug] = el)}
       onMouseMove={handleMouseMove}
-      onClick={() => onToggle(exp.slug)}
+      onClick={() => {
+        if (window.getSelection()?.toString().length > 0) return;
+        onToggle(exp.slug);
+      }}
       className={`exp-card group hover-lift shimmer-sheen hover-glow data-flow-border bg-transparent border-b border-gold-dim overflow-hidden cursor-pointer rounded-lg ${isActive ? "active" : ""}`}
       style={isActive ? { background: "rgba(196,160,80,0.03)", borderColor: "transparent" } : {}}
     >
@@ -286,6 +296,7 @@ const ExperienceCard = ({ exp, isActive, onToggle, itemRefs }) => {
           >
             <div className="px-4 md:px-8 pb-10 md:ml-64 mr-8 cursor-auto" onClick={(e) => {
               if (e.target.closest("a") || e.target.closest("pre")) e.stopPropagation();
+              if (window.getSelection()?.toString().length > 0) e.stopPropagation();
             }}>
               <div className="border-t border-gold-dim/20 pt-8 mt-2">
                 {groupBlocks(exp.body ?? []).map((block, index) => (
