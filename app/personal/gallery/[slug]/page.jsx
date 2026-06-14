@@ -9,7 +9,10 @@ export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
 export async function generateMetadata({ params }) {
   const item = await fetchGalleryBySlug(params.slug);
-  return { description: item?.story || undefined };
+  return {
+    title: item?.label || undefined,
+    description: item?.story || undefined,
+  };
 }
 
 // Pre-render only the stable curated gallery items (hardcoded in data/pinboard.js).

@@ -9,6 +9,7 @@ export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 export async function generateMetadata({ params }) {
   const piece = await fetchWritingBySlug(params.slug);
   return {
+    title: piece?.title || undefined,
     description: piece?.excerpt || undefined,
     robots: { index: true, follow: true, noimageindex: true },
   };

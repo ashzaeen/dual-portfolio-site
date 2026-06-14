@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
-import { fetchExperiences } from "@/lib/notion";
+import { fetchExperienceBySlug, fetchExperiences } from "@/lib/notion";
+
+export async function generateMetadata({ params }) {
+  const exp = await fetchExperienceBySlug(params.slug);
+  return { title: exp?.role || undefined };
+}
 
 // Pre-render every known experience slug so the redirect lookup is cached.
 export async function generateStaticParams() {

@@ -8,7 +8,24 @@ import { fetchTravelData } from "@/lib/notion";
 
 export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
-export const metadata = { robots: { index: true, follow: true, noimageindex: true } };
+export async function generateMetadata({ params }) {
+  const { storiesBySlug, locations } = await fetchTravelData();
+  const story = storiesBySlug?.[params.slug] ?? null;
+  if (story) {
+    return {
+      title: story.title || undefined,
+      robots: { index: false, follow: false },
+    };
+  }
+  const loc = locations?.find((l) => l.id === params.slug) ?? null;
+  const locTitle = loc?.city && loc?.country
+    ? `${loc.city}, ${loc.country}`
+    : loc?.city || undefined;
+  return {
+    title: locTitle,
+    robots: { index: true, follow: true, noimageindex: true },
+  };
+}
 
 // Pre-render every location AND every story slug — both are valid entry
 // points (the route renders StoryIndex for a location id, StoryView for a

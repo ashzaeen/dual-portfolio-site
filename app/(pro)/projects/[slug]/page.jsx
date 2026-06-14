@@ -8,7 +8,10 @@ export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
 export async function generateMetadata({ params }) {
   const project = await fetchProjectBySlug(params.slug);
-  return { description: project?.summary || undefined };
+  return {
+    title: project?.title || undefined,
+    description: project?.summary || undefined,
+  };
 }
 
 // Pre-render every known project slug at build time so first-visit-ever is
