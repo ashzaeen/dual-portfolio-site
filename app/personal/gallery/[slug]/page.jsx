@@ -7,6 +7,11 @@ import { ITEMS as CURATED_ITEMS, gallerySlug } from "@/data/pinboard";
 
 export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
+export async function generateMetadata({ params }) {
+  const item = await fetchGalleryBySlug(params.slug);
+  return { description: item?.story || undefined };
+}
+
 // Pre-render only the stable curated gallery items (hardcoded in data/pinboard.js).
 // Notion-added dynamic photos are server-rendered on first visit instead.
 // This avoids fetching all Notion pinboard photos + curated overrides at build

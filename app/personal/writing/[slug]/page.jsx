@@ -6,7 +6,13 @@ import { fetchWriting, fetchWritingBySlug } from "@/lib/notion";
 
 export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
-export const metadata = { robots: { index: true, follow: true, noimageindex: true } };
+export async function generateMetadata({ params }) {
+  const piece = await fetchWritingBySlug(params.slug);
+  return {
+    description: piece?.excerpt || undefined,
+    robots: { index: true, follow: true, noimageindex: true },
+  };
+}
 
 // Pre-render every published writing piece. `piece.id` is the slug
 // (mapWritingRow stores readText(props.Slug) under id, not slug).

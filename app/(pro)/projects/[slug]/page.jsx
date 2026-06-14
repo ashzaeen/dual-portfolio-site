@@ -6,6 +6,11 @@ import { fetchProjectBySlug, fetchProjects } from "@/lib/notion";
 
 export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
+export async function generateMetadata({ params }) {
+  const project = await fetchProjectBySlug(params.slug);
+  return { description: project?.summary || undefined };
+}
+
 // Pre-render every known project slug at build time so first-visit-ever is
 // already cached. Slugs added in Notion after a build render on-demand
 // (dynamicParams defaults to true) and cache on first hit.
