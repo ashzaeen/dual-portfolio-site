@@ -1,4 +1,5 @@
 export const metadata = {
+  title: "Ashzaeen Fatmi Khan - Postcards & Polaroids",
   description:
     "Somewhere between a project and a polaroid. Between a research paper and a postcard. This is the side of me that doesn't fit on a resume.",
 };
