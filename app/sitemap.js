@@ -6,6 +6,8 @@ import {
   fetchTravelData,
 } from "@/lib/notion";
 
+// Stories are noindex — excluded from sitemap intentionally.
+
 const BASE = "https://www.ashzaeen.com";
 
 export default async function sitemap() {
@@ -42,20 +44,11 @@ export default async function sitemap() {
     .filter((g) => g.slug)
     .map((g) => ({ url: `${BASE}/personal/gallery/${g.slug}`, changeFrequency: "yearly", priority: 0.5 }));
 
-  const { locations = [], locationStories = {} } = travelData ?? {};
+  const { locations = [] } = travelData ?? {};
 
   const travelRoutes = locations
     .filter((l) => l.id)
     .map((l) => ({ url: `${BASE}/personal/travel/${l.id}`, changeFrequency: "monthly", priority: 0.7 }));
-
-  const storyRoutes = Object.entries(locationStories).flatMap(
-    ([locationSlug, slugs]) =>
-      slugs.map((storySlug) => ({
-        url: `${BASE}/personal/travel/${locationSlug}/${storySlug}`,
-        changeFrequency: "monthly",
-        priority: 0.6,
-      }))
-  );
 
   return [
     ...static_routes,
@@ -64,6 +57,5 @@ export default async function sitemap() {
     ...writingRoutes,
     ...galleryRoutes,
     ...travelRoutes,
-    ...storyRoutes,
   ];
 }

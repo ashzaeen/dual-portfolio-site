@@ -6,6 +6,8 @@ import { fetchTravelData } from "@/lib/notion";
 
 export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
+export const metadata = { robots: { index: false, follow: false } };
+
 // Only multi-story locations (≥2 stories) get nested URLs; single-story
 // locations continue to use the flat /personal/travel/<storySlug> pattern.
 // First segment param is named `slug` to stay consistent with the sibling

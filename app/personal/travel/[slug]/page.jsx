@@ -8,6 +8,8 @@ import { fetchTravelData } from "@/lib/notion";
 
 export const revalidate = process.env.NODE_ENV === "development" ? 0 : 3600;
 
+export const metadata = { robots: { index: true, follow: true, noimageindex: true } };
+
 // Pre-render every location AND every story slug — both are valid entry
 // points (the route renders StoryIndex for a location id, StoryView for a
 // story slug). Dedupe in case any names collide.
