@@ -50,11 +50,11 @@ export async function GET() {
 
   const rows = entries.map(
     (e) => `  <url>
-    <loc>${e.loc}</loc>
+    <loc>${esc(e.loc)}</loc>
 ${e.images
   .map(
     (img) =>
-      `    <image:image>\n      <image:loc>${img.loc}</image:loc>${
+      `    <image:image>\n      <image:loc>${esc(img.loc)}</image:loc>${
         img.title ? `\n      <image:title>${img.title}</image:title>` : ""
       }${
         img.caption ? `\n      <image:caption>${img.caption}</image:caption>` : ""
