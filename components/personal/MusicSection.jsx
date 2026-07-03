@@ -732,11 +732,28 @@ function useYouTubePlayer(videoId, snippetStart = 0, snippetEnd = null, onListen
   useEffect(() => {
     whenYT(() => {
       if (playerRef.current || !containerRef.current) return;
-      playerRef.current = new window.YT.Player(containerRef.current, {
-        width: 2,
-        height: 2,
-        videoId: videoId || "",
-        playerVars: { autoplay: 0, controls: 0, rel: 0, modestbranding: 1, playsinline: 1 },
+      // Build the iframe ourselves so we can grant it `allow="autoplay"`. The
+      // YT IFrame API generates an iframe WITHOUT that permission-policy, and
+      // strict in-app WebViews (Instagram/Facebook) then refuse a cross-origin
+      // playVideo() even from a real tap — the gesture lives in our page and
+      // never crosses the frame boundary, so without the feature policy YT
+      // reads it as autoplay and blocks it. Normal mobile browsers are lenient
+      // and don't need this, which is why playback works everywhere else.
+      // playerVars move into the src query string; the API attaches to the
+      // existing iframe via its enablejsapi=1 flag.
+      const iframe = document.createElement("iframe");
+      iframe.width = "2";
+      iframe.height = "2";
+      iframe.style.border = "0";
+      iframe.allow = "autoplay; encrypted-media";
+      iframe.setAttribute("playsinline", "1");
+      const ytParams = new URLSearchParams({
+        enablejsapi: "1", autoplay: "0", controls: "0", rel: "0",
+        modestbranding: "1", playsinline: "1", origin: window.location.origin,
+      });
+      iframe.src = `https://www.youtube.com/embed/${videoId || ""}?${ytParams}`;
+      containerRef.current.appendChild(iframe);
+      playerRef.current = new window.YT.Player(iframe, {
         events: {
           // Start buffering the initial song as soon as the player exists.
           onReady: (e) => { if (videoId) preload(e.target, videoId, snippetStart); },
