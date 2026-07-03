@@ -809,14 +809,23 @@ function useYouTubePlayer(videoId, snippetStart = 0, snippetEnd = null, onListen
       return;
     }
     const startSec = (snippetStart ?? 0) / 1000;
-    // Still mid silent-preload: the buffer is already rolling, so just unmute
-    // it for instant sound and flip the UI ourselves (no new PLAYING event
-    // fires since it's already playing).
+    // Still mid silent-preload. In normal browsers the muted buffer is already
+    // rolling, so unmuting + flipping the UI is enough. But in-app browsers
+    // (Instagram, Facebook) block even muted iframe autoplay, so the preload
+    // may never have actually started — in that case we must issue a real
+    // gesture-driven playVideo() here (we're inside the play-button tap) and
+    // let the PLAYING event flip the UI.
     if (preloadingRef.current) {
       preloadingRef.current = false;
       try { p.unMute(); } catch {}
-      setPlaying(true);
-      playStartRef.current = performance.now();
+      const S = window.YT?.PlayerState;
+      if (S && p.getPlayerState?.() === S.PLAYING) {
+        setPlaying(true);
+        playStartRef.current = performance.now();
+      } else {
+        if (startSec > 0) p.seekTo(startSec, true);
+        p.playVideo();
+      }
       return;
     }
     // Parked & pre-buffered (or a cold player): unmute and resume — playback

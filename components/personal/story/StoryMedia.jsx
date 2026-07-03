@@ -100,6 +100,12 @@ export default function StoryMedia({
   // Pause/resume actual video element when held or externally paused.
   // When needsGesture is true, effectivePaused is true → video stays
   // paused until the play overlay is tapped.
+  //
+  // currentIndex is a dependency so that EVERY slide change re-issues an
+  // explicit play(). On a video→video advance neither effectivePaused nor
+  // useVideoEl changes, so without it the freshly-mounted <video> would rely
+  // solely on its `autoPlay` attribute — which in-app browsers (Instagram,
+  // Facebook) ignore for dynamically-inserted media, leaving slide 2+ frozen.
   useEffect(() => {
     if (!videoRef.current || !useVideoEl) return;
     if (effectivePaused) {
@@ -107,7 +113,7 @@ export default function StoryMedia({
     } else {
       videoRef.current.play().catch(() => {});
     }
-  }, [effectivePaused, useVideoEl]);
+  }, [effectivePaused, useVideoEl, currentIndex]);
 
   // One-time play gesture — sets the module flag so future direct landings
   // in this session skip the overlay entirely.
