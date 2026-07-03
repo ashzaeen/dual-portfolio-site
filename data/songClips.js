@@ -2,7 +2,12 @@
 // Maps song id (Notion Slug) → self-hosted clipped-audio path in /public.
 // Used ONLY as the Instagram in-app-browser playback fallback; every other
 // browser plays via the YouTube iframe.
-//
-// Run `node scripts/download-clips.mjs` (needs yt-dlp + ffmpeg on PATH) to
-// download each song's marked Snippet Start→End range and populate this file.
-export const SONG_CLIPS = {};
+export const SONG_CLIPS = {
+  "aviciithenights": "/audio/aviciithenights.mp3",
+  "laurenaquilinaking": "/audio/laurenaquilinaking.mp3",
+  "johnlegendallofme": "/audio/johnlegendallofme.mp3",
+  "onerepublicilived": "/audio/onerepublicilived.mp3",
+  "arnobchowdhurytomarjonnonilchetaray": "/audio/arnobchowdhurytomarjonnonilchetaray.mp3",
+  "popeyebangladeshbhalobashabaki": "/audio/popeyebangladeshbhalobashabaki.mp3",
+  "terabanjaungaarijitsinghterabanjaungaarijitsingh": "/audio/terabanjaungaarijitsinghterabanjaungaarijitsingh.mp3"
+};
