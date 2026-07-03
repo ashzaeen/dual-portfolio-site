@@ -8,6 +8,8 @@ import { FALLBACK_SECTION_COPY } from "@/data/sections";
 import NotionImage from "@/components/shared/NotionImage";
 import styles from "./MusicSection.module.css";
 import { analytics } from "@/lib/analytics";
+import { SONG_CLIPS } from "@/data/songClips";
+import { isInstagramBrowser } from "@/lib/isInAppBrowser";
 
 const ACCENT_PALETTE = [
   "#a0691f", "#3a6a9a", "#c4a050", "#a04068",
@@ -856,6 +858,69 @@ function useYouTubePlayer(videoId, snippetStart = 0, snippetEnd = null, onListen
   return { playing, progress, toggle, containerRef };
 }
 
+/* ─── NATIVE AUDIO PLAYER (Instagram fallback) ───────────── */
+// Plays a self-hosted, pre-clipped MP3 through a same-origin <audio> element.
+// Instagram's/Facebook's in-app WebView blocks the cross-origin YouTube iframe
+// (the tap gesture never crosses the frame), but a native audio play() invoked
+// from that same tap is allowed. The file is already trimmed to the Notion
+// snippet, so there are no start/end bounds to enforce here — it just plays.
+function useNativeAudioPlayer(src, onListen) {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef(null);
+  // Wall-clock listen time, mirroring the YouTube hook: stamped on play,
+  // reported (rounded to seconds) on pause/end.
+  const playStartRef = useRef(null);
+  const onListenRef = useRef(onListen);
+  onListenRef.current = onListen;
+  const reportListen = () => {
+    if (playStartRef.current == null) return;
+    const secs = Math.round((performance.now() - playStartRef.current) / 1000);
+    playStartRef.current = null;
+    if (secs > 0) onListenRef.current?.(secs);
+  };
+
+  // Bind media events once — the <audio> node is rendered unconditionally and
+  // never unmounts, so the ref is stable for the component's lifetime.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const onPlay = () => { setPlaying(true); playStartRef.current = performance.now(); };
+    const onPause = () => { setPlaying(false); reportListen(); };
+    const onEnded = () => {
+      setPlaying(false);
+      reportListen();
+      try { a.currentTime = 0; } catch {}
+    };
+    a.addEventListener("play", onPlay);
+    a.addEventListener("pause", onPause);
+    a.addEventListener("ended", onEnded);
+    return () => {
+      a.removeEventListener("play", onPlay);
+      a.removeEventListener("pause", onPause);
+      a.removeEventListener("ended", onEnded);
+    };
+  }, []);
+
+  // New song → stop & rewind so the next play starts the clip from the top.
+  useEffect(() => {
+    setPlaying(false);
+    const a = audioRef.current;
+    if (a) { try { a.pause(); a.currentTime = 0; } catch {} }
+  }, [src]);
+
+  function toggle() {
+    const a = audioRef.current;
+    if (!a || !src) return;
+    if (playing) { a.pause(); return; }
+    // Inside the play-button tap → a same-origin audio play() is permitted
+    // even in strict in-app WebViews. The `playing` state flips via the
+    // "play" event above.
+    a.play().catch(() => {});
+  }
+
+  return { playing, toggle, audioRef };
+}
+
 /* ─── DESKTOP ────────────────────────────────────────────── */
 function MusicDesktop({ songs, activeIndex, setActiveIndex, loadSong, song, playing, speed, setSpeed, toggle, copy }) {
   const [draggingId, setDraggingId] = useState(null);
@@ -1000,12 +1065,32 @@ export default function MusicSection({ songs: rawSongs, copy = FALLBACK_SECTION_
   const songRef = useRef(song);
   songRef.current = song;
 
-  const { playing, toggle, containerRef } = useYouTubePlayer(
+  const onListen = (secs) => analytics.musicListenDuration(songRef.current, secs);
+
+  // Two playback backends. YouTube is the default everywhere; native <audio>
+  // (a self-hosted, pre-clipped MP3) is the Instagram/Facebook in-app-browser
+  // fallback, since those WebViews block cross-origin iframe playback. Both
+  // hooks are always called (rules of hooks); only the selected one is wired
+  // to the UI, so the idle backend never produces sound.
+  const yt = useYouTubePlayer(
     song.ytId ?? null,
     song.snippetStart ?? 0,
     song.snippetEnd ?? null,
-    (secs) => analytics.musicListenDuration(songRef.current, secs),
+    onListen,
   );
+  const clipSrc = SONG_CLIPS[song.id] || null;
+  const audioBackend = useNativeAudioPlayer(clipSrc, onListen);
+
+  // Detection runs in an effect (post-mount) so SSR/first paint stay on the
+  // YouTube path; if we're in an in-app browser and have a clip, switch.
+  const [inAppBrowser, setInAppBrowser] = useState(false);
+  useEffect(() => { setInAppBrowser(isInstagramBrowser()); }, []);
+  const useAudioBackend = inAppBrowser && !!clipSrc;
+
+  const playing = useAudioBackend ? audioBackend.playing : yt.playing;
+  const toggle = useAudioBackend ? audioBackend.toggle : yt.toggle;
+  const { containerRef } = yt;
+  const { audioRef } = audioBackend;
 
   // Analytics-wrapped controls. `loadSong` records click-vs-drag at the call
   // site; play/pause and speed wrap the underlying setters.
@@ -1049,6 +1134,14 @@ export default function MusicSection({ songs: rawSongs, copy = FALLBACK_SECTION_
       <div
         ref={containerRef}
         style={{ position: "fixed", bottom: -4, right: -4, width: 2, height: 2, pointerEvents: "none", zIndex: -1 }}
+      />
+      {/* Instagram fallback: self-hosted clipped audio. Hidden; only driven
+          when useAudioBackend is true (in-app browser + clip available). */}
+      <audio
+        ref={audioRef}
+        src={clipSrc || undefined}
+        preload={useAudioBackend ? "auto" : "none"}
+        style={{ display: "none" }}
       />
       <div className="desktop-only">
         <MusicDesktop {...shared} />
